@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "173918995139",
+    "firebase_url": "https://my-chat-e7416-default-rtdb.firebaseio.com",
+    "project_id": "my-chat-e7416",
+    "storage_bucket": "my-chat-e7416.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:173918995139:android:4f289ac47503754d869876",
+        "android_client_info": {
+          "package_name": "com.example.lammah"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "173918995139-b0jcv2jnfgao8h6a7fd1k6mg18g2o0c7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOBjBPS14ycFZSrO_T4pUqReGM9dU_45w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "173918995139-2qks4j94v1qvtpo4lcb16ehqo106n3qu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "173918995139-agaj2djspmuaa4mv18a2lge77n3l7s8b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.myChat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
