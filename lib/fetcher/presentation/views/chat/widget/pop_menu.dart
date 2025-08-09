@@ -14,7 +14,7 @@ PopupMenuItem<dynamic> popMenu(
     onTap: onTap,
     child: isMenu
         ? Text(
-            title!,
+            title ?? '',
             style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
           )
         : SizedBox(

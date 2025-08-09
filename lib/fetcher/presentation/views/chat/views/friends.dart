@@ -41,15 +41,15 @@ class _FriendsState extends State<Friends> {
               ),
               title: Text(
                 'Friend ${index + 1}',
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onTertiary,
-                ),
+                // style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                //   color: Theme.of(context).colorScheme.onTertiary,
+                // ),
               ),
               subtitle: Text(
                 'نبذه نبذه نبذه نبذه نبذه نبذه نبذه ${index + 1}',
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  color: Theme.of(context).colorScheme.onTertiary,
-                ),
+                // style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                //   color: Theme.of(context).colorScheme.onTertiary,
+                // ),
               ),
               onTap: () {
                 // Handle friend tap

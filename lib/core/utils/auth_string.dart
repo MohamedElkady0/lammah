@@ -103,6 +103,10 @@ class AuthString {
       'لم يتم العثور على مستخدم بهذا البريد الإلكتروني.';
   static const String noCodeSent = "رمز التحقق غير صحيح.";
   static const String noUser = "فشل التحقق، لم يتم العثور على المستخدم.";
+  static const String noUserFound = "User data not found in Firestore.";
+  static const String checkInternet = "Please check your internet connection.";
+  static const String noUserFound2 =
+      'Failed to load data. Check your connection.';
 
   //----------------keys--------------------------------------------------------
   //constants for Firebase Storage and Firestore paths
@@ -117,6 +121,7 @@ class AuthString {
   static const String emailNotFound = 'auth/user-not-found';
   static const String getPhoneN = 'US'; // Default country code for phone number
   static const String invalidVerificationCode = 'invalid-verification-code';
+  static const String invalidGetUser = 'unavailable';
 
   //----------------images------------------------------------------------------
   //----------------------------------------------------------------------------

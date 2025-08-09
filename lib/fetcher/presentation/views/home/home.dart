@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/utils/string_app.dart';
+import 'package:lammah/fetcher/data/model/user_info.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/auth/view/welcome_page.dart';
 import 'package:lammah/fetcher/presentation/views/chat/chat_home.dart';
@@ -10,7 +11,8 @@ import 'package:lammah/fetcher/presentation/views/news/news.dart';
 import 'package:lammah/fetcher/presentation/views/stories/shop.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.userInfoData});
+  final UserInfoData userInfoData;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,7 +21,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  List<Widget> pages = [ChatW(), News(), Shop(), Enjoyment()];
+  late List<Widget> pages;
+
+  @override
+  void initState() {
+    super.initState();
+    pages = [
+      ChatW(userInfoData: widget.userInfoData),
+      News(),
+      Shop(),
+      Enjoyment(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -10,14 +10,14 @@ import 'package:lammah/fetcher/presentation/views/Introduction/widget/anim_image
 import 'package:lammah/fetcher/presentation/views/Introduction/widget/background_page.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/widget/blur_background.dart';
 
-class PageViewMyChat extends StatefulWidget {
-  const PageViewMyChat({super.key});
+class Introduction extends StatefulWidget {
+  const Introduction({super.key});
 
   @override
-  State<PageViewMyChat> createState() => _PageViewMyChatState();
+  State<Introduction> createState() => _IntroductionState();
 }
 
-class _PageViewMyChatState extends State<PageViewMyChat>
+class _IntroductionState extends State<Introduction>
     with SingleTickerProviderStateMixin {
   final PageController _controller = PageController(initialPage: 0);
 

@@ -30,6 +30,16 @@ class AuthImagePicked extends AuthState {
   AuthImagePicked(this.image);
 }
 
+class AuthLoadingProgress extends AuthState {
+  final double progress;
+  AuthLoadingProgress(this.progress);
+}
+
+class LocationUpdateSuccess extends AuthState {
+  final LatLng position;
+  LocationUpdateSuccess(this.position);
+}
+
 class ShowOnboardingState extends AuthState {}
 
 class AuthAuthenticated extends AuthState {}

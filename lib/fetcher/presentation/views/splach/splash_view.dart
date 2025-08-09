@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
+import 'package:lammah/fetcher/data/model/user_info.dart';
+import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/home/home.dart';
 
 class SplashView extends StatefulWidget {
@@ -16,7 +19,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late ConnectivityResult _connectivityResult;
-  bool isFirstTime = false;
+  late AuthCubit _authCubit;
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       begin: 0.3,
       end: 1.5,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _authCubit = BlocProvider.of<AuthCubit>(context);
 
     _checkInternetConnection();
   }
@@ -47,13 +51,23 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     if (_connectivityResult == ConnectivityResult.mobile ||
         _connectivityResult == ConnectivityResult.wifi) {
-      Future.delayed(const Duration(seconds: 6), () {
-        if (!mounted) return;
+      if (!mounted) return;
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      });
+      // Navigator.of(context).pushReplacement(
+      //   MaterialPageRoute(
+      //     builder: (context) => _authCubit.currentUserInfo != null
+      //         ? HomePage(userInfoData: _authCubit.currentUserInfo!)
+      //         : widget,
+      //   ),
+      // );
+      Future.delayed(const Duration(seconds: 5));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => HomePage(
+            userInfoData: _authCubit.currentUserInfo ?? UserInfoData(),
+          ),
+        ),
+      );
     } else {
       if (mounted) {
         _showNoInternetDialog();

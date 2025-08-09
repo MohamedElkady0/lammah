@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -13,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/fetcher/data/model/user_info.dart';
+import 'package:lammah/fetcher/data/service/auth_cache_service.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +26,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthSuccess(userInfo: userInfo!));
   }
 
+  //----------------------------------------------------------------------------
   bool isRegister = true;
   File? img;
   String _otp = AuthString.empty;
@@ -39,7 +40,7 @@ class AuthCubit extends Cubit<AuthState> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   LatLng? currentPosition;
   String currentAddress = AuthString.noPlace;
-  MapController? mapController;
+
   bool isLoading = true;
   SharedPreferences? prefs;
   // ---------------------------------------------------------------------------
@@ -47,10 +48,12 @@ class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _credential = FirebaseAuth.instance;
   StreamSubscription? _authSubscription;
   //----------------------------------------------------------------------------
-  AuthCubit() : super(AuthInitial()) {
+  final AuthCacheService _cacheService;
+  //----------------------------------------------------------------------------
+  AuthCubit(this._cacheService) : super(AuthInitial()) {
     _monitorAuthenticationState();
   }
-
+  //----------------------------------------------------------------------------
   void _monitorAuthenticationState() {
     _authSubscription?.cancel();
 
@@ -64,7 +67,7 @@ class AuthCubit extends Cubit<AuthState> {
       if (!hasSeenOnboarding) {
         emit(ShowOnboardingState());
       } else {
-        if (user != null) {
+        if (user != null || _currentUserInfo != null) {
           emit(AuthLoading());
           try {
             emit(AuthSuccess(userInfo: _currentUserInfo!));
@@ -120,6 +123,58 @@ class AuthCubit extends Cubit<AuthState> {
       }
     }
   }
+
+  //------------------------------------------------------------------------------
+
+  Future<void> loadUserData(String uid) async {
+    final firebaseUser = _credential.currentUser;
+    try {
+      emit(AuthLoadingProgress(0.0));
+
+      if (firebaseUser != null || _currentUserInfo != null) {
+        emit(AuthLoading());
+        final docSnapshot = await FirebaseFirestore.instance
+            .collection(AuthString.fSUsers)
+            .doc(uid)
+            .get();
+        emit(AuthLoadingProgress(0.5));
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (docSnapshot.exists) {
+          _currentUserInfo = UserInfoData.fromJson(docSnapshot.data()!);
+          emit(AuthLoadingProgress(1.0)); // 100%
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (_currentUserInfo != null) {
+            emit(AuthSuccess(userInfo: _currentUserInfo!));
+          } else {
+            emit(AuthFailure(message: AuthString.userDoesNotExist));
+            return;
+          }
+        }
+      } else {
+        emit(AuthLoading());
+
+        emit(AuthLoadingProgress(0.5));
+        await Future.delayed(const Duration(seconds: 1));
+        _currentUserInfo = await _cacheService.loadUserData();
+        emit(AuthLoadingProgress(1.0)); // 100%
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (_currentUserInfo != null) {
+          emit(AuthSuccess(userInfo: _currentUserInfo!));
+        } else {
+          emit(AuthFailure(message: AuthString.userDoesNotExist));
+          return;
+        }
+      }
+    } catch (e) {
+      if (e == AuthString.invalidGetUser) {
+        emit(AuthFailure(message: AuthString.checkInternet));
+      } else {
+        emit(AuthFailure(message: e.toString()));
+      }
+    }
+  }
+
   //----------------------------------------------------------------------------
 
   Future<void> getCurrentLocation() async {
@@ -163,17 +218,11 @@ class AuthCubit extends Cubit<AuthState> {
       currentPosition = newPosition;
       isLoading = false;
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentPosition != null) {
-          mapController?.move(currentPosition!, 2.0);
-        }
-      });
-
       getAddressFromLatLng(position);
+
+      emit(LocationUpdateSuccess(newPosition));
     } catch (e) {
       debugPrint("Error getting location: $e");
-      // if (!mounted) return;
-
       currentAddress = "خطأ في تحديد الموقع: ${e.toString()}";
       isLoading = false;
     }
@@ -245,6 +294,7 @@ class AuthCubit extends Cubit<AuthState> {
           .set(userInfo.toJson());
 
       _currentUserInfo = userInfo;
+      await _cacheService.saveUserData(_currentUserInfo!);
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException catch (e) {
       String message = AuthString.errAuth1;
@@ -280,13 +330,10 @@ class AuthCubit extends Cubit<AuthState> {
       if (userDoc.exists) {
         _currentUserInfo = UserInfoData.fromJson(userDoc.data()!);
       } else {
-        emit(
-          state is AuthInitial
-              ? AuthFailure(message: AuthString.userDoesNotExist)
-              : AuthFailure(message: AuthString.userDoesNotExist),
-        );
+        emit(AuthFailure(message: AuthString.userDoesNotExist));
         return;
       }
+      await _cacheService.saveUserData(_currentUserInfo!);
 
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException {
@@ -346,6 +393,7 @@ class AuthCubit extends Cubit<AuthState> {
             .set(userInfo.toJson());
       }
       _currentUserInfo = userInfo;
+      await _cacheService.saveUserData(_currentUserInfo!);
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } catch (e) {
       if (e is FirebaseAuthException) {
@@ -490,6 +538,7 @@ class AuthCubit extends Cubit<AuthState> {
             _currentUserInfo = userInfo;
           }
         });
+        await _cacheService.saveUserData(_currentUserInfo!);
         emit(AuthSuccess(userInfo: _currentUserInfo!));
       } else {
         emit(AuthFailure(message: AuthString.noUser));
@@ -550,6 +599,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _credential.signOut();
 
       await _googleSignIn.signOut();
+      await _cacheService.clearUserData();
 
       _currentUserInfo = null;
       emit(AuthUnauthenticated());
@@ -621,11 +671,15 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> _updateUserDocument(String imageUrl) async {
     try {
       _currentUserInfo = _currentUserInfo?.copyWith(image: imageUrl);
+      if (_currentUserInfo != null) {
+        await _cacheService.saveUserData(_currentUserInfo!);
+      }
 
       await FirebaseFirestore.instance
           .collection(AuthString.fSUsers)
           .doc(_credential.currentUser!.uid)
           .update({'image': imageUrl});
+      emit(AuthUpdateSuccess());
     } catch (e) {
       throw Exception('فشل تحديث بيانات المستخدم: ${e.toString()}');
     }
@@ -634,37 +688,45 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
   void updateName(String name) async {
     _currentUserInfo = _currentUserInfo?.copyWith(name: name);
+    await _cacheService.saveUserData(_currentUserInfo!);
     await FirebaseFirestore.instance
         .collection(AuthString.fSUsers)
         .doc(_credential.currentUser!.uid)
         .update(_currentUserInfo!.toJson());
+    emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
   void updatePhoneNumber(String phoneNumber) async {
     _currentUserInfo = _currentUserInfo?.copyWith(phoneNumber: phoneNumber);
+    await _cacheService.saveUserData(_currentUserInfo!);
     await FirebaseFirestore.instance
         .collection(AuthString.fSUsers)
         .doc(_credential.currentUser!.uid)
         .update(_currentUserInfo!.toJson());
+    emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
   void updatePassword(String password) async {
     _currentUserInfo = _currentUserInfo?.copyWith(password: password);
+    await _cacheService.saveUserData(_currentUserInfo!);
     await FirebaseFirestore.instance
         .collection(AuthString.fSUsers)
         .doc(_credential.currentUser!.uid)
         .update(_currentUserInfo!.toJson());
+    emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
   void updateEmail(String email) async {
     _currentUserInfo = _currentUserInfo?.copyWith(email: email);
+    await _cacheService.saveUserData(_currentUserInfo!);
     await FirebaseFirestore.instance
         .collection(AuthString.fSUsers)
         .doc(_credential.currentUser!.uid)
         .update(_currentUserInfo!.toJson());
+    emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
@@ -676,10 +738,12 @@ class AuthCubit extends Cubit<AuthState> {
           '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
       userCountry: currentAddress.split(',')[0],
     );
+    await _cacheService.saveUserData(_currentUserInfo!);
     await FirebaseFirestore.instance
         .collection(AuthString.fSUsers)
         .doc(_credential.currentUser!.uid)
         .update(_currentUserInfo!.toJson());
+    emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------

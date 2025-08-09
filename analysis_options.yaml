@@ -10,6 +10,7 @@
 analyzer:
   errors:
     avoid_print: false
+    file_names: false
 include: package:flutter_lints/flutter.yaml
 
 linter:
