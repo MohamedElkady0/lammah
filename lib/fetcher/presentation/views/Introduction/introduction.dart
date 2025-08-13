@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/config/fixed_sizes_app.dart';
+import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/core/utils/pageview_string.dart';
-import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/data/pageview_data.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/widget/anim_image.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/widget/background_page.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/widget/blur_background.dart';
+import 'package:lammah/fetcher/presentation/views/auth/widget/button_auth.dart';
+import 'package:lammah/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Introduction extends StatefulWidget {
   const Introduction({super.key});
@@ -112,28 +113,26 @@ class _IntroductionState extends State<Introduction>
                       ),
                     ),
                     if (index == pageViewData.length - 1)
-                      ElevatedButton(
-                        style: Theme.of(context).elevatedButtonTheme.style!
-                            .copyWith(
-                              padding: WidgetStateProperty.all(
-                                EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.horizontalS.horizontal,
-                                  vertical: AppSpacing.verticalS.vertical,
-                                ),
-                              ),
-                            ),
-                        onPressed: () =>
-                            BlocProvider.of<AuthCubit>(context).onIntroEnd(),
-                        child: Text(
-                          PageViewString.start,
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(
-                                fontFamily: GoogleFonts.poppins().fontFamily,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                              ),
-                        ),
+                      ButtonAuth(
+                        onPressed: () async {
+                          final navigator = Navigator.of(context);
+
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool(
+                            AuthString.keyOfSeenOnboarding,
+                            true,
+                          );
+
+                          if (!mounted) return;
+
+                          navigator.pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => AuthGate()),
+                            (route) => false,
+                          );
+                        },
+                        title: PageViewString.start,
+                        icon: Icons.arrow_forward,
+                        isW: true,
                       ),
                     SizedBox(height: AppSpacing.vSpaceXXS.height),
                   ],

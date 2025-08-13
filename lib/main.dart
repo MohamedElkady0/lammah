@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/theme/themes_app.dart';
+import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
 import 'package:lammah/fetcher/data/service/notification_service.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
@@ -11,7 +12,9 @@ import 'package:lammah/fetcher/domian/theme/theme_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/Introduction.dart';
 import 'package:lammah/fetcher/presentation/views/auth/view/welcome_page.dart';
 import 'package:lammah/fetcher/presentation/views/home/home.dart';
+import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 import 'package:lammah/firebase_options.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,19 +54,57 @@ class Lammah extends StatelessWidget {
             themeMode: themeState.themeMode,
             theme: ThemesApp.light,
             darkTheme: ThemesApp.dark,
-            home: BlocBuilder<AuthCubit, AuthState>(
-              builder: (context, authState) {
-                if (authState is ShowOnboardingState) {
-                  return Introduction();
-                } else if (authState is AuthUnauthenticated) {
-                  return WelcomeScreen();
-                }
-                return HomePage();
-              },
-            ),
+            home: AppStartDecider(),
           );
         },
       ),
+    );
+  }
+}
+
+class AppStartDecider extends StatelessWidget {
+  const AppStartDecider({super.key});
+
+  Future<bool> _checkIfOnboardingSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    return prefs.getBool(AuthString.keyOfSeenOnboarding) ?? false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _checkIfOnboardingSeen(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SplashView();
+        }
+
+        final bool hasSeenOnboarding = snapshot.data ?? false;
+
+        if (hasSeenOnboarding) {
+          return AuthGate();
+        } else {
+          return Introduction();
+        }
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        if (state is AuthSuccess) {
+          return HomePage();
+        } else {
+          return WelcomeScreen();
+        }
+      },
     );
   }
 }

@@ -56,38 +56,20 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
   void _monitorAuthenticationState() {
     _authSubscription?.cancel();
-
     _authSubscription = _credential.authStateChanges().listen((
       User? user,
     ) async {
-      final prefs = await SharedPreferences.getInstance();
-      final bool hasSeenOnboarding =
-          prefs.getBool(AuthString.keyOfSeenOnboarding) ?? false;
-
-      if (!hasSeenOnboarding) {
-        emit(ShowOnboardingState());
-      } else {
-        if (user != null) {
-          emit(AuthLoading());
-
-          try {
-            if (_currentUserInfo != null) {
-              emit(AuthSuccess(userInfo: _currentUserInfo!));
-            } else {
-              _currentUserInfo = await _cacheService.loadUserData();
-              emit(AuthSuccess(userInfo: _currentUserInfo!));
-            }
-          } catch (e) {
-            emit(
-              AuthFailure(
-                message: 'خطأ في تحميل بيانات المستخدم: ${e.toString()}',
-              ),
-            );
-          }
-          emit(AuthAuthenticated());
-        } else {
-          emit(AuthUnauthenticated());
+      if (user != null) {
+        emit(AuthLoading());
+        try {
+          _currentUserInfo ??= await _cacheService.loadUserData();
+          emit(AuthSuccess(userInfo: _currentUserInfo!));
+        } catch (e) {
+          emit(AuthFailure(message: 'فشل تحميل بيانات المستخدم: $e'));
         }
+      } else {
+        _currentUserInfo = null;
+        emit(AuthUnauthenticated());
       }
     });
   }
@@ -721,7 +703,6 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthUpdateSuccess());
     } catch (e) {
-      Future.delayed(Duration(seconds: 5));
       emit(AuthFailure(message: e.toString()));
     }
   }
