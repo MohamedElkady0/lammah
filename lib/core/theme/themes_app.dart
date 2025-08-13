@@ -12,16 +12,29 @@ class ThemesApp {
       elevation: 0,
     ),
     cardTheme: CardThemeData(
-      color: ColorThemeApp.darkColorScheme.surface,
+      color: ColorThemeApp.darkColorScheme.primary,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
+      clipBehavior: Clip.hardEdge,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shadowColor: Colors.black12,
+      surfaceTintColor: ColorThemeApp.lightColorScheme.onPrimary,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: ColorThemeApp.darkColorScheme.primary,
-        foregroundColor: ColorThemeApp.darkColorScheme.onPrimary,
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        backgroundColor: ColorThemeApp.darkColorScheme.secondary,
+        side: BorderSide(
+          color: ColorThemeApp.darkColorScheme.primary,
+          width: 2,
+        ),
+        foregroundColor: ColorThemeApp.darkColorScheme.onSecondary,
+        elevation: 4,
+
+        padding: EdgeInsets.all(10),
+        iconColor: ColorThemeApp.tertiaryColor,
       ),
     ),
+    iconTheme: IconThemeData(color: ColorThemeApp.secondaryColor, size: 30),
 
     textTheme: ThemeText.getTextTheme(ColorThemeApp.darkColorScheme),
   );
@@ -35,8 +48,13 @@ class ThemesApp {
       elevation: 0,
     ),
     cardTheme: CardThemeData(
-      color: ColorThemeApp.lightColorScheme.surface,
+      color: ColorThemeApp.lightColorScheme.primary,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
+      clipBehavior: Clip.hardEdge,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shadowColor: Colors.black12,
+      surfaceTintColor: ColorThemeApp.lightColorScheme.onPrimary,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

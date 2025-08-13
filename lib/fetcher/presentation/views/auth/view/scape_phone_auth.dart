@@ -7,6 +7,7 @@ import 'package:lammah/fetcher/presentation/views/auth/widget/button_auth.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/fun_service.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/image_auth.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/input_field_auth.dart';
+import 'package:lammah/fetcher/presentation/views/home/home.dart';
 import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 
 class ScapePhoneAuth extends StatefulWidget {
@@ -44,13 +45,13 @@ class _ScapePhoneAuthState extends State<ScapePhoneAuth> {
             SnackBar(content: Text('Welcome ${state.userInfo.name}')),
           );
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SplashView()),
+            MaterialPageRoute(builder: (context) => const HomePage()),
           );
         }
       },
       builder: (context, state) {
         return state is AuthLoading
-            ? Center(child: CircularProgressIndicator())
+            ? SplashView()
             : SafeArea(
                 child: Scaffold(
                   backgroundColor: Theme.of(context).colorScheme.primary,

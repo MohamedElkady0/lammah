@@ -33,13 +33,13 @@ class ButtonAuth extends StatelessWidget {
         ),
         style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
           backgroundColor: WidgetStateProperty.all(
-            Theme.of(context).colorScheme.primary.withAlpha(50),
+            Theme.of(context).colorScheme.primary.withAlpha(40),
           ),
         ),
         onPressed: onPressed,
         label: Text(
           title,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
             fontFamily: GoogleFonts.poppins().fontFamily,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onPrimary,

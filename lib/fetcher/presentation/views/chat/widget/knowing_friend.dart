@@ -4,18 +4,17 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
-import 'package:lammah/fetcher/data/model/user_info.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, required this.userInfoData});
-  final UserInfoData userInfoData;
+  const MapScreen({super.key});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
 
+//
 class _MapScreenState extends State<MapScreen> {
   final MapController mapController = MapController();
 
@@ -26,7 +25,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthCubit>().getCurrentLocation();
+    context.read<AuthCubit>().updateLocation();
   }
 
   @override
@@ -51,12 +50,14 @@ class _MapScreenState extends State<MapScreen> {
         builder: (context, state) {
           final authCubit = context.read<AuthCubit>();
           final currentPosition = authCubit.currentPosition;
+          final userInfoData = authCubit.currentUserInfo;
 
-          if (currentPosition == null) {
+          if (currentPosition == null || userInfoData == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
           return Stack(
+            alignment: Alignment.center,
             children: [
               FlutterMap(
                 mapController: mapController,
@@ -89,8 +90,8 @@ class _MapScreenState extends State<MapScreen> {
                         child: CircleAvatar(
                           radius: 20,
                           backgroundColor: Colors.blue,
-                          backgroundImage: widget.userInfoData.image != null
-                              ? NetworkImage(widget.userInfoData.image!)
+                          backgroundImage: userInfoData.image != null
+                              ? NetworkImage(userInfoData.image!)
                               : MemoryImage(kTransparentImage) as ImageProvider,
                         ),
                       ),
@@ -99,15 +100,17 @@ class _MapScreenState extends State<MapScreen> {
                 ],
               ),
               Positioned(
-                bottom: 80,
-                left: MediaQuery.of(context).size.width * 0.27,
+                bottom: 100,
                 child: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      widget.userInfoData.userCity ?? 'Unknown Location',
+                      userInfoData.userCountry ??
+                          authCubit.currentAddress.split(',')[0],
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   ),
                 ),

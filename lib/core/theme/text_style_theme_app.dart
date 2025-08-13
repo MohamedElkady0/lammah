@@ -121,6 +121,11 @@ class ThemeText {
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
+      displaySmall: baseTextTheme.displaySmall?.copyWith(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: colorScheme.onPrimary,
+      ),
       // Title
       titleLarge: baseTextTheme.titleLarge?.copyWith(
         fontSize: 22,
@@ -129,6 +134,11 @@ class ThemeText {
       ),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
         fontSize: 18,
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onSurface,
+      ),
+      titleSmall: baseTextTheme.titleSmall?.copyWith(
+        fontSize: 16,
         fontWeight: FontWeight.w500,
         color: colorScheme.onSurface,
       ),
@@ -141,6 +151,10 @@ class ThemeText {
         fontSize: 14,
         color: colorScheme.onSurfaceVariant,
       ),
+      bodySmall: baseTextTheme.bodySmall?.copyWith(
+        fontSize: 12,
+        color: colorScheme.onSurfaceVariant,
+      ),
       // Label
       labelLarge: baseTextTheme.labelLarge?.copyWith(
         fontSize: 16,
@@ -149,6 +163,10 @@ class ThemeText {
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontSize: 12,
+        color: colorScheme.onSurfaceVariant,
+      ),
+      labelSmall: baseTextTheme.labelSmall?.copyWith(
+        fontSize: 10,
         color: colorScheme.onSurfaceVariant,
       ),
     );

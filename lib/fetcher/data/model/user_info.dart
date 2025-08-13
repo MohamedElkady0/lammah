@@ -1,4 +1,4 @@
-import 'package:lammah/fetcher/data/model/user_message.dart';
+//import 'package:lammah/fetcher/data/model/user_message.dart';
 
 class UserInfoData {
   String? userId;
@@ -10,11 +10,10 @@ class UserInfoData {
   String? userPlace;
   String? userCity;
   String? userCountry;
-  String? password;
-  UserMessage? userMessage;
+  // UserMessage? userMessage;
 
   UserInfoData({
-    this.userMessage,
+    // this.userMessage,
     this.userId,
     this.name,
     this.email,
@@ -24,7 +23,6 @@ class UserInfoData {
     this.userPlace,
     this.userCity,
     this.userCountry,
-    this.password,
   });
   factory UserInfoData.fromJson(Map<String, dynamic> json) => UserInfoData(
     userId: json['userId'],
@@ -36,10 +34,9 @@ class UserInfoData {
     userPlace: json['userPlace'],
     userCity: json['userCity'],
     userCountry: json['userCountry'],
-    password: json['password'],
-    userMessage: json['userMessage'] != null
-        ? UserMessage.fromJson(json['userMessage'])
-        : null,
+    // userMessage: json['userMessage'] != null
+    // ? UserMessage.fromJson(json['userMessage'])
+    // : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -52,8 +49,7 @@ class UserInfoData {
     'userPlace': userPlace,
     'userCity': userCity,
     'userCountry': userCountry,
-    'password': password,
-    'userMessage': userMessage?.toJson(),
+    // 'userMessage': userMessage?.toJson(),
   };
 
   @override
@@ -73,8 +69,7 @@ class UserInfoData {
         other.friends == friends &&
         other.userPlace == userPlace &&
         other.userCity == userCity &&
-        other.userCountry == userCountry &&
-        other.password == password;
+        other.userCountry == userCountry;
   }
 
   @override
@@ -87,9 +82,8 @@ class UserInfoData {
         friends.hashCode ^
         userPlace.hashCode ^
         userCity.hashCode ^
-        userCountry.hashCode ^
-        password.hashCode ^
-        userMessage.hashCode;
+        userCountry.hashCode;
+    // userMessage.hashCode;
   }
 
   UserInfoData copyWith({
@@ -102,8 +96,6 @@ class UserInfoData {
     String? userPlace,
     String? userCity,
     String? userCountry,
-    String? password,
-    UserMessage? userMessage,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -115,12 +107,10 @@ class UserInfoData {
       userPlace: userPlace ?? this.userPlace,
       userCity: userCity ?? this.userCity,
       userCountry: userCountry ?? this.userCountry,
-      password: password ?? this.password,
-      userMessage: userMessage ?? this.userMessage,
     );
   }
 
-  UserInfoData.fromUserInfoData(UserInfoData userInfoData, this.userMessage)
+  UserInfoData.fromUserInfoData(UserInfoData userInfoData) //this.userMessage
     : userId = userInfoData.userId,
       name = userInfoData.name,
       email = userInfoData.email,
@@ -129,6 +119,5 @@ class UserInfoData {
       friends = List<String>.from(userInfoData.friends ?? []),
       userPlace = userInfoData.userPlace,
       userCity = userInfoData.userCity,
-      userCountry = userInfoData.userCountry,
-      password = userInfoData.password;
+      userCountry = userInfoData.userCountry;
 }

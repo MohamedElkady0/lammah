@@ -23,7 +23,7 @@ class AuthCubit extends Cubit<AuthState> {
   UserInfoData? _currentUserInfo;
   UserInfoData? get currentUserInfo => _currentUserInfo;
   set currentUserInfo(UserInfoData? userInfo) {
-    emit(AuthSuccess(userInfo: userInfo!));
+    emit(AuthSuccessSetUserInfo(userInfo: userInfo!));
   }
 
   //----------------------------------------------------------------------------
@@ -48,9 +48,9 @@ class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _credential = FirebaseAuth.instance;
   StreamSubscription? _authSubscription;
   //----------------------------------------------------------------------------
-  final AuthCacheService _cacheService;
+  final AuthCacheService _cacheService = AuthCacheService();
   //----------------------------------------------------------------------------
-  AuthCubit(this._cacheService) : super(AuthInitial()) {
+  AuthCubit() : super(AuthInitial()) {
     _monitorAuthenticationState();
   }
   //----------------------------------------------------------------------------
@@ -67,10 +67,16 @@ class AuthCubit extends Cubit<AuthState> {
       if (!hasSeenOnboarding) {
         emit(ShowOnboardingState());
       } else {
-        if (user != null || _currentUserInfo != null) {
+        if (user != null) {
           emit(AuthLoading());
+
           try {
-            emit(AuthSuccess(userInfo: _currentUserInfo!));
+            if (_currentUserInfo != null) {
+              emit(AuthSuccess(userInfo: _currentUserInfo!));
+            } else {
+              _currentUserInfo = await _cacheService.loadUserData();
+              emit(AuthSuccess(userInfo: _currentUserInfo!));
+            }
           } catch (e) {
             emit(
               AuthFailure(
@@ -131,7 +137,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       emit(AuthLoadingProgress(0.0));
 
-      if (firebaseUser != null || _currentUserInfo != null) {
+      if (firebaseUser != null) {
         emit(AuthLoading());
         final docSnapshot = await FirebaseFirestore.instance
             .collection(AuthString.fSUsers)
@@ -152,19 +158,34 @@ class AuthCubit extends Cubit<AuthState> {
           }
         }
       } else {
-        emit(AuthLoading());
+        emit(AuthFailure(message: AuthString.userDoesNotExist));
+        return;
+      }
+    } catch (e) {
+      if (e == AuthString.invalidGetUser) {
+        emit(AuthFailure(message: AuthString.checkInternet));
+      } else {
+        emit(AuthFailure(message: e.toString()));
+      }
+    }
+  }
 
-        emit(AuthLoadingProgress(0.5));
-        await Future.delayed(const Duration(seconds: 1));
-        _currentUserInfo = await _cacheService.loadUserData();
-        emit(AuthLoadingProgress(1.0)); // 100%
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (_currentUserInfo != null) {
-          emit(AuthSuccess(userInfo: _currentUserInfo!));
-        } else {
-          emit(AuthFailure(message: AuthString.userDoesNotExist));
-          return;
-        }
+  //----------------------------------------------------------------------------
+  // if FirebaseAuth.instance.currentUser != null  && _currentUserInfo == null
+  localUserInfo() async {
+    try {
+      emit(AuthLoading());
+
+      emit(AuthLoadingProgress(0.5));
+      await Future.delayed(const Duration(seconds: 1));
+      _currentUserInfo = await _cacheService.loadUserData();
+      emit(AuthLoadingProgress(1.0)); // 100%
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (_currentUserInfo != null) {
+        emit(AuthSuccess(userInfo: _currentUserInfo!));
+      } else {
+        emit(AuthFailure(message: AuthString.userDoesNotExist));
+        return;
       }
     } catch (e) {
       if (e == AuthString.invalidGetUser) {
@@ -183,7 +204,10 @@ class AuthCubit extends Cubit<AuthState> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      currentAddress = AuthString.noLocation;
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
+      emit(AuthFailure(message: AuthString.noLocation));
+
       isLoading = false;
 
       return;
@@ -191,9 +215,14 @@ class AuthCubit extends Cubit<AuthState> {
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        currentAddress = AuthString.noAddress;
+        currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+        currentPosition = LatLng(0, 0);
+        emit(AuthFailure(message: AuthString.noAddress));
+
         isLoading = false;
 
         return;
@@ -201,7 +230,9 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      currentAddress = AuthString.noAddressSelected;
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
+      emit(AuthFailure(message: AuthString.noAddressSelected));
       isLoading = false;
 
       return;
@@ -239,7 +270,8 @@ class AuthCubit extends Cubit<AuthState> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
 
-        currentAddress = '${place.country},${place.street},${place.locality}';
+        currentAddress =
+            '${place.country},${place.locality},${place.street},${place.locality},${place.postalCode}';
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -262,6 +294,12 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: AuthString.fillAllAr));
       return;
     }
+    if (currentPosition == null || currentAddress.isEmpty) {
+      Future.delayed(Duration(seconds: 5));
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
+      emit(AuthFailure(message: AuthString.noLocation));
+    }
 
     emit(AuthLoading());
 
@@ -279,7 +317,7 @@ class AuthCubit extends Cubit<AuthState> {
         image: imgUrl,
         email: email,
         phoneNumber: number.phoneNumber ?? AuthString.empty,
-        userId: userCredential.user!.uid,
+        userId: _credential.currentUser!.uid,
         name: name,
         friends: [],
         userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
@@ -290,11 +328,13 @@ class AuthCubit extends Cubit<AuthState> {
 
       await FirebaseFirestore.instance
           .collection(AuthString.fSUsers)
-          .doc(userCredential.user!.uid)
+          .doc(_credential.currentUser!.uid)
           .set(userInfo.toJson());
+      if (_currentUserInfo == null) {
+        _currentUserInfo = userInfo;
+        await _cacheService.saveUserData(_currentUserInfo!);
+      }
 
-      _currentUserInfo = userInfo;
-      await _cacheService.saveUserData(_currentUserInfo!);
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException catch (e) {
       String message = AuthString.errAuth1;
@@ -363,8 +403,14 @@ class AuthCubit extends Cubit<AuthState> {
       final UserCredential userCredential = await _credential
           .signInWithCredential(credential);
 
+      if (currentPosition == null || currentAddress.isEmpty) {
+        emit(AuthFailure(message: AuthString.noLocation));
+        currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+        currentPosition = LatLng(0, 0);
+      }
+
       UserInfoData userInfo = UserInfoData(
-        userId: userCredential.user!.uid,
+        userId: _credential.currentUser!.uid,
         name: userCredential.user!.displayName ?? AuthString.empty,
         email: userCredential.user!.email ?? AuthString.empty,
         phoneNumber: userCredential.user!.phoneNumber ?? AuthString.empty,
@@ -392,8 +438,10 @@ class AuthCubit extends Cubit<AuthState> {
             .doc(userCredential.user!.uid)
             .set(userInfo.toJson());
       }
-      _currentUserInfo = userInfo;
-      await _cacheService.saveUserData(_currentUserInfo!);
+      if (_currentUserInfo == null) {
+        _currentUserInfo = userInfo;
+        await _cacheService.saveUserData(_currentUserInfo!);
+      }
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } catch (e) {
       if (e is FirebaseAuthException) {
@@ -497,6 +545,11 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: AuthString.otpVerificationFailed));
       return;
     }
+    if (currentPosition == null || currentAddress.isEmpty) {
+      emit(AuthFailure(message: AuthString.noLocation));
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
+    }
 
     emit(AuthLoading());
     final credential = PhoneAuthProvider.credential(
@@ -516,13 +569,17 @@ class AuthCubit extends Cubit<AuthState> {
           if (userDoc.exists) {
             _currentUserInfo = UserInfoData.fromJson(userDoc.data()!);
           } else {
+            if (currentPosition == null || currentAddress.isEmpty) {
+              emit(AuthFailure(message: AuthString.noLocation));
+              currentAddress = AuthString.noAddressSelected;
+              currentPosition = LatLng(0, 0);
+            }
             final userInfo = UserInfoData(
               image: AuthString.empty,
               email: AuthString.empty,
-              password: AuthString.empty,
 
               phoneNumber: number.phoneNumber ?? AuthString.empty,
-              userId: userCredential.user!.uid,
+              userId: _credential.currentUser!.uid,
               name: AuthString.empty,
               friends: _currentUserInfo?.friends ?? [],
               userPlace:
@@ -533,7 +590,7 @@ class AuthCubit extends Cubit<AuthState> {
             );
             await FirebaseFirestore.instance
                 .collection(AuthString.fSUsers)
-                .doc(userCredential.user!.uid)
+                .doc(_credential.currentUser!.uid)
                 .set(userInfo.toJson());
             _currentUserInfo = userInfo;
           }
@@ -643,6 +700,7 @@ class AuthCubit extends Cubit<AuthState> {
       final imgUrl = await storageRef.getDownloadURL();
       return imgUrl;
     } catch (e) {
+      emit(AuthFailure(message: 'فشل رفع الصورة: ${e.toString()}'));
       throw Exception('فشل رفع الصورة: ${e.toString()}');
     }
   }
@@ -663,6 +721,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthUpdateSuccess());
     } catch (e) {
+      Future.delayed(Duration(seconds: 5));
       emit(AuthFailure(message: e.toString()));
     }
   }
@@ -681,6 +740,7 @@ class AuthCubit extends Cubit<AuthState> {
           .update({'image': imageUrl});
       emit(AuthUpdateSuccess());
     } catch (e) {
+      Future.delayed(Duration(seconds: 5));
       throw Exception('فشل تحديث بيانات المستخدم: ${e.toString()}');
     }
   }
@@ -688,61 +748,64 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
   void updateName(String name) async {
     _currentUserInfo = _currentUserInfo?.copyWith(name: name);
-    await _cacheService.saveUserData(_currentUserInfo!);
-    await FirebaseFirestore.instance
-        .collection(AuthString.fSUsers)
-        .doc(_credential.currentUser!.uid)
-        .update(_currentUserInfo!.toJson());
+    if (_currentUserInfo != null) {
+      await _cacheService.saveUserData(_currentUserInfo!);
+      await FirebaseFirestore.instance
+          .collection(AuthString.fSUsers)
+          .doc(_credential.currentUser!.uid)
+          .update(_currentUserInfo!.toJson());
+    }
     emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
   void updatePhoneNumber(String phoneNumber) async {
     _currentUserInfo = _currentUserInfo?.copyWith(phoneNumber: phoneNumber);
-    await _cacheService.saveUserData(_currentUserInfo!);
-    await FirebaseFirestore.instance
-        .collection(AuthString.fSUsers)
-        .doc(_credential.currentUser!.uid)
-        .update(_currentUserInfo!.toJson());
+    if (_currentUserInfo != null) {
+      await _cacheService.saveUserData(_currentUserInfo!);
+      await FirebaseFirestore.instance
+          .collection(AuthString.fSUsers)
+          .doc(_credential.currentUser!.uid)
+          .update(_currentUserInfo!.toJson());
+    }
     emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
-  void updatePassword(String password) async {
-    _currentUserInfo = _currentUserInfo?.copyWith(password: password);
-    await _cacheService.saveUserData(_currentUserInfo!);
-    await FirebaseFirestore.instance
-        .collection(AuthString.fSUsers)
-        .doc(_credential.currentUser!.uid)
-        .update(_currentUserInfo!.toJson());
-    emit(AuthUpdateSuccess());
-  }
 
-  //----------------------------------------------------------------------------
   void updateEmail(String email) async {
     _currentUserInfo = _currentUserInfo?.copyWith(email: email);
-    await _cacheService.saveUserData(_currentUserInfo!);
-    await FirebaseFirestore.instance
-        .collection(AuthString.fSUsers)
-        .doc(_credential.currentUser!.uid)
-        .update(_currentUserInfo!.toJson());
+    if (_currentUserInfo != null) {
+      await _cacheService.saveUserData(_currentUserInfo!);
+      await FirebaseFirestore.instance
+          .collection(AuthString.fSUsers)
+          .doc(_credential.currentUser!.uid)
+          .update(_currentUserInfo!.toJson());
+    }
     emit(AuthUpdateSuccess());
   }
 
   //----------------------------------------------------------------------------
   void updateLocation() async {
     getCurrentLocation();
+    if (currentPosition == null || currentAddress.isEmpty) {
+      emit(AuthFailure(message: AuthString.noLocation));
+      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentPosition = LatLng(0, 0);
+    }
     _currentUserInfo = _currentUserInfo?.copyWith(
       userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
       userCity:
           '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
       userCountry: currentAddress.split(',')[0],
     );
-    await _cacheService.saveUserData(_currentUserInfo!);
-    await FirebaseFirestore.instance
-        .collection(AuthString.fSUsers)
-        .doc(_credential.currentUser!.uid)
-        .update(_currentUserInfo!.toJson());
+    if (_currentUserInfo != null) {
+      await _cacheService.saveUserData(_currentUserInfo!);
+      await FirebaseFirestore.instance
+          .collection(AuthString.fSUsers)
+          .doc(_credential.currentUser!.uid)
+          .update(_currentUserInfo!.toJson());
+    }
     emit(AuthUpdateSuccess());
   }
 

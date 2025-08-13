@@ -60,7 +60,7 @@ PopupMenuItem<dynamic> popMenu(
                             const SizedBox(width: 8),
                             Text(
                               date ?? '',
-                              style: Theme.of(context).textTheme.labelSmall!
+                              style: Theme.of(context).textTheme.labelMedium!
                                   .copyWith(
                                     color: Theme.of(
                                       context,

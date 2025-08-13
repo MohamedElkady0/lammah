@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/utils/chat_string.dart';
-import 'package:lammah/fetcher/data/model/user_info.dart';
 import 'package:lammah/fetcher/presentation/views/chat/widget/knowing_friend.dart';
 import 'package:lammah/fetcher/presentation/views/chat/widget/search_app.dart';
 import 'package:lammah/fetcher/presentation/views/chat/widget/side_bar_chat.dart';
 
 class ChatW extends StatefulWidget {
-  const ChatW({super.key, required this.userInfoData});
-  final UserInfoData userInfoData;
+  const ChatW({super.key});
 
   @override
   State<ChatW> createState() => _ChatWState();
@@ -22,7 +20,7 @@ class _ChatWState extends State<ChatW> {
     double h = ConfigApp.height;
     return Stack(
       children: [
-        MapScreen(userInfoData: widget.userInfoData),
+        MapScreen(),
         Container(
           height: h,
           width: w,

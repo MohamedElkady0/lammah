@@ -11,6 +11,7 @@ import 'package:lammah/fetcher/presentation/views/auth/view/phone_page.dart';
 import 'package:lammah/fetcher/presentation/views/auth/view/register_page.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/button_auth.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/fun_service.dart';
+import 'package:lammah/fetcher/presentation/views/home/home.dart';
 import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -31,7 +32,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   void initState() {
-    BlocProvider.of<AuthCubit>(context).getCurrentLocation();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -89,7 +89,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             SnackBar(content: Text('welcome ${state.userInfo.name}')),
           );
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => SplashView()),
+            MaterialPageRoute(builder: (context) => HomePage()),
           );
         }
       },
@@ -98,7 +98,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: Scaffold(
             backgroundColor: Colors.black54,
             body: state is AuthLoading
-                ? Center(child: CircularProgressIndicator())
+                ? SplashView()
                 : Stack(
                     children: [
                       AnimatedBuilder(

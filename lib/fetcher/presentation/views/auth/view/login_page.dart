@@ -8,6 +8,7 @@ import 'package:lammah/fetcher/presentation/views/auth/view/forget_password_page
 import 'package:lammah/fetcher/presentation/views/auth/widget/app_bar_auth.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/button_auth.dart';
 import 'package:lammah/fetcher/presentation/views/auth/widget/input_field_auth.dart';
+import 'package:lammah/fetcher/presentation/views/home/home.dart';
 import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 
 class LoginPage extends StatefulWidget {
@@ -47,19 +48,19 @@ class _LoginPageState extends State<LoginPage> {
             context,
           ).showSnackBar(SnackBar(content: Text(AuthString.welcomeBack)));
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => SplashView()),
+            MaterialPageRoute(builder: (context) => HomePage()),
           );
         }
       },
       builder: (context, state) {
-        return SafeArea(
-          child: Scaffold(
-            appBar: AppBarAuth(title: AuthString.login),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            extendBodyBehindAppBar: true,
-            body: state is AuthLoading
-                ? Center(child: CircularProgressIndicator())
-                : Padding(
+        return state is AuthLoading
+            ? SplashView()
+            : SafeArea(
+                child: Scaffold(
+                  appBar: AppBarAuth(title: AuthString.login),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  extendBodyBehindAppBar: true,
+                  body: Padding(
                     padding: AppSpacing.horizontalM,
                     child: SingleChildScrollView(
                       child: Form(
@@ -134,8 +135,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-          ),
-        );
+                ),
+              );
       },
     );
   }
