@@ -186,7 +186,8 @@ class AuthCubit extends Cubit<AuthState> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentAddress =
+          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
       currentPosition = LatLng(0, 0);
       emit(AuthFailure(message: AuthString.noLocation));
 
@@ -197,11 +198,13 @@ class AuthCubit extends Cubit<AuthState> {
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentAddress =
+          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
       currentPosition = LatLng(0, 0);
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+        currentAddress =
+            '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
         currentPosition = LatLng(0, 0);
         emit(AuthFailure(message: AuthString.noAddress));
 
@@ -212,7 +215,8 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
+      currentAddress =
+          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
       currentPosition = LatLng(0, 0);
       emit(AuthFailure(message: AuthString.noAddressSelected));
       isLoading = false;
@@ -769,11 +773,6 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
   void updateLocation() async {
     getCurrentLocation();
-    if (currentPosition == null || currentAddress.isEmpty) {
-      emit(AuthFailure(message: AuthString.noLocation));
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
-      currentPosition = LatLng(0, 0);
-    }
     _currentUserInfo = _currentUserInfo?.copyWith(
       userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
       userCity:

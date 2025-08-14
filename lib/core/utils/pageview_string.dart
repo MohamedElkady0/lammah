@@ -11,6 +11,7 @@ class PageViewString {
   static const String pagetext3 = 'Enjoy watching exclusive movies and series';
   static const String pagetext4 = 'Be a trader, buy and sell, and profit';
   static const String pagetext5 = 'Enjoy watching open and encrypted channels';
-  static const String pagetext6 = 'Play with friends, all of that and more';
+  static const String pagetext6 =
+      '10 X 1 \n ten in one \n Ten applications in one application \n Discover now';
   static const String start = 'Get Started';
 }

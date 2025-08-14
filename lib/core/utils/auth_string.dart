@@ -81,6 +81,7 @@ class AuthString {
   static const String noAddress = 'تم رفض إذن الوصول للموقع.';
   static const String noAddressSelected =
       'تم رفض إذن الوصول للموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.';
+  static const String unknown = 'unknown';
   static const String noAddressSelected2 = 'لا يمكن جلب العنوان';
   static const String choseImg = 'الرجاء اختيار صورة شخصية.';
   static const String fillAllAr = 'الرجاء ملء جميع الحقول.';

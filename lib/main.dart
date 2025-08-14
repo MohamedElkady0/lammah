@@ -99,7 +99,9 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
-        if (state is AuthSuccess) {
+        if (state is AuthInitial || state is AuthLoading) {
+          return SplashView();
+        } else if (state is AuthSuccess) {
           return HomePage();
         } else {
           return WelcomeScreen();

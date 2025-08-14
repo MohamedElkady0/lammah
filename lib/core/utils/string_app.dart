@@ -12,7 +12,7 @@ class StringApp {
   static const String close = 'إغلاق';
   static const String loading = 'جاري التحميل...';
   static const String loadingMore = 'جاري تحميل المزيد...';
-  static const String chats = 'الدردشات';
+  static const String chats = 'دردشه';
   static const String store = 'المتجر';
   static const String news = 'الأخبار';
   static const String enjoyment = 'ترفيه';

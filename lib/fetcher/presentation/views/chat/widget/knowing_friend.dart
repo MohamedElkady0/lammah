@@ -105,8 +105,7 @@ class _MapScreenState extends State<MapScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      userInfoData.userCountry ??
-                          authCubit.currentAddress.split(',')[0],
+                      userInfoData.userCountry ?? authCubit.currentAddress,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                         color: Theme.of(context).colorScheme.onPrimary,
