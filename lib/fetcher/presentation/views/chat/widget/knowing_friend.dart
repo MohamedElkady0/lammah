@@ -6,6 +6,8 @@ import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:circle_flags/circle_flags.dart';
+import 'package:country_flags/country_flags.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -14,7 +16,6 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-//
 class _MapScreenState extends State<MapScreen> {
   final MapController mapController = MapController();
 
@@ -39,20 +40,24 @@ class _MapScreenState extends State<MapScreen> {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is LocationUpdateSuccess) {
+          final authCubit = context.read<AuthCubit>();
+          final positionToMove = authCubit.countryPosition ?? state.position;
+
           if (_isMapReady) {
-            mapController.move(state.position, 2.0);
+            mapController.move(positionToMove, 2.0);
           } else {
-            _pendingPosition = state.position;
+            _pendingPosition = positionToMove;
           }
         }
       },
       child: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           final authCubit = context.read<AuthCubit>();
-          final currentPosition = authCubit.currentPosition;
+          final positionForMap =
+              authCubit.countryPosition ?? authCubit.currentPosition;
           final userInfoData = authCubit.currentUserInfo;
 
-          if (currentPosition == null || userInfoData == null) {
+          if (positionForMap == null || userInfoData == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -62,14 +67,13 @@ class _MapScreenState extends State<MapScreen> {
               FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  initialCenter: currentPosition,
-                  initialZoom: 2.0,
+                  initialCenter: positionForMap,
 
+                  initialZoom: 2.0,
                   onMapReady: () {
                     setState(() {
                       _isMapReady = true;
                     });
-
                     if (_pendingPosition != null) {
                       mapController.move(_pendingPosition!, 2.0);
                       _pendingPosition = null;
@@ -86,30 +90,63 @@ class _MapScreenState extends State<MapScreen> {
                       Marker(
                         width: 60.0,
                         height: 60.0,
-                        point: currentPosition,
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.blue,
-                          backgroundImage: userInfoData.image != null
-                              ? NetworkImage(userInfoData.image!)
-                              : MemoryImage(kTransparentImage) as ImageProvider,
+                        point: positionForMap,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (authCubit.currentCountryCode != null)
+                              CircleFlag(
+                                authCubit.currentCountryCode!,
+                                size: 60,
+                              ),
+
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: CircleAvatar(
+                                radius: 26,
+                                backgroundColor: Colors.grey.shade300,
+                                backgroundImage: userInfoData.image != null
+                                    ? NetworkImage(userInfoData.image!)
+                                    : MemoryImage(kTransparentImage)
+                                          as ImageProvider,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
+
               Positioned(
                 bottom: 100,
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      userInfoData.userCountry ?? authCubit.currentAddress,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (authCubit.currentCountryCode != null)
+                          CountryFlag.fromCountryCode(
+                            authCubit.currentCountryCode!,
+                            height: 20,
+                            width: 30,
+                          ),
+
+                        if (authCubit.currentCountryCode != null)
+                          const SizedBox(width: 8),
+
+                        Text(
+                          userInfoData.userCountry ??
+                              authCubit.currentAddress.split(',')[0],
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -82,7 +82,7 @@ class _IntroductionState extends State<Introduction>
 
             animationController.reset();
 
-            animationController.repeat(reverse: true);
+            animationController.forward();
           },
           itemCount: pageViewData.length,
           itemBuilder: (context, index) {
@@ -106,7 +106,7 @@ class _IntroductionState extends State<Introduction>
                       ),
                       child: Text(
                         pageViewData[index].title!,
-                        maxLines: 2,
+                        maxLines: 5,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.displayMedium!
                             .copyWith(color: Colors.white54),

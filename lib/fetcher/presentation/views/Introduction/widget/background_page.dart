@@ -24,33 +24,46 @@ class _BackgroundPageState extends State<BackgroundPage>
       duration: const Duration(seconds: 2),
     );
 
-    topAlignmentAnimation = AlignmentTween(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.decelerate),
-    );
+    topAlignmentAnimation =
+        AlignmentTween(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.decelerate,
+          ),
+        );
 
-    bottomAlignmentAnimation = AlignmentTween(
-      begin: Alignment.bottomCenter,
-      end: Alignment.topCenter,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.decelerate),
-    );
+    bottomAlignmentAnimation =
+        AlignmentTween(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.decelerate,
+          ),
+        );
 
-    colorAnim1 = ColorTween(
-      begin: Colors.deepPurple,
-      end: Colors.lightBlueAccent,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.slowMiddle),
-    );
+    colorAnim1 =
+        ColorTween(
+          begin: Colors.deepPurple,
+          end: Colors.lightBlueAccent,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.slowMiddle,
+          ),
+        );
 
-    colorAnim2 = ColorTween(
-      begin: Colors.pinkAccent,
-      end: Colors.greenAccent,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.slowMiddle),
-    );
+    colorAnim2 = ColorTween(begin: Colors.pinkAccent, end: Colors.greenAccent)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.slowMiddle,
+          ),
+        );
 
     colorAnim3 = ColorTween(begin: Colors.amber, end: Colors.redAccent).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.slowMiddle),
@@ -72,20 +85,19 @@ class _BackgroundPageState extends State<BackgroundPage>
     super.build(context);
     return AnimatedBuilder(
       animation: _animationController,
-      builder:
-          (context, child) => Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: topAlignmentAnimation.value,
-                end: bottomAlignmentAnimation.value,
-                colors: [
-                  colorAnim1.value ?? Colors.transparent,
-                  colorAnim2.value ?? Colors.transparent,
-                  colorAnim3.value ?? Colors.transparent,
-                ],
-              ),
-            ),
+      builder: (context, child) => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: topAlignmentAnimation.value,
+            end: bottomAlignmentAnimation.value,
+            colors: [
+              colorAnim1.value ?? Colors.transparent,
+              colorAnim2.value ?? Colors.transparent,
+              colorAnim3.value ?? Colors.transparent,
+            ],
           ),
+        ),
+      ),
     );
   }
 

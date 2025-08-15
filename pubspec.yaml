@@ -73,6 +73,9 @@ dependencies:
   percent_indicator: ^4.2.5
   flutter_colorpicker: ^1.1.0
   google_nav_bar: ^5.0.7
+  country_picker: ^2.0.27
+  circle_flags: ^5.0.0
+  country_flags: ^3.3.0
 
   
   

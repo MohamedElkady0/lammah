@@ -15,6 +15,7 @@ import 'package:lammah/fetcher/data/model/user_info.dart';
 import 'package:lammah/fetcher/data/service/auth_cache_service.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:country_picker/country_picker.dart';
 
 part 'auth_state.dart';
 
@@ -39,8 +40,9 @@ class AuthCubit extends Cubit<AuthState> {
   String get phoneNumber => _phoneNumber;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   LatLng? currentPosition;
+  LatLng? countryPosition;
   String currentAddress = AuthString.noPlace;
-
+  String? currentCountryCode;
   bool isLoading = true;
   SharedPreferences? prefs;
   // ---------------------------------------------------------------------------
@@ -240,7 +242,8 @@ class AuthCubit extends Cubit<AuthState> {
       emit(LocationUpdateSuccess(newPosition));
     } catch (e) {
       debugPrint("Error getting location: $e");
-      currentAddress = "خطأ في تحديد الموقع: ${e.toString()}";
+      currentAddress =
+          "خطأ في تحديد الموقع: ${e.toString()},${AuthString.unknown},${AuthString.unknown}";
       isLoading = false;
     }
   }
@@ -258,11 +261,42 @@ class AuthCubit extends Cubit<AuthState> {
 
         currentAddress =
             '${place.country},${place.locality},${place.street},${place.locality},${place.postalCode}';
+
+        if (place.country != null && place.country!.isNotEmpty) {
+          try {
+            Country country = Country.parse(place.country!);
+            currentCountryCode = country.countryCode;
+          } catch (e) {
+            debugPrint(
+              "Could not parse country name to get code: ${e.toString()}",
+            );
+            currentCountryCode = null;
+          }
+          try {
+            List<Location> locations = await locationFromAddress(
+              place.country!,
+            );
+            if (locations.isNotEmpty) {
+              countryPosition = LatLng(
+                locations.first.latitude,
+                locations.first.longitude,
+              );
+            }
+          } catch (e) {
+            debugPrint("Could not geocode the country: ${e.toString()}");
+            countryPosition = LatLng(position.latitude, position.longitude);
+            currentCountryCode = null;
+            currentAddress =
+                '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+          }
+        }
       }
     } catch (e) {
       debugPrint(e.toString());
 
-      currentAddress = AuthString.noAddressSelected2;
+      currentAddress =
+          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+      countryPosition = LatLng(0, 0);
     }
   }
   //----------------------------------------------------------------------------
@@ -775,8 +809,7 @@ class AuthCubit extends Cubit<AuthState> {
     getCurrentLocation();
     _currentUserInfo = _currentUserInfo?.copyWith(
       userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
-      userCity:
-          '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
+      userCity: currentAddress,
       userCountry: currentAddress.split(',')[0],
     );
     if (_currentUserInfo != null) {
