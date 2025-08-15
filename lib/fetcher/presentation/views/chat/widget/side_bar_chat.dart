@@ -11,7 +11,7 @@ class SideBarChat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiary.withAlpha(150),
+        color: Theme.of(context).colorScheme.primary.withAlpha(150),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -36,9 +36,18 @@ class SideBarChat extends StatelessWidget {
               },
             ],
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.groups)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.groups,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
           PopChats(
-            icon: const Icon(Icons.chat_bubble_outline),
+            icon: Icon(
+              Icons.chat_bubble_outline,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
             offset: const Offset(50, -97),
             isMenu: false,
             index: 4,
@@ -52,8 +61,20 @@ class SideBarChat extends StatelessWidget {
             chats: ['Hello world', 'Hello world', 'Hello world', 'Hello world'],
             dates: ['today', 'yesterday', '2 days ago', '3 days ago'],
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.web_stories)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.event_note)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.web_stories,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.event_note,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
         ],
       ),
     );

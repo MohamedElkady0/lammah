@@ -15,7 +15,7 @@ PopupMenuItem<dynamic> popMenu(
     child: isMenu
         ? Text(
             title ?? '',
-            style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           )
         : SizedBox(
             width: MediaQuery.of(context).size.width * 0.55,
@@ -25,7 +25,7 @@ PopupMenuItem<dynamic> popMenu(
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: Theme.of(context).colorScheme.onTertiary,
+                    backgroundColor: Theme.of(context).colorScheme.onPrimary,
                     backgroundImage: image != null ? AssetImage(image) : null,
                   ),
                   const SizedBox(width: 10.0),
@@ -37,7 +37,7 @@ PopupMenuItem<dynamic> popMenu(
                         Text(
                           title ?? '',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onTertiary,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -53,7 +53,7 @@ PopupMenuItem<dynamic> popMenu(
                                     .copyWith(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onTertiary.withAlpha(150),
+                                      ).colorScheme.onPrimary.withAlpha(150),
                                     ),
                               ),
                             ),
@@ -64,7 +64,7 @@ PopupMenuItem<dynamic> popMenu(
                                   .copyWith(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onTertiary.withAlpha(150),
+                                    ).colorScheme.onPrimary.withAlpha(150),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                             ),

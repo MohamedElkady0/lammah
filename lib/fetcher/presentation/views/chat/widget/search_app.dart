@@ -32,12 +32,22 @@ class _SearchAppState extends State<SearchApp> {
   Widget build(BuildContext context) {
     return SearchAnchor.bar(
       barBackgroundColor: WidgetStatePropertyAll(
-        Theme.of(context).colorScheme.tertiary.withAlpha(150),
+        Theme.of(context).colorScheme.primary.withAlpha(150),
       ),
+
       searchController: _searchController,
       barHintText: ChatString.search,
+      barLeading: Icon(
+        Icons.search,
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
 
-      barTrailing: [IconButton(icon: Icon(Icons.mic), onPressed: () {})],
+      barTrailing: [
+        IconButton(
+          icon: Icon(Icons.mic, color: Theme.of(context).colorScheme.onPrimary),
+          onPressed: () {},
+        ),
+      ],
       suggestionsBuilder: (BuildContext context, SearchController controller) {
         final String query = controller.text.toLowerCase();
         if (query.isEmpty) {

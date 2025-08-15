@@ -40,6 +40,11 @@ class _ChatWState extends State<ChatW> {
           left: w * 0.05,
           right: w * 0.05,
           child: ElevatedButton.icon(
+            style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
+              backgroundColor: WidgetStatePropertyAll(
+                Theme.of(context).colorScheme.primary.withAlpha(100),
+              ),
+            ),
             onPressed: () {},
             icon: const Icon(Icons.airplanemode_on),
             label: const Text(ChatString.startChat),

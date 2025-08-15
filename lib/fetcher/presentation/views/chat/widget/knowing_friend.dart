@@ -144,7 +144,10 @@ class _MapScreenState extends State<MapScreen> {
                           userInfoData.userCountry ??
                               authCubit.currentAddress.split(',')[0],
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                         ),
                       ],
                     ),
