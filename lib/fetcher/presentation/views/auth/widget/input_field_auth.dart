@@ -13,6 +13,7 @@ class InputFieldAuth extends StatelessWidget {
     this.controller,
     this.onPressed,
     this.onChanged,
+    this.validator,
   });
 
   final String title;
@@ -23,42 +24,38 @@ class InputFieldAuth extends StatelessWidget {
   final bool obscureText;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       onSaved: onSaved,
-      validator: (val) {
-        if (title == AuthString.name) {
-          if (val == null || val.isEmpty) {
-            return AuthString.enterName;
-          }
-          return null;
-        } else if (title == AuthString.email) {
-          if (val == null || val.isEmpty) {
-            return AuthString.enterEmail;
-          } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) {
-            return AuthString.enterValidEmail;
-          }
-          return null;
-        } else if (title == AuthString.password) {
-          if (val == null || val.isEmpty) {
-            return AuthString.enterPassword;
-          } else if (val.length < 6) {
-            return AuthString.enterValidPassword;
-          }
-          return null;
-        } else if (title == AuthString.confirmPassword) {
-          if (val == null || val.isEmpty) {
-            return AuthString.enterConfirmPassword;
-          } else if (controller != null && val != controller!.text) {
-            return AuthString.enterValidConfirmPassword;
-          }
-          return null;
-        } else {
-          return null;
-        }
-      },
+      validator:
+          validator ??
+          (val) {
+            if (title == AuthString.name) {
+              if (val == null || val.isEmpty) {
+                return AuthString.enterName;
+              }
+              return null;
+            } else if (title == AuthString.email) {
+              if (val == null || val.isEmpty) {
+                return AuthString.enterEmail;
+              } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) {
+                return AuthString.enterValidEmail;
+              }
+              return null;
+            } else if (title == AuthString.password) {
+              if (val == null || val.isEmpty) {
+                return AuthString.enterPassword;
+              } else if (val.length < 6) {
+                return AuthString.enterValidPassword;
+              }
+              return null;
+            } else {
+              return null;
+            }
+          },
       onChanged: onChanged,
       controller: controller,
       obscureText: obscureText,

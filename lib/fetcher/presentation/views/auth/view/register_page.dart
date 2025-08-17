@@ -119,6 +119,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             SizedBox(height: height * 0.02),
                             InputFieldAuth(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return AuthString.enterConfirmPassword;
+                                } else if (value != passwordController.text) {
+                                  return AuthString.passwordNotMatch;
+                                }
+                                return null;
+                              },
                               controller: confirmPasswordController,
                               title: AuthString.confirmPassword,
                               icon: visibilityConfirm

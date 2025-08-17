@@ -11,6 +11,8 @@ class UserInfoData {
   String? userCity;
   String? userCountry;
   // UserMessage? userMessage;
+  int? points;
+  int? adsCount;
 
   UserInfoData({
     // this.userMessage,
@@ -23,6 +25,8 @@ class UserInfoData {
     this.userPlace,
     this.userCity,
     this.userCountry,
+    this.points,
+    this.adsCount,
   });
   factory UserInfoData.fromJson(Map<String, dynamic> json) => UserInfoData(
     userId: json['userId'],
@@ -34,6 +38,8 @@ class UserInfoData {
     userPlace: json['userPlace'],
     userCity: json['userCity'],
     userCountry: json['userCountry'],
+    points: json['points'],
+    adsCount: json['adsCount'],
     // userMessage: json['userMessage'] != null
     // ? UserMessage.fromJson(json['userMessage'])
     // : null,
@@ -49,6 +55,8 @@ class UserInfoData {
     'userPlace': userPlace,
     'userCity': userCity,
     'userCountry': userCountry,
+    'points': points,
+    'adsCount': adsCount,
     // 'userMessage': userMessage?.toJson(),
   };
 
@@ -69,7 +77,9 @@ class UserInfoData {
         other.friends == friends &&
         other.userPlace == userPlace &&
         other.userCity == userCity &&
-        other.userCountry == userCountry;
+        other.userCountry == userCountry &&
+        other.points == points &&
+        other.adsCount == adsCount;
   }
 
   @override
@@ -82,7 +92,9 @@ class UserInfoData {
         friends.hashCode ^
         userPlace.hashCode ^
         userCity.hashCode ^
-        userCountry.hashCode;
+        userCountry.hashCode ^
+        points.hashCode ^
+        adsCount.hashCode;
     // userMessage.hashCode;
   }
 
@@ -96,6 +108,8 @@ class UserInfoData {
     String? userPlace,
     String? userCity,
     String? userCountry,
+    int? points,
+    int? adsCount,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -107,6 +121,8 @@ class UserInfoData {
       userPlace: userPlace ?? this.userPlace,
       userCity: userCity ?? this.userCity,
       userCountry: userCountry ?? this.userCountry,
+      points: points ?? this.points,
+      adsCount: adsCount ?? this.adsCount,
     );
   }
 
@@ -119,5 +135,7 @@ class UserInfoData {
       friends = List<String>.from(userInfoData.friends ?? []),
       userPlace = userInfoData.userPlace,
       userCity = userInfoData.userCity,
-      userCountry = userInfoData.userCountry;
+      userCountry = userInfoData.userCountry,
+      points = userInfoData.points,
+      adsCount = userInfoData.adsCount;
 }

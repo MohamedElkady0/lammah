@@ -26,7 +26,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthCubit>().updateLocation();
+    context.read<AuthCubit>().getCurrentLocation();
   }
 
   @override

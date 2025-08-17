@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
+import 'package:lammah/fetcher/presentation/views/chat/views/friends.dart';
 import 'package:lammah/fetcher/presentation/views/chat/widget/pop_chats.dart';
+import 'package:lammah/fetcher/presentation/views/help/help_page.dart';
+import 'package:lammah/fetcher/presentation/views/notes/note_page.dart';
+import 'package:lammah/fetcher/presentation/views/notification/notification_page.dart';
+import 'package:lammah/fetcher/presentation/views/profile/profile_page.dart';
+import 'package:lammah/fetcher/presentation/views/setting/setting_page.dart';
+import 'package:lammah/fetcher/presentation/views/story/story_page.dart';
 
 class SideBarChat extends StatelessWidget {
   const SideBarChat({super.key});
@@ -28,16 +35,43 @@ class SideBarChat extends StatelessWidget {
             ],
             isMenu: true,
             onTap: [
-              () {},
-              () {},
-              () {},
+              () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
+              },
+              () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => SettingPage()));
+              },
+              () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => HelpPage()));
+              },
               () {
                 context.read<AuthCubit>().signOut();
               },
             ],
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
+            },
+            icon: Icon(
+              Icons.notifications,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => Friends(index: 4)),
+              );
+            },
             icon: Icon(
               Icons.groups,
               color: Theme.of(context).colorScheme.onPrimary,
@@ -62,16 +96,33 @@ class SideBarChat extends StatelessWidget {
             dates: ['today', 'yesterday', '2 days ago', '3 days ago'],
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => StoryPage()));
+            },
             icon: Icon(
               Icons.web_stories,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => NotePage()));
+            },
             icon: Icon(
               Icons.event_note,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              context.read<AuthCubit>().updateLocation();
+            },
+            icon: Icon(
+              Icons.gps_fixed,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),

@@ -12,6 +12,7 @@ class AuthString {
   static const String name = 'Name';
   static const String welcomeBack = 'Welcome Back';
   static const String phoneNumber = 'Phone Number';
+  static const String passwordNotMatch = 'Enter confirm password';
 
   static const String enterYourName = 'Enter your name';
   static const String enterYourConfirmPassword = 'Enter your confirm password';
