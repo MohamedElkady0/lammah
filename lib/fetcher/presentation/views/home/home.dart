@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    pages = [ChatW(), News(), Shop(), Enjoyment()];
+    pages = [ChatW(), Shop(), News(), Enjoyment()];
   }
 
   @override

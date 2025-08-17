@@ -18,7 +18,7 @@ class _FriendsState extends State<Friends> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.tertiary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         appBar: appBarFriends(context),
         body: ListView.builder(
           itemCount: 20,
@@ -29,7 +29,7 @@ class _FriendsState extends State<Friends> {
                       onPressed: () {},
                       icon: Icon(
                         Icons.add,
-                        color: Theme.of(context).colorScheme.onTertiary,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     )
                   : null,
@@ -42,13 +42,13 @@ class _FriendsState extends State<Friends> {
               title: Text(
                 'Friend ${index + 1}',
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onTertiary,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
               subtitle: Text(
                 'نبذه نبذه نبذه نبذه نبذه نبذه نبذه ${index + 1}',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  color: Theme.of(context).colorScheme.onTertiary,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
               onTap: () {
@@ -73,9 +73,14 @@ class _FriendsState extends State<Friends> {
             ? SizedBox()
             : PopChats(
                 index: widget.index,
-                title: ['مجموعه جديده', 'الاصدقاء', 'تسجيل الخروج'],
+                title: [
+                  'مجموعه جديده',
+                  'الاصدقاء',
+                  'تسجيل الخروج',
+                  'المستخدمين',
+                ],
                 isMenu: true,
-                color: Theme.of(context).colorScheme.tertiaryFixedDim,
+                color: Theme.of(context).colorScheme.primaryFixedDim,
                 offset: Offset(0, 50),
                 onTap: [
                   () {
@@ -83,6 +88,7 @@ class _FriendsState extends State<Friends> {
                       newCollection = true;
                     });
                   },
+                  () {},
                   () {},
                   () {},
                 ],

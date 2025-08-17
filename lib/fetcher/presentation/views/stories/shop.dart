@@ -6,7 +6,14 @@ class Shop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(body: Center(child: Text('Shop'))),
+      child: Scaffold(
+        body: Center(
+          child: Text(
+            'Shop',
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 }

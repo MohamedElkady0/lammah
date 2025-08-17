@@ -136,10 +136,13 @@ class _SendResChatState extends State<SendResChat> {
                             });
                         control.clear();
                       } catch (e) {
-                        // Handle error
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to send message: $e')),
-                        );
+                        // if (!mounted) {
+                        //   return;
+                        // }
+
+                        // ScaffoldMessenger.of(context).showSnackBar(
+                        //   SnackBar(content: Text('Failed to send message: $e')),
+                        // );
                       }
                     }
                   },

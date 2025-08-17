@@ -12,10 +12,13 @@ class ThemeCubit extends Cubit<ThemeState> {
     loadTheme();
   }
 
+  bool themeModeSwitch = false;
+
   static const String _themeKey = StringApp.themeMode;
 
   void toggleTheme(bool isDark) {
     final newThemeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    themeModeSwitch = !themeModeSwitch;
 
     _saveTheme(newThemeMode);
 
