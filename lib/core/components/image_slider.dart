@@ -10,7 +10,11 @@ class ImageSlider extends StatefulWidget {
 }
 
 class _ImageSliderState extends State<ImageSlider> {
-  List imgList = ['images/s1.jpg', 'images/s2.jpg', 'images/s3.jpg'];
+  List imgList = [
+    'assets/images/console.png',
+    'assets/images/requirements.png',
+    'assets/images/translate.png',
+  ];
   int _currentIndex = 0;
 
   @override

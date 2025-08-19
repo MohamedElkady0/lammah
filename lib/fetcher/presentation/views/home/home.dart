@@ -42,7 +42,9 @@ class _HomePageState extends State<HomePage> {
       },
       child: SafeArea(
         child: Scaffold(
-          body: Center(child: pages.elementAt(_currentIndex)),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+
+          body: pages.elementAt(_currentIndex),
           bottomNavigationBar: NavBar(
             currentIndex: _currentIndex,
             onTabChange: (index) {

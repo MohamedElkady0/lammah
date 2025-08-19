@@ -88,6 +88,7 @@ class NavBar extends StatelessWidget {
                   ],
                 ),
               ),
+
               GButton(
                 icon: FontAwesomeIcons.film,
                 text: StringApp.enjoyment,

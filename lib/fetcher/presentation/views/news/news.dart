@@ -5,15 +5,8 @@ class News extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Center(
-          child: Text(
-            'News',
-            style: TextStyle(fontSize: 20, color: Colors.white),
-          ),
-        ),
-      ),
+    return Center(
+      child: Text('News', style: TextStyle(fontSize: 20, color: Colors.white)),
     );
   }
 }
