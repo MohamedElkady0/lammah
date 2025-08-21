@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/core/utils/auth_string.dart';
+import 'package:lammah/fetcher/presentation/views/stories/views/new_shop.dart';
 
 class AppBarShop extends StatelessWidget {
   const AppBarShop({super.key});
@@ -12,7 +13,11 @@ class AppBarShop extends StatelessWidget {
       actions: [
         InkWell(
           borderRadius: BorderRadius.circular(15),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (context) => const NewShop()));
+          },
           child: Stack(
             children: [
               Image.asset('assets/images/save-money.png', width: 35),
