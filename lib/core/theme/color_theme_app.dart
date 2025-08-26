@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class ColorThemeApp {
@@ -21,10 +23,14 @@ class ColorThemeApp {
   static ColorScheme lightColorScheme = ColorScheme.fromSeed(
     seedColor: backgroundColor,
     brightness: Brightness.light,
+    surface: primaryColor,
+    background: backgroundColor,
   );
 
   static ColorScheme darkColorScheme = ColorScheme.fromSeed(
-    seedColor: primaryColor,
+    seedColor: c6,
     brightness: Brightness.dark,
+    surface: c8,
+    background: primaryColor,
   );
 }

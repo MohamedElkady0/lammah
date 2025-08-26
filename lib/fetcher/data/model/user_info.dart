@@ -13,6 +13,7 @@ class UserInfoData {
   // UserMessage? userMessage;
   int? points;
   int? adsCount;
+  String? language;
 
   UserInfoData({
     // this.userMessage,
@@ -27,6 +28,7 @@ class UserInfoData {
     this.userCountry,
     this.points,
     this.adsCount,
+    this.language,
   });
   factory UserInfoData.fromJson(Map<String, dynamic> json) => UserInfoData(
     userId: json['userId'],
@@ -40,6 +42,7 @@ class UserInfoData {
     userCountry: json['userCountry'],
     points: json['points'],
     adsCount: json['adsCount'],
+    language: json['language'],
     // userMessage: json['userMessage'] != null
     // ? UserMessage.fromJson(json['userMessage'])
     // : null,
@@ -57,6 +60,7 @@ class UserInfoData {
     'userCountry': userCountry,
     'points': points,
     'adsCount': adsCount,
+    'language': language,
     // 'userMessage': userMessage?.toJson(),
   };
 
@@ -79,7 +83,8 @@ class UserInfoData {
         other.userCity == userCity &&
         other.userCountry == userCountry &&
         other.points == points &&
-        other.adsCount == adsCount;
+        other.adsCount == adsCount &&
+        other.language == language;
   }
 
   @override
@@ -94,7 +99,8 @@ class UserInfoData {
         userCity.hashCode ^
         userCountry.hashCode ^
         points.hashCode ^
-        adsCount.hashCode;
+        adsCount.hashCode ^
+        language.hashCode;
     // userMessage.hashCode;
   }
 
@@ -110,6 +116,7 @@ class UserInfoData {
     String? userCountry,
     int? points,
     int? adsCount,
+    String? language,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -123,6 +130,7 @@ class UserInfoData {
       userCountry: userCountry ?? this.userCountry,
       points: points ?? this.points,
       adsCount: adsCount ?? this.adsCount,
+      language: language ?? this.language,
     );
   }
 
@@ -137,5 +145,6 @@ class UserInfoData {
       userCity = userInfoData.userCity,
       userCountry = userInfoData.userCountry,
       points = userInfoData.points,
-      adsCount = userInfoData.adsCount;
+      adsCount = userInfoData.adsCount,
+      language = userInfoData.language;
 }
