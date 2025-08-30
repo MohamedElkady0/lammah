@@ -16,4 +16,6 @@ class StringApp {
   static const String store = 'المتجر';
   static const String news = 'الأخبار';
   static const String enjoyment = 'ترفيه';
+  static const String iCorrect = '✅';
+  static const String iWrong = '❌';
 }

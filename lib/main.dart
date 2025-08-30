@@ -9,6 +9,7 @@ import 'package:lammah/fetcher/data/service/notification_service.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/domian/notification/notification_cubit.dart';
 import 'package:lammah/fetcher/domian/theme/theme_cubit.dart';
+import 'package:lammah/fetcher/domian/upload/image_upload_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/Introduction.dart';
 import 'package:lammah/fetcher/presentation/views/auth/view/welcome_page.dart';
 import 'package:lammah/fetcher/presentation/views/home/home.dart';
@@ -45,6 +46,7 @@ class Lammah extends StatelessWidget {
           create: (context) =>
               NotificationCubit(notificationService)..requestPermissions(),
         ),
+        BlocProvider(create: (context) => ImageUploadCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

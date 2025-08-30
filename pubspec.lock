@@ -225,6 +225,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  file_picker:
+    dependency: "direct main"
+    description:
+      name: file_picker
+      sha256: e7e16c9d15c36330b94ca0e2ad8cb61f93cd5282d0158c09805aed13b5452f22
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.3.2"
   file_selector_linux:
     dependency: transitive
     description:
@@ -435,6 +443,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.28"
+  flutter_reorderable_grid_view:
+    dependency: transitive
+    description:
+      name: flutter_reorderable_grid_view
+      sha256: bbaea92595e3d3a08313aea21540723bd383006fdb86ef4b6b92c453c04dc3b8
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.5.1"
   flutter_staggered_animations:
     dependency: "direct main"
     description:
@@ -893,6 +909,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  multi_image_picker_view:
+    dependency: "direct main"
+    description:
+      name: multi_image_picker_view
+      sha256: aa9f81fcbb27762193da659fde9c035a9d6f10828cf688d2fd45fdd012c884b5
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   nested:
     dependency: transitive
     description:
@@ -934,7 +958,7 @@ packages:
     source: hosted
     version: "1.1.0"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
@@ -1021,6 +1045,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  pro_image_editor:
+    dependency: "direct main"
+    description:
+      name: pro_image_editor
+      sha256: df25475c7df5fb90c36f7ede774c7c14b83d862148ed5ab77f09a0dd120ec159
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.3.0"
   proj4dart:
     dependency: transitive
     description:
@@ -1348,4 +1380,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.8.1 <4.0.0"
-  flutter: ">=3.27.0"
+  flutter: ">=3.32.0"
