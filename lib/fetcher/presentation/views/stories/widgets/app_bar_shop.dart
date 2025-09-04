@@ -32,10 +32,8 @@ class AppBarShop extends StatelessWidget {
       ],
       title: Image.asset(AuthString.logo, width: 50),
       centerTitle: true,
-      leading: IconButton(
-        onPressed: () {},
-        icon: Icon(Icons.notifications, size: 25),
-      ),
     );
   }
+
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

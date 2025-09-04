@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/core/cart/cart_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/cart_point.dart';
 
 class GridPoint extends StatelessWidget {
   const GridPoint({super.key});

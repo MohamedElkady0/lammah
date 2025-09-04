@@ -44,7 +44,8 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.primary,
 
-          body: pages.elementAt(_currentIndex),
+          body: IndexedStack(index: _currentIndex, children: pages),
+
           bottomNavigationBar: NavBar(
             currentIndex: _currentIndex,
             onTabChange: (index) {

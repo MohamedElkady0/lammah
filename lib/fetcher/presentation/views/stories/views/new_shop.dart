@@ -1,45 +1,104 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/button_style.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/input_new_shop.dart';
+import 'package:lammah/core/components/custom_dropdown.dart';
+import 'package:lammah/fetcher/data/const/list_shop.dart';
+import 'package:lammah/fetcher/presentation/widgets/button_image.dart';
+import 'package:lammah/fetcher/presentation/widgets/button_style.dart';
+import 'package:lammah/fetcher/presentation/widgets/input_new_item.dart';
 
-class NewShop extends StatelessWidget {
+class NewShop extends StatefulWidget {
   const NewShop({super.key});
+
+  @override
+  State<NewShop> createState() => _NewShopState();
+}
+
+class _NewShopState extends State<NewShop> {
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController imageController = TextEditingController();
+  final TextEditingController urlController = TextEditingController();
+  final TextEditingController sourceController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    imageController.dispose();
+    urlController.dispose();
+    sourceController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Add New Shop',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          centerTitle: true,
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        appBar: AppBar(title: const Text('new Item'), centerTitle: true),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 10.0),
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  InputNewItem(
+                    title: 'title',
+                    controller: titleController,
+                    isValidator: true,
+                  ),
+                  const SizedBox(height: 10),
+                  InputNewItem(
+                    title: 'description',
+                    maxLines: 5,
+                    controller: descriptionController,
+                    isValidator: true,
+                  ),
+                  const SizedBox(height: 10),
+                  InputNewItem(
+                    title: 'link image',
+                    controller: imageController,
+                    isValidator: false,
+                  ),
+                  const SizedBox(height: 10),
+                  InputNewItem(
+                    title: 'link',
+                    controller: urlController,
+                    isValidator: false,
+                  ),
+                  const SizedBox(height: 10),
+                  InputNewItem(
+                    title: 'price',
+                    controller: sourceController,
+                    isValidator: true,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 10),
+                  CustomDropdown(
+                    letterList: ListShop.category,
+                    title: 'category',
+                  ),
 
-                const SizedBox(height: 10.0),
-                InputNewShop(
-                  title: 'title',
-                  keyboardType: TextInputType.text,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 10.0),
-                InputNewShop(
-                  title: 'description',
-                  keyboardType: TextInputType.multiline,
-                  maxLines: 5,
-                ),
+                  ButtonImage(),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 10.0),
-                InputNewShop(
-                  title: 'price',
-                  keyboardType: TextInputType.number,
-                ),
-
-                const SizedBox(height: 10.0),
-                ButtonAppStyle(title: 'save', icon: Icons.save),
-              ],
+                  ButtonAppStyle(
+                    title: "تحميل",
+                    onPressed: () {},
+                    icon: Icons.upload,
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),

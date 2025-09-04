@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lammah/fetcher/domian/upload/image_upload_cubit.dart';
+// import 'package:lammah/fetcher/domian/upload/image_upload_cubit.dart';
 import 'package:multi_image_picker_view/multi_image_picker_view.dart';
 import 'dart:typed_data';
 import 'package:pro_image_editor/pro_image_editor.dart';
@@ -114,7 +114,7 @@ class _ButtonImageState extends State<ButtonImage> {
           MultiImagePickerView(
             onDragBoxDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.primary.withAlpha(100),
               border: Border.all(color: Colors.grey[300]!),
               boxShadow: [
                 BoxShadow(
@@ -138,7 +138,9 @@ class _ButtonImageState extends State<ButtonImage> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey[300],
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withAlpha(100),
                 ),
                 child: const Icon(Icons.add, size: 50, color: Colors.white),
               ),
@@ -189,37 +191,42 @@ class _ButtonImageState extends State<ButtonImage> {
               );
             },
           ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: () {
-              final images = controller.images;
-              if (images.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('لم يتم اختيار أي صورة بعد!')),
-                );
-                return;
-              }
+          // const SizedBox(height: 30),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     final images = controller.images;
+          //     if (images.isEmpty) {
+          //       ScaffoldMessenger.of(context).showSnackBar(
+          //         const SnackBar(content: Text('لم يتم اختيار أي صورة بعد!')),
+          //       );
+          //       return;
+          //     }
 
-              context.read<ImageUploadCubit>().uploadImages(images.toList());
+          //     context.read<ImageUploadCubit>().uploadImages(images.toList());
 
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('الصور المختارة (${images.length})'),
-                    content: Text(images.map((e) => e.name).join('\n')),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('حسناً'),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: const Text('عرض أسماء الصور المختارة'),
-          ),
+          //     showDialog(
+          //       context: context,
+          //       builder: (context) {
+          //         return AlertDialog(
+          //           title: Text('الصور المختارة (${images.length})'),
+          //           content: Text(images.map((e) => e.name).join('\n')),
+          //           actions: [
+          //             TextButton(
+          //               onPressed: () => Navigator.pop(context),
+          //               child: const Text('حسناً'),
+          //             ),
+          //           ],
+          //         );
+          //       },
+          //     );
+          //   },
+          //   style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
+          //     backgroundColor: WidgetStateProperty.all(
+          //       Theme.of(context).colorScheme.primaryContainer.withAlpha(50),
+          //     ),
+          //   ),
+          //   child: const Text('تحميل'),
+          // ),
         ],
       ),
     );

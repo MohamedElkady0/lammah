@@ -18,40 +18,44 @@ class _ChatWState extends State<ChatW> {
     ConfigApp.initConfig(context);
     double w = ConfigApp.width;
     double h = ConfigApp.height;
-    return Stack(
-      children: [
-        MapScreen(),
-        Container(
-          height: h,
-          width: w,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary.withAlpha(30),
-          ),
-        ),
-        Positioned(
-          top: w * 0.1,
-          left: w * 0.05 + 60,
-          right: w * 0.05,
-          child: SearchApp(),
-        ),
-
-        Positioned(
-          bottom: w * 0.1,
-          left: w * 0.05,
-          right: w * 0.05,
-          child: ElevatedButton.icon(
-            style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
-              backgroundColor: WidgetStatePropertyAll(
-                Theme.of(context).colorScheme.primary.withAlpha(100),
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            MapScreen(),
+            Container(
+              height: h,
+              width: w,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiary.withAlpha(30),
               ),
             ),
-            onPressed: () {},
-            icon: const Icon(Icons.airplanemode_on),
-            label: const Text(ChatString.startChat),
-          ),
+            Positioned(
+              top: w * 0.1,
+              left: w * 0.05 + 60,
+              right: w * 0.05,
+              child: SearchApp(),
+            ),
+
+            Positioned(
+              bottom: w * 0.1,
+              left: w * 0.05,
+              right: w * 0.05,
+              child: ElevatedButton.icon(
+                style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
+                  backgroundColor: WidgetStatePropertyAll(
+                    Theme.of(context).colorScheme.primary.withAlpha(100),
+                  ),
+                ),
+                onPressed: () {},
+                icon: const Icon(Icons.airplanemode_on),
+                label: const Text(ChatString.startChat),
+              ),
+            ),
+            Positioned(left: w * 0.05, top: w * 0.1, child: SideBarChat()),
+          ],
         ),
-        Positioned(left: w * 0.05, top: w * 0.1, child: SideBarChat()),
-      ],
+      ),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/tap_bar_shop.dart';
+import 'package:lammah/fetcher/presentation/widgets/tap_bar_shop.dart';
 
 class HeaderShop extends StatefulWidget {
   const HeaderShop({super.key});
