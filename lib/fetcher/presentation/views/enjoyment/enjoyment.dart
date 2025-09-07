@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/widgets/drawer_main.dart';
+import 'package:lammah/fetcher/presentation/views/enjoyment/widget/drawer_enjoy.dart';
 
 class Enjoyment extends StatelessWidget {
-  const Enjoyment({super.key});
+  const Enjoyment({super.key, required this.scaffoldKey});
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   @override
   Widget build(BuildContext context) {
+    print("News page build: Using key ${scaffoldKey.hashCode}");
     return Scaffold(
+      drawer: DrawerEnjoy(),
+      appBar: AppBar(
+        title: Text('News'),
+        // leading: IconButton(
+        //   icon: Icon(Icons.menu),
+        //   onPressed: () {
+        //     Scaffold.of(context).openDrawer();
+        //   },
+        // ),
+      ),
+      key: scaffoldKey,
+
       backgroundColor: Theme.of(context).colorScheme.primary,
-      drawer: DrawerMain(),
+
       body: SafeArea(
         child: Center(
           child: Text(

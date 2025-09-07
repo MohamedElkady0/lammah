@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -183,68 +185,72 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
 
   Future<void> getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+    try {
+      bool serviceEnabled;
+      LocationPermission permission;
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      currentAddress =
-          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-      currentPosition = LatLng(0, 0);
-      emit(AuthFailure(message: AuthString.noLocation));
-
-      isLoading = false;
-
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      currentAddress =
-          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-      currentPosition = LatLng(0, 0);
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         currentAddress =
             '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
         currentPosition = LatLng(0, 0);
-        emit(AuthFailure(message: AuthString.noAddress));
 
+        await Geolocator.openLocationSettings();
+
+        emit(
+          AuthFailure(
+            message: "يرجى تفعيل خدمة تحديد المواقع والمحاولة مرة أخرى.",
+          ),
+        );
         isLoading = false;
-
         return;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      currentAddress =
-          '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-      currentPosition = LatLng(0, 0);
-      emit(AuthFailure(message: AuthString.noAddressSelected));
-      isLoading = false;
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          currentAddress =
+              '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+          currentPosition = LatLng(0, 0);
+          emit(AuthFailure(message: AuthString.noAddress));
+          isLoading = false;
+          return;
+        }
+      }
 
-      return;
-    }
+      if (permission == LocationPermission.deniedForever) {
+        currentAddress =
+            '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+        currentPosition = LatLng(0, 0);
+        emit(AuthFailure(message: AuthString.noAddressSelected));
+        isLoading = false;
 
-    try {
+        // await Geolocator.openAppSettings();
+        return;
+      }
+
+      isLoading = true;
+      emit(AuthLoading());
+
       Position position = await Geolocator.getCurrentPosition(
-        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
       );
 
       final newPosition = LatLng(position.latitude, position.longitude);
-
       currentPosition = newPosition;
+
+      await getAddressFromLatLng(position);
+
       isLoading = false;
-
-      getAddressFromLatLng(position);
-
       emit(LocationUpdateSuccess(newPosition));
     } catch (e) {
-      debugPrint("Error getting location: $e");
+      debugPrint("Error in getCurrentLocation: $e");
       currentAddress =
           "خطأ في تحديد الموقع: ${e.toString()},${AuthString.unknown},${AuthString.unknown}";
+      currentPosition = LatLng(0, 0);
       isLoading = false;
+      emit(AuthFailure(message: "حدث خطأ أثناء محاولة تحديد موقعك."));
     }
   }
   //----------------------------------------------------------------------------

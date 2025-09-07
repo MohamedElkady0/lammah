@@ -1,0 +1,26 @@
+class ListNews {
+  static const List<String> category = [
+    'Top News',
+    'Sports',
+    'Business',
+    'Technology',
+    'Entertainment',
+    'Health',
+    'Science',
+    'Politics',
+    'World',
+    'US',
+    'UK',
+    'India',
+    'Australia',
+    'Canada',
+    'Germany',
+    'France',
+    'Italy',
+    'Spain',
+    'Russia',
+    'Japan',
+    'China',
+    'Egypt',
+  ];
+}

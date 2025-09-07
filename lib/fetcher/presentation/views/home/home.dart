@@ -21,10 +21,43 @@ class _HomePageState extends State<HomePage> {
 
   late List<Widget> pages;
 
+  final List<GlobalKey<ScaffoldState>> _scaffoldKeys = [
+    GlobalKey<ScaffoldState>(),
+    GlobalKey<ScaffoldState>(),
+    GlobalKey<ScaffoldState>(),
+    GlobalKey<ScaffoldState>(),
+  ];
+  void _onItemTapped(int index) {
+    if (_currentIndex == index) return;
+
+    final keyToClose = _scaffoldKeys[_currentIndex];
+
+    final scaffoldState = keyToClose.currentState;
+
+    if (scaffoldState == null) {
+      debugPrint(
+        "!!! ERROR: currentState is NULL. The key is not attached to a Scaffold in page index $_currentIndex.",
+      );
+    } else {
+      if (scaffoldState.isDrawerOpen) {
+        scaffoldState.closeDrawer();
+      }
+    }
+
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    pages = [ChatW(), Shop(), News(), Enjoyment()];
+    pages = [
+      ChatW(),
+      Shop(scaffoldKey: _scaffoldKeys[1]),
+      News(scaffoldKey: _scaffoldKeys[2]),
+      Enjoyment(scaffoldKey: _scaffoldKeys[3]),
+    ];
   }
 
   @override
@@ -48,11 +81,7 @@ class _HomePageState extends State<HomePage> {
 
           bottomNavigationBar: NavBar(
             currentIndex: _currentIndex,
-            onTabChange: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+            onTabChange: _onItemTapped,
           ),
         ),
       ),

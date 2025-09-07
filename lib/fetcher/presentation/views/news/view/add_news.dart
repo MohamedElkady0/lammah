@@ -54,10 +54,7 @@ class _AddNewsState extends State<AddNews> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  Image.asset(
-                    'assets/images/publication.png',
-                    height: height * 0.3,
-                  ),
+                  Image.asset('assets/images/news1.png', height: height * 0.3),
                   const SizedBox(height: 20),
                   InputNewItem(
                     title: 'title',

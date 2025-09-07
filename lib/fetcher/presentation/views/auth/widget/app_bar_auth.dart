@@ -14,8 +14,8 @@ class AppBarAuth extends StatelessWidget implements PreferredSizeWidget {
       actions: [Image.asset(AuthString.logo)],
 
       centerTitle: true,
-      backgroundColor: Theme.of(context).colorScheme.onPrimary,
-      foregroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      foregroundColor: Theme.of(context).colorScheme.onPrimary,
     );
   }
 

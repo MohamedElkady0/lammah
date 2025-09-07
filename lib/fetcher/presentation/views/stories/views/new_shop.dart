@@ -51,6 +51,12 @@ class _NewShopState extends State<NewShop> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
+                  Image.asset(
+                    'assets/images/payment.png',
+                    height: 100,
+                    fit: BoxFit.fill,
+                  ),
+                  const SizedBox(height: 20),
                   InputNewItem(
                     title: 'title',
                     controller: titleController,
