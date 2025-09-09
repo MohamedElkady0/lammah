@@ -79,26 +79,52 @@ class DrawerShop extends StatelessWidget {
                 ),
               ),
             ),
-
-            Divider(
-              thickness: 1,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            for (var i = 0; i < ListShop.category.length; i++)
-              ListTile(
-                onTap: () {},
-                leading: Icon(
-                  ListShop.iconShop[i],
+            ListTile(
+              onTap: () {},
+              leading: Icon(
+                Icons.notifications,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
+              title: Text(
+                'Notifications',
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   color: Theme.of(context).colorScheme.onPrimary,
-                  size: 20,
-                ),
-                title: Text(
-                  ListShop.category[i],
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
                 ),
               ),
+            ),
+
+            ExpansionTile(
+              iconColor: Theme.of(context).colorScheme.onPrimary,
+              title: Text(
+                'Category',
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+              leading: Icon(
+                Icons.category,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
+              children: [
+                for (var i = 0; i < ListShop.category.length; i++)
+                  ListTile(
+                    onTap: () {},
+                    leading: Icon(
+                      ListShop.iconShop[i],
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      size: 20,
+                    ),
+                    title: Text(
+                      ListShop.category[i],
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),

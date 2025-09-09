@@ -81,6 +81,7 @@ dependencies:
   multi_image_picker_view: ^3.0.0
   pro_image_editor: ^11.3.0
   path_provider: ^2.1.5
+  dropdown_button2: ^2.3.9
 
   
   

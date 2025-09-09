@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/core/components/custom_dropdown.dart';
 import 'package:lammah/fetcher/data/const/list_shop.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_image.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_style.dart';
+import 'package:lammah/fetcher/presentation/widgets/drop2.dart';
 import 'package:lammah/fetcher/presentation/widgets/input_new_item.dart';
 
 class NewShop extends StatefulWidget {
@@ -52,8 +52,8 @@ class _NewShopState extends State<NewShop> {
                 children: [
                   const SizedBox(height: 20),
                   Image.asset(
-                    'assets/images/payment.png',
-                    height: 100,
+                    'assets/images/online-shopping.png',
+                    height: 200,
                     fit: BoxFit.fill,
                   ),
                   const SizedBox(height: 20),
@@ -89,10 +89,8 @@ class _NewShopState extends State<NewShop> {
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 10),
-                  CustomDropdown(
-                    letterList: ListShop.category,
-                    title: 'category',
-                  ),
+
+                  MyCustomDropdown(items: ListShop.category),
 
                   ButtonImage(),
                   const SizedBox(height: 20),

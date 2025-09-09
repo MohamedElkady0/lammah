@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
     pages = [
       ChatW(),
       Shop(scaffoldKey: _scaffoldKeys[1]),
-      News(scaffoldKey: _scaffoldKeys[2]),
+      NewsView(scaffoldKey: _scaffoldKeys[2]),
       Enjoyment(scaffoldKey: _scaffoldKeys[3]),
     ];
   }

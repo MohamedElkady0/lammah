@@ -25,7 +25,7 @@ class DrawerNews extends StatelessWidget {
                   end: Alignment.topCenter,
                 ),
                 image: DecorationImage(
-                  image: AssetImage('assets/images/online-shopping.png'),
+                  image: AssetImage('assets/images/newspaper1.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -80,21 +80,33 @@ class DrawerNews extends StatelessWidget {
               ),
             ),
 
-            Divider(
-              thickness: 1,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            for (var i = 0; i < ListNews.category.length; i++)
-              ListTile(
-                onTap: () {},
-
-                title: Text(
-                  ListNews.category[i],
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+            ExpansionTile(
+              iconColor: Theme.of(context).colorScheme.onPrimary,
+              title: Text(
+                'Category',
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
+              leading: Icon(
+                Icons.category,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
+              children: [
+                for (var i = 0; i < ListNews.category.length; i++)
+                  ListTile(
+                    onTap: () {},
+
+                    title: Text(
+                      ListNews.category[i],
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),

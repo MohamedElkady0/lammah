@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/chat/widget/pop_chats.dart';
+import 'package:lammah/fetcher/presentation/widgets/pop_app.dart';
 
 class Friends extends StatefulWidget {
   const Friends({super.key, required this.index});
@@ -71,7 +71,7 @@ class _FriendsState extends State<Friends> {
         ),
         isSearch
             ? SizedBox()
-            : PopChats(
+            : PopApp(
                 index: widget.index,
                 title: [
                   'مجموعه جديده',

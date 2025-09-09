@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/chat/views/friends.dart';
-import 'package:lammah/fetcher/presentation/views/chat/widget/pop_chats.dart';
+import 'package:lammah/fetcher/presentation/widgets/pop_app.dart';
 import 'package:lammah/fetcher/presentation/views/help/help_page.dart';
 import 'package:lammah/fetcher/presentation/views/notes/note_page.dart';
 import 'package:lammah/fetcher/presentation/views/notification/notification_page.dart';
@@ -24,7 +24,7 @@ class SideBarChat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PopChats(
+          PopApp(
             offset: const Offset(50, 0),
             index: 4,
             title: [
@@ -77,7 +77,7 @@ class SideBarChat extends StatelessWidget {
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
-          PopChats(
+          PopApp(
             icon: Icon(
               Icons.chat_bubble_outline,
               color: Theme.of(context).colorScheme.onPrimary,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/fetcher/presentation/views/chat/widget/pop_menu.dart';
 
-class PopChats extends StatelessWidget {
-  const PopChats({
+class PopApp extends StatelessWidget {
+  const PopApp({
     super.key,
     required this.index,
     required this.title,

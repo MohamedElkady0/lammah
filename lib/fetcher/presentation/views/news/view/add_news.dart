@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/core/components/custom_dropdown.dart';
 import 'package:lammah/core/config/config_app.dart';
+import 'package:lammah/fetcher/data/const/list_news.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_image.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_style.dart';
+import 'package:lammah/fetcher/presentation/widgets/drop2.dart';
 import 'package:lammah/fetcher/presentation/widgets/input_new_item.dart';
 
 class AddNews extends StatefulWidget {
@@ -87,19 +88,8 @@ class _AddNewsState extends State<AddNews> {
                     isValidator: false,
                   ),
                   const SizedBox(height: 10),
-                  CustomDropdown(
-                    letterList: [
-                      'general',
-                      'sport',
-                      'entertainment',
-                      'science',
-                      'technology',
-                      'business',
-                      'health',
-                      'lifestyle',
-                    ],
-                    title: 'category',
-                  ),
+
+                  MyCustomDropdown(items: ListNews.category),
 
                   ButtonImage(),
                   const SizedBox(height: 20),
