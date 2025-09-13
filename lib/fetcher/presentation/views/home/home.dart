@@ -7,6 +7,7 @@ import 'package:lammah/fetcher/presentation/views/chat/chat_home.dart';
 import 'package:lammah/fetcher/presentation/views/enjoyment/enjoyment.dart';
 import 'package:lammah/fetcher/presentation/views/home/widget/nav_bar.dart';
 import 'package:lammah/fetcher/presentation/views/news/news.dart';
+import 'package:lammah/fetcher/presentation/views/profile/profile_page.dart';
 import 'package:lammah/fetcher/presentation/views/stories/shop.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   late List<Widget> pages;
 
   final List<GlobalKey<ScaffoldState>> _scaffoldKeys = [
+    GlobalKey<ScaffoldState>(),
     GlobalKey<ScaffoldState>(),
     GlobalKey<ScaffoldState>(),
     GlobalKey<ScaffoldState>(),
@@ -57,6 +59,7 @@ class _HomePageState extends State<HomePage> {
       Shop(scaffoldKey: _scaffoldKeys[1]),
       NewsView(scaffoldKey: _scaffoldKeys[2]),
       Enjoyment(scaffoldKey: _scaffoldKeys[3]),
+      ProfilePage(scaffoldKey: _scaffoldKeys[4]),
     ];
   }
 

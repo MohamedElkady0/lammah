@@ -11,8 +11,8 @@ class GridPoint extends StatelessWidget {
       shrinkWrap: true,
       itemCount: 10,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
+        mainAxisSpacing: 1,
+        crossAxisSpacing: 2,
         crossAxisCount: 2,
       ),
       itemBuilder: (context, index) {

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/fetcher/presentation/views/stories/views/new_shop.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/big_save.dart';
 import 'package:lammah/fetcher/presentation/views/stories/widgets/category_buttons_shop.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/discount_fifty.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/fashion_scroll.dart';
 import 'package:lammah/fetcher/presentation/views/stories/widgets/grid_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/super_show.dart';
 import 'package:lammah/fetcher/presentation/widgets/top_widget.dart';
 import 'package:lammah/fetcher/presentation/views/stories/widgets/drawer_shop.dart';
 import 'package:lammah/fetcher/presentation/widgets/search_app.dart';
@@ -73,7 +77,15 @@ class _ShopState extends State<Shop> {
                 ),
                 SizedBox(height: 10),
                 CategoryButtonsShop(),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
+                BigSave(),
+                SizedBox(height: 10),
+                DiscountFifty(),
+                SizedBox(height: 10),
+                SuperShow(),
+                SizedBox(height: 10),
+                FashionScroll(),
+                SizedBox(height: 10),
                 GridPoint(),
               ],
             ),

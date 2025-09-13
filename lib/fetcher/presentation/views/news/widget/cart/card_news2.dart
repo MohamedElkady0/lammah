@@ -22,7 +22,7 @@ class CartNews2 extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         color: Theme.of(context).colorScheme.primary.withAlpha(200),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2),
+          padding: const EdgeInsets.all(2.0),
           child: Stack(
             children: [
               Row(

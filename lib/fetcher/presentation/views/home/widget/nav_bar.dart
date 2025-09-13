@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:lammah/core/utils/string_app.dart';
 
 class NavBar extends StatelessWidget {
   const NavBar({super.key, required this.currentIndex, this.onTabChange});
@@ -19,48 +18,39 @@ class NavBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
           child: GNav(
-            rippleColor: Theme.of(
-              context,
-            ).colorScheme.onPrimary, // tab button ripple color when pressed
-            hoverColor: Theme.of(
-              context,
-            ).colorScheme.tertiary, // tab button hover color
-            haptic: true, // haptic feedback
+            rippleColor: Theme.of(context).colorScheme.onPrimary,
+            hoverColor: Theme.of(context).colorScheme.tertiary,
+            haptic: true,
             tabBorderRadius: 15,
             tabActiveBorder: Border.all(
               color: Theme.of(context).colorScheme.tertiary,
               width: 1,
-            ), // tab button border
+            ),
             tabBorder: Border.all(
               color: Theme.of(context).colorScheme.primary.withAlpha(100),
               width: 1,
-            ), // tab button border
+            ),
             tabShadow: [
               BoxShadow(
                 color: Theme.of(context).colorScheme.onPrimary.withAlpha(50),
                 blurRadius: 8,
               ),
-            ], // tab button shadow
-            curve: Curves.easeOutExpo, // tab animation curves
-            // tab animation duration
-            gap: 8, // the tab button gap between icon and text
-            color: Theme.of(
-              context,
-            ).colorScheme.onPrimary, // unselected icon color
-            activeColor: Theme.of(
-              context,
-            ).colorScheme.primary, // selected icon and text color
-            iconSize: 24, // tab button icon size
-            tabBackgroundColor: Theme.of(
-              context,
-            ).colorScheme.onPrimary, // selected tab background color
+            ],
+            curve: Curves.easeOutExpo,
+
+            gap: 8,
+            color: Theme.of(context).colorScheme.onPrimary,
+            activeColor: Theme.of(context).colorScheme.primary,
+
+            tabBackgroundColor: Theme.of(context).colorScheme.onPrimary,
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             duration: Duration(milliseconds: 100),
 
             tabs: [
               GButton(
+                iconSize: 16,
                 icon: FontAwesomeIcons.house,
-                text: StringApp.chats,
+                text: '',
                 backgroundGradient: RadialGradient(
                   colors: [
                     Theme.of(context).colorScheme.onPrimary.withAlpha(50),
@@ -69,8 +59,9 @@ class NavBar extends StatelessWidget {
                 ),
               ),
               GButton(
+                iconSize: 16,
                 icon: FontAwesomeIcons.store,
-                text: StringApp.store,
+                text: '',
                 backgroundGradient: RadialGradient(
                   colors: [
                     Theme.of(context).colorScheme.onPrimary.withAlpha(50),
@@ -79,8 +70,9 @@ class NavBar extends StatelessWidget {
                 ),
               ),
               GButton(
+                iconSize: 16,
                 icon: FontAwesomeIcons.newspaper,
-                text: StringApp.news,
+                text: '',
                 backgroundGradient: RadialGradient(
                   colors: [
                     Theme.of(context).colorScheme.onPrimary.withAlpha(50),
@@ -90,8 +82,20 @@ class NavBar extends StatelessWidget {
               ),
 
               GButton(
+                iconSize: 16,
                 icon: FontAwesomeIcons.film,
-                text: StringApp.enjoyment,
+                text: '',
+                backgroundGradient: RadialGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.onPrimary.withAlpha(50),
+                    Theme.of(context).colorScheme.onPrimary.withAlpha(100),
+                  ],
+                ),
+              ),
+              GButton(
+                iconSize: 16,
+                icon: FontAwesomeIcons.person,
+                text: '',
                 backgroundGradient: RadialGradient(
                   colors: [
                     Theme.of(context).colorScheme.onPrimary.withAlpha(50),

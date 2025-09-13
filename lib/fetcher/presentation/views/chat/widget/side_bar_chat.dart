@@ -7,7 +7,6 @@ import 'package:lammah/fetcher/presentation/widgets/pop_app.dart';
 import 'package:lammah/fetcher/presentation/views/help/help_page.dart';
 import 'package:lammah/fetcher/presentation/views/notes/note_page.dart';
 import 'package:lammah/fetcher/presentation/views/notification/notification_page.dart';
-import 'package:lammah/fetcher/presentation/views/profile/profile_page.dart';
 import 'package:lammah/fetcher/presentation/views/setting/setting_page.dart';
 import 'package:lammah/fetcher/presentation/views/story/story_page.dart';
 
@@ -35,11 +34,7 @@ class SideBarChat extends StatelessWidget {
             ],
             isMenu: true,
             onTap: [
-              () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => ProfilePage()));
-              },
+              () {},
               () {
                 Navigator.of(
                   context,

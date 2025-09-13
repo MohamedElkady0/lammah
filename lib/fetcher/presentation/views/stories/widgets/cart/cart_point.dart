@@ -5,10 +5,18 @@ class CartPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.brown,
-      width: MediaQuery.of(context).size.width * .1,
-      height: MediaQuery.of(context).size.height * 0.1,
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+      elevation: 4,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        color: Colors.brown,
+        width: MediaQuery.of(context).size.width * .4,
+        height: MediaQuery.of(context).size.height * 0.3,
+      ),
     );
   }
 }
