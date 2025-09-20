@@ -1,6 +1,6 @@
 import 'dart:async'; // Required for the Timer
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/cart_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_super_show.dart';
 
 class SuperShow extends StatefulWidget {
   const SuperShow({super.key});
@@ -145,7 +145,7 @@ class _SuperShowState extends State<SuperShow> {
                       Text(
                         'ينتهي في',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
@@ -190,7 +190,9 @@ class _SuperShowState extends State<SuperShow> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             reverse: true,
-            child: Row(children: [for (int i = 0; i < 10; i++) CartPoint()]),
+            child: Row(
+              children: [for (int i = 0; i < 10; i++) CardSuperShow()],
+            ),
           ),
           const SizedBox(height: 10),
         ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/cart_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_bigsave.dart';
 
 class BigSave extends StatelessWidget {
   const BigSave({super.key});
@@ -62,7 +62,7 @@ class BigSave extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             reverse: true,
-            child: Row(children: [for (int i = 0; i < 10; i++) CartPoint()]),
+            child: Row(children: [for (int i = 0; i < 10; i++) CardBigsave()]),
           ),
         ],
       ),

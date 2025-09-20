@@ -90,7 +90,24 @@ class _NewShopState extends State<NewShop> {
                   ),
                   const SizedBox(height: 10),
 
-                  MyCustomDropdown(items: ListShop.category),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Category',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      MyCustomDropdown(
+                        items: ListShop.category,
+                        iconItems: ListShop.iconShop,
+                      ),
+                    ],
+                  ),
 
                   ButtonImage(),
                   const SizedBox(height: 20),

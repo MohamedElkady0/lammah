@@ -20,12 +20,13 @@ class _TopWidgetState extends State<TopWidget> {
         return widget.imgList != null
             ? Container(
                 width: double.infinity,
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                child: Image.asset(widget.imgList![index], fit: BoxFit.fill),
+                margin: EdgeInsets.symmetric(horizontal: 5),
+                child: Image.network(widget.imgList![index], fit: BoxFit.fill),
               )
             : widget.card!;
       },
       options: CarouselOptions(
+        viewportFraction: 1,
         height: 186,
         autoPlay: true,
         autoPlayInterval: const Duration(seconds: 5),

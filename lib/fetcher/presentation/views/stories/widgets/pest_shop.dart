@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/cart_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_pestShop.dart';
 
-class DiscountFifty extends StatelessWidget {
-  const DiscountFifty({super.key});
+class PestShop extends StatelessWidget {
+  const PestShop({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class DiscountFifty extends StatelessWidget {
                 ),
                 Expanded(child: SizedBox()),
                 Text(
-                  'مركز التوفير',
+                  'افضل المبيعات',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class DiscountFifty extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
-              ' %50  عرض التوفير  َ خصم اضافى',
+              'مختارات بافضل الاسعار و افضل جوده',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w300,
@@ -53,7 +53,7 @@ class DiscountFifty extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             reverse: true,
-            child: Row(children: [for (int i = 0; i < 10; i++) CartPoint()]),
+            child: Row(children: [for (int i = 0; i < 10; i++) CardPestShop()]),
           ),
         ],
       ),

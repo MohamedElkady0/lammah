@@ -94,7 +94,7 @@ class NavBar extends StatelessWidget {
               ),
               GButton(
                 iconSize: 16,
-                icon: FontAwesomeIcons.person,
+                icon: Icons.manage_accounts,
                 text: '',
                 backgroundGradient: RadialGradient(
                   colors: [

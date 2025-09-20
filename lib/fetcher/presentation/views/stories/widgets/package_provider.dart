@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_fashion.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_package_provider.dart';
 
-class FashionScroll extends StatelessWidget {
-  const FashionScroll({super.key});
+class PackageProvider extends StatelessWidget {
+  const PackageProvider({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,21 +28,34 @@ class FashionScroll extends StatelessWidget {
                 ),
                 Expanded(child: SizedBox()),
                 Text(
-                  'موضه',
+                  'مركز التوفير',
                   style: TextStyle(
                     fontSize: 24,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ],
             ),
           ),
-
+          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              'وفر حتى 50% فى الباقه',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w300,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             reverse: true,
-            child: Row(children: [for (int i = 0; i < 10; i++) CardFashion()]),
+            child: Row(
+              children: [for (int i = 0; i < 10; i++) CardPackageProvider()],
+            ),
           ),
         ],
       ),

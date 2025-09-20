@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/cart_point.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_grid.dart';
 
 class GridPoint extends StatelessWidget {
   const GridPoint({super.key});
@@ -11,12 +11,12 @@ class GridPoint extends StatelessWidget {
       shrinkWrap: true,
       itemCount: 10,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        mainAxisSpacing: 1,
-        crossAxisSpacing: 2,
+        mainAxisSpacing: 3,
+        crossAxisSpacing: 3,
         crossAxisCount: 2,
       ),
       itemBuilder: (context, index) {
-        return CartPoint();
+        return CardGrid();
       },
     );
   }
