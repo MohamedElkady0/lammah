@@ -19,6 +19,8 @@ class CardGrid extends StatelessWidget {
         children: [
           Expanded(
             child: FadeInImage(
+              width: double.infinity,
+              fit: BoxFit.cover,
               placeholder: MemoryImage(kTransparentImage),
               image: NetworkImage(
                 'https://ae01.alicdn.com/kf/Se3fe3522af0d4ba1901fa5f033432ac6W.jpg',

@@ -39,6 +39,7 @@ class InputFieldAuth extends StatelessWidget {
         ),
         const SizedBox(height: 4.0),
         TextFormField(
+          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           onSaved: onSaved,
           validator:
               validator ??

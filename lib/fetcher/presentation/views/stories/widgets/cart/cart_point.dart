@@ -7,8 +7,6 @@ class CartPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String ds = 'خصم 53%EGP175,968.14';
-
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       elevation: 4,
@@ -24,5 +22,3 @@ class CartPoint extends StatelessWidget {
     );
   }
 }
-
-// العدد و الخصم و الشحن مجانى ولا لأ و الارجاع و الباقات هل تريد عمل باقه

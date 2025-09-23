@@ -13,6 +13,8 @@ class CardFashion extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           FadeInImage(
+            width: MediaQuery.of(context).size.width * .4,
+            fit: BoxFit.cover,
             placeholder: MemoryImage(kTransparentImage),
             image: NetworkImage(
               'https://ae-pic-a1.aliexpress-media.com/kf/Sb00ddd29d8ea448c97642037073cdba4I.jpg?width=800&height=800&hash=1600',

@@ -20,6 +20,10 @@ class _NewShopState extends State<NewShop> {
   final TextEditingController sourceController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  bool value = false;
+  bool value1 = false;
+  bool value2 = false;
+
   @override
   void dispose() {
     titleController.dispose();
@@ -108,6 +112,133 @@ class _NewShopState extends State<NewShop> {
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 10),
+                  InputNewItem(
+                    title: 'count',
+                    controller: sourceController,
+                    isValidator: true,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Discount',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      MyCustomDropdown(
+                        items: List.generate(100, (i) {
+                          return '$i';
+                        }),
+                        iconItems: List.generate(100, (i) {
+                          return Icons.discount;
+                        }),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+                  ExpansionTile(
+                    title: Text(
+                      'الشحن',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    children: [
+                      const SizedBox(height: 10),
+
+                      CheckboxListTile.adaptive(
+                        value: value,
+                        onChanged: (val) {
+                          setState(() => value = val!);
+                        },
+                        title: Text(
+                          'الشحن مجانى',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+                      InputNewItem(
+                        title: 'مصاريف الشحن',
+                        controller: sourceController,
+                        isValidator: true,
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  ExpansionTile(
+                    title: Text(
+                      'الارجاع',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    children: [
+                      const SizedBox(height: 10),
+
+                      CheckboxListTile.adaptive(
+                        value: value1,
+                        onChanged: (val) {
+                          setState(() {
+                            value1 = val!;
+                            if (value1 == true) {
+                              value2 = false;
+                            }
+                          });
+                        },
+                        title: Text(
+                          'ارجاع مجانى',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+                      CheckboxListTile.adaptive(
+                        value: value2,
+                        onChanged: (val) {
+                          setState(() {
+                            value2 = val!;
+                            if (value2 == true) {
+                              value1 = false;
+                            }
+                          });
+                        },
+                        title: Text(
+                          'عدم الارجاع',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ExpansionTile(
+                    title: Text(
+                      'هل تريد عمل باقه',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    children: [const SizedBox(height: 10)],
+                  ),
+                  const SizedBox(height: 10),
 
                   ButtonImage(),
                   const SizedBox(height: 20),

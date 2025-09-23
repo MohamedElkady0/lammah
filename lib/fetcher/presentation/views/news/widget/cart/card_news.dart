@@ -45,7 +45,7 @@ class CartNews extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: 14,
                   ),
                 ),
               ),

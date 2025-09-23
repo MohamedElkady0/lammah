@@ -15,7 +15,7 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
   @override
   Widget build(BuildContext context) {
     return DropdownButton2<String>(
-      isDense: true,
+      // isDense: true,
       isExpanded: true,
       hint: Text(
         'اختر عنصراً',
@@ -65,13 +65,19 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
         padding: const EdgeInsets.only(left: 14, right: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Theme.of(context).colorScheme.onPrimary),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onPrimary.withAlpha(100),
+          ),
         ),
       ),
 
       dropdownStyleData: DropdownStyleData(
         maxHeight: 200,
         decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onPrimary.withAlpha(100),
+            width: 1,
+          ),
           borderRadius: BorderRadius.circular(14),
           color: Theme.of(context).colorScheme.primary.withAlpha(200),
         ),

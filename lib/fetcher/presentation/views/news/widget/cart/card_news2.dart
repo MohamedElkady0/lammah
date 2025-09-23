@@ -43,6 +43,7 @@ class CartNews2 extends StatelessWidget {
                   ),
                   Expanded(
                     child: Container(
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -54,7 +55,7 @@ class CartNews2 extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -118,7 +119,7 @@ class CartNews2 extends StatelessWidget {
                           child: PopApp(
                             icon: Icon(
                               Icons.more_vert,
-                              size: 20,
+                              size: 14,
                               color: Theme.of(context).colorScheme.onPrimary,
                             ),
                             index: 4,
@@ -141,7 +142,7 @@ class CartNews2 extends StatelessWidget {
                             icon: Icon(
                               Icons.close,
                               color: Theme.of(context).colorScheme.onPrimary,
-                              size: 20,
+                              size: 14,
                             ),
                           ),
                         ),
@@ -156,6 +157,7 @@ class CartNews2 extends StatelessWidget {
                           style: Theme.of(context).textTheme.labelMedium!
                               .copyWith(
                                 color: Theme.of(context).colorScheme.onPrimary,
+                                fontSize: 10,
                               ),
                         ),
                         SizedBox(width: 4),
