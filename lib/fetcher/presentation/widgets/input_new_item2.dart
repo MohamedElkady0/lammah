@@ -61,6 +61,17 @@ class InputNewItem2 extends StatelessWidget {
             suffixIcon: icon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onPrimary.withAlpha(50),
+                width: 4.0,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onPrimary.withAlpha(50),
+                width: 4.0,
+              ),
             ),
             contentPadding: EdgeInsets.all(10),
             focusedBorder: OutlineInputBorder(

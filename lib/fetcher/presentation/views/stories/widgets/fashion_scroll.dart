@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_fashion.dart';
 
 class FashionScroll extends StatelessWidget {
@@ -6,33 +7,30 @@ class FashionScroll extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+    var width = ConfigApp.width;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       elevation: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const SizedBox(height: 10),
+          SizedBox(height: width * 0.01),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: width * 0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  '<',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
                 Expanded(child: SizedBox()),
-                Text(
-                  'موضه',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.onPrimary,
+                InkWell(
+                  onTap: () {},
+                  child: Text(
+                    'موضه',
+                    style: TextStyle(
+                      fontSize: width * 0.045,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ],

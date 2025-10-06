@@ -128,7 +128,13 @@ class AddNote extends StatelessWidget {
               ),
               SizedBox(height: 30),
 
-              ButtonAppStyle(title: 'تذكير', icon: Icons.safety_check),
+              ButtonAppStyle(
+                title: 'تذكير',
+                icon: Icons.safety_check,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
               SizedBox(height: 10),
             ],
           ),

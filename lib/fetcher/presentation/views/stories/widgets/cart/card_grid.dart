@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/core/config/config_app.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class CardGrid extends StatelessWidget {
@@ -10,6 +11,8 @@ class CardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+    var width = ConfigApp.width;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       elevation: 4,
@@ -27,8 +30,10 @@ class CardGrid extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: width * 0.01),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Text(
@@ -38,15 +43,19 @@ class CardGrid extends StatelessWidget {
 
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onPrimary,
-                    fontSize: 12,
+                    fontSize: width * 0.032,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+              SizedBox(width: width * 0.02),
               Container(
                 padding: EdgeInsets.all(2),
-                decoration: BoxDecoration(color: Colors.red[800]),
+                decoration: BoxDecoration(
+                  color: Colors.red[800],
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                ),
+
                 child: Text(
                   'عرض',
                   style: TextStyle(
@@ -58,7 +67,8 @@ class CardGrid extends StatelessWidget {
           ),
           const SizedBox(height: 1),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
             children: [
               Row(
                 children: [
@@ -67,28 +77,28 @@ class CardGrid extends StatelessWidget {
                     '4.0',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 10,
+                      fontSize: width * 0.028,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+              SizedBox(width: width * 0.02),
               Text(
                 'مباع 5000',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary.withAlpha(200),
-                  fontSize: 10,
+                  fontSize: width * 0.028,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+              SizedBox(width: width * 0.02),
               Text(
                 'EGP82,705.03',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: width * 0.032,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ],
@@ -100,7 +110,7 @@ class CardGrid extends StatelessWidget {
                 '42% - الان',
                 style: TextStyle(
                   color: Colors.red,
-                  fontSize: 14,
+                  fontSize: width * 0.028,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -109,12 +119,16 @@ class CardGrid extends StatelessWidget {
                 'العرض',
                 style: TextStyle(
                   color: Colors.red,
-                  fontSize: 14,
+                  fontSize: width * 0.028,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-              Icon(Icons.arrow_downward, color: Colors.red[800], size: 14),
+              Icon(
+                Icons.arrow_downward,
+                color: Colors.red[800],
+                size: width * 0.04,
+              ),
             ],
           ),
         ],

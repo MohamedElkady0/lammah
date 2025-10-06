@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/core/config/config_app.dart';
 
 class CartNews extends StatelessWidget {
   const CartNews({super.key, this.onTap});
@@ -6,12 +7,14 @@ class CartNews extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+    var width = ConfigApp.width;
     return InkWell(
       onTap: onTap,
       child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        margin: const EdgeInsets.all(8),
+        margin: EdgeInsets.all(width * 0.02),
         clipBehavior: Clip.hardEdge,
 
         child: Stack(
@@ -45,7 +48,7 @@ class CartNews extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: width * 0.04,
                   ),
                 ),
               ),

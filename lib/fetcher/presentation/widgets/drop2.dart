@@ -15,12 +15,21 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
   @override
   Widget build(BuildContext context) {
     return DropdownButton2<String>(
-      // isDense: true,
+      iconStyleData: IconStyleData(
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+        iconSize: 30,
+        iconEnabledColor: Theme.of(context).colorScheme.onPrimary,
+        iconDisabledColor: Colors.grey,
+      ),
+      underline: const SizedBox(),
       isExpanded: true,
       hint: Text(
-        'اختر عنصراً',
+        'اختر',
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           color: Theme.of(context).colorScheme.onPrimary,
           decoration: TextDecoration.none,
         ),
@@ -34,7 +43,7 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
                   Icon(
                     widget.iconItems != null
                         ? widget.iconItems![widget.items.indexOf(item)]
-                        : Icons.shopping_bag,
+                        : null,
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                   const SizedBox(width: 4),
@@ -42,7 +51,7 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
                     child: Text(
                       item,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 16,
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
@@ -66,7 +75,8 @@ class _MyCustomDropdownState extends State<MyCustomDropdown> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Theme.of(context).colorScheme.onPrimary.withAlpha(100),
+            color: Theme.of(context).colorScheme.onPrimary.withAlpha(50),
+            width: 4,
           ),
         ),
       ),

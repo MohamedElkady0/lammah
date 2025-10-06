@@ -77,6 +77,24 @@ class _ShopState extends State<Shop> {
                         onPressed: [() {}, () {}, () {}, () {}],
                       ),
                     ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Theme.of(context).colorScheme.primary,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 10),
@@ -91,6 +109,20 @@ class _ShopState extends State<Shop> {
                 FashionScroll(),
                 SizedBox(height: 10),
                 PestShop(),
+                SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'ربما تعجبك ايضا',
+
+                        style: TextStyle(fontSize: 20, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: 10),
                 GridPoint(),
               ],

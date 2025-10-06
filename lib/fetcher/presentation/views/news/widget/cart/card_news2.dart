@@ -28,8 +28,8 @@ class CartNews2 extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: w * 0.27,
-                    height: h * 0.22,
+                    width: w * 0.3,
+                    height: h * 0.17,
                     padding: const EdgeInsets.all(4),
 
                     decoration: BoxDecoration(
@@ -149,9 +149,16 @@ class CartNews2 extends StatelessWidget {
                       ],
                     ),
 
-                    SizedBox(width: w * 0.14),
+                    SizedBox(width: w * 0.2),
                     Row(
                       children: [
+                        Image.network(
+                          'https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1q7xgu.img?w=160&h=160',
+                          fit: BoxFit.fill,
+                          width: w * 0.08,
+                          height: h * 0.04,
+                        ),
+                        SizedBox(width: 4),
                         Text(
                           'المصرى اليوم',
                           style: Theme.of(context).textTheme.labelMedium!
@@ -159,13 +166,6 @@ class CartNews2 extends StatelessWidget {
                                 color: Theme.of(context).colorScheme.onPrimary,
                                 fontSize: 10,
                               ),
-                        ),
-                        SizedBox(width: 4),
-                        Image.network(
-                          'https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1q7xgu.img?w=160&h=160',
-                          fit: BoxFit.fill,
-                          width: w * 0.06,
-                          height: h * 0.06,
                         ),
                       ],
                     ),

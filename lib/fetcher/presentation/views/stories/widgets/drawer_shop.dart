@@ -95,7 +95,10 @@ class DrawerShop extends StatelessWidget {
             ),
 
             ExpansionTile(
-              iconColor: Theme.of(context).colorScheme.onPrimary,
+              trailing: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
               title: Text(
                 'Category',
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(

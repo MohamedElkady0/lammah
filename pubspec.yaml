@@ -34,7 +34,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  date_picker_timeline: ^1.2.6
   sqflite: ^2.3.3+1
   flutter_staggered_animations: ^1.1.1
   flutter_svg: ^2.0.10+1
@@ -82,6 +81,8 @@ dependencies:
   pro_image_editor: ^11.3.0
   path_provider: ^2.1.5
   dropdown_button2: ^2.3.9
+  table_calendar: ^3.2.0
+  path: ^1.9.1
 
   
   

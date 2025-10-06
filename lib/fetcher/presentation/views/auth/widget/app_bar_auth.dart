@@ -10,7 +10,10 @@ class AppBarAuth extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: TextAuth(data: title),
+      title: Hero(
+        tag: title,
+        child: TextAuth(data: title),
+      ),
       actions: [Image.asset(AuthString.logo)],
 
       centerTitle: true,

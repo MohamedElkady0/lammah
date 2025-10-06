@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/core/config/config_app.dart';
 
 class CardSuperShow extends StatelessWidget {
   const CardSuperShow({super.key});
 
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+    var width = ConfigApp.width;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       elevation: 4,
@@ -14,16 +17,18 @@ class CardSuperShow extends StatelessWidget {
           Image.network(
             'https://ae01.alicdn.com/kf/S37d3e913e5114086b6f37878c4a29069L.jpg',
             fit: BoxFit.cover,
-            width: MediaQuery.of(context).size.width * .5,
-            height: MediaQuery.of(context).size.height * 0.3,
+            width: width * .35,
+            height: ConfigApp.height * 0.165,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: width * 0.008),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
                 'EGP3,062.74',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: width * 0.022,
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.w300,
                   decoration: TextDecoration.lineThrough,
@@ -32,19 +37,18 @@ class CardSuperShow extends StatelessWidget {
                   decorationStyle: TextDecorationStyle.solid,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: width * 0.02),
               Text(
                 'EGP1,378.37',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: width * 0.03,
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 8),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: width * 0.008),
           Container(
             padding: EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -54,7 +58,7 @@ class CardSuperShow extends StatelessWidget {
               ' %53 خصم',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onPrimary,
-                fontSize: 16,
+                fontSize: width * 0.025,
                 fontWeight: FontWeight.w800,
               ),
             ),

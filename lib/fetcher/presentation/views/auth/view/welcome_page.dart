@@ -119,31 +119,40 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         },
                         child: SizedBox(),
                       ),
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(height: height * 0.1),
-                            Text(
-                              AuthString.welcome,
-                              style: Theme.of(context).textTheme.displayLarge!
-                                  .copyWith(
-                                    fontFamily: GoogleFonts.praise().fontFamily,
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary,
-                                  ),
-                            ),
-                            AppSpacing.vSpaceXXL,
-                            AnimatedBuilder(
-                              animation: _controller,
-                              builder: (BuildContext context, Widget? child) {
-                                return Transform.scale(
-                                  scale: _animation.value,
-                                  child: Column(
-                                    children: [
-                                      ButtonAuth(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: height * 0.03),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                AuthString.welcome,
+                                style: Theme.of(context).textTheme.displayLarge!
+                                    .copyWith(
+                                      fontFamily:
+                                          GoogleFonts.rokkitt().fontFamily,
+                                      fontWeight: FontWeight.w900,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                      fontSize: height * 0.05,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: height * 0.2),
+                          AnimatedBuilder(
+                            animation: _controller,
+                            builder: (BuildContext context, Widget? child) {
+                              return Transform.scale(
+                                scale: _animation.value,
+                                child: Column(
+                                  children: [
+                                    Hero(
+                                      tag: 'Login',
+                                      child: ButtonAuth(
                                         isW: true,
                                         title: AuthString.login,
                                         icon: FontAwesomeIcons.rightToBracket,
@@ -155,8 +164,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           );
                                         },
                                       ),
-                                      AppSpacing.vSpaceM,
-                                      ButtonAuth(
+                                    ),
+                                    AppSpacing.vSpaceM,
+                                    Hero(
+                                      tag: 'Register',
+                                      child: ButtonAuth(
                                         isW: true,
                                         title: AuthString.register,
                                         icon: FontAwesomeIcons.userAstronaut,
@@ -169,47 +181,47 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           );
                                         },
                                       ),
-                                      AppSpacing.vSpaceM,
-                                      ButtonAuth(
-                                        isW: true,
-                                        title: AuthString.google,
-                                        icon: FontAwesomeIcons.google,
-                                        onPressed: () async {
-                                          final authCubit =
-                                              BlocProvider.of<AuthCubit>(
-                                                context,
-                                              );
-                                          final scaffoldMessenger =
-                                              ScaffoldMessenger.of(context);
+                                    ),
+                                    AppSpacing.vSpaceM,
+                                    ButtonAuth(
+                                      isW: true,
+                                      title: AuthString.google,
+                                      icon: FontAwesomeIcons.google,
+                                      onPressed: () async {
+                                        final authCubit =
+                                            BlocProvider.of<AuthCubit>(context);
+                                        final scaffoldMessenger =
+                                            ScaffoldMessenger.of(context);
 
-                                          final bool? didAgree =
-                                              await funService(
-                                                context,
-                                                initialAgreeValue: agree,
-                                              );
+                                        final bool? didAgree = await funService(
+                                          context,
+                                          initialAgreeValue: agree,
+                                        );
 
+                                        if (!mounted) return;
+
+                                        if (didAgree == true) {
+                                          setState(() {
+                                            agree = true;
+                                          });
+
+                                          authCubit.signInWithGoogle();
+                                        } else {
                                           if (!mounted) return;
 
-                                          if (didAgree == true) {
-                                            setState(() {
-                                              agree = true;
-                                            });
-
-                                            authCubit.signInWithGoogle();
-                                          } else {
-                                            if (!mounted) return;
-
-                                            scaffoldMessenger.clearSnackBars();
-                                            scaffoldMessenger.showSnackBar(
-                                              const SnackBar(
-                                                content: Text(AuthString.agree),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      AppSpacing.vSpaceM,
-                                      ButtonAuth(
+                                          scaffoldMessenger.clearSnackBars();
+                                          scaffoldMessenger.showSnackBar(
+                                            const SnackBar(
+                                              content: Text(AuthString.agree),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    AppSpacing.vSpaceM,
+                                    Hero(
+                                      tag: 'Phone',
+                                      child: ButtonAuth(
                                         isW: true,
                                         title: AuthString.phone,
                                         icon: FontAwesomeIcons.phone,
@@ -221,14 +233,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           );
                                         },
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                              child: const SizedBox(),
-                            ),
-                          ],
-                        ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const SizedBox(),
+                          ),
+                        ],
                       ),
                     ],
                   ),

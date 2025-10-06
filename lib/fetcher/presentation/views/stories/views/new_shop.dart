@@ -147,6 +147,10 @@ class _NewShopState extends State<NewShop> {
 
                   const SizedBox(height: 10),
                   ExpansionTile(
+                    trailing: Icon(
+                      Icons.arrow_drop_down,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     title: Text(
                       'الشحن',
                       style: TextStyle(
@@ -181,6 +185,10 @@ class _NewShopState extends State<NewShop> {
                   const SizedBox(height: 10),
 
                   ExpansionTile(
+                    trailing: Icon(
+                      Icons.arrow_drop_down,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     title: Text(
                       'الارجاع',
                       style: TextStyle(
@@ -230,6 +238,10 @@ class _NewShopState extends State<NewShop> {
                   ),
                   const SizedBox(height: 10),
                   ExpansionTile(
+                    trailing: Icon(
+                      Icons.arrow_drop_down,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     title: Text(
                       'هل تريد عمل باقه',
                       style: TextStyle(

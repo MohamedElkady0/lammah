@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/fetcher/presentation/views/stories/widgets/cart/card_package_provider.dart';
 
 class PackageProvider extends StatelessWidget {
@@ -6,45 +7,42 @@ class PackageProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+    var width = ConfigApp.width;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       elevation: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const SizedBox(height: 10),
+          SizedBox(height: width * 0.01),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: width * 0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  '<',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
                 Expanded(child: SizedBox()),
-                Text(
-                  'مركز التوفير',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimary,
+                InkWell(
+                  onTap: () {},
+                  child: Text(
+                    'مركز التوفير',
+                    style: TextStyle(
+                      fontSize: width * 0.045,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+          SizedBox(height: ConfigApp.height * 0.01),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: width * 0.02),
             child: Text(
               'وفر حتى 50% فى الباقه',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: width * 0.025,
                 fontWeight: FontWeight.w300,
                 color: Theme.of(context).colorScheme.onPrimary,
               ),

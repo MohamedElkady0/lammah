@@ -9,6 +9,7 @@ import 'package:lammah/fetcher/data/service/notification_service.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/domian/notification/notification_cubit.dart';
 import 'package:lammah/fetcher/domian/theme/theme_cubit.dart';
+import 'package:lammah/fetcher/domian/transaction/transaction_cubit.dart';
 import 'package:lammah/fetcher/domian/upload/image_upload_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/Introduction/Introduction.dart';
 import 'package:lammah/fetcher/presentation/views/auth/view/welcome_page.dart';
@@ -17,6 +18,8 @@ import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 import 'package:lammah/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -24,6 +27,8 @@ void main() async {
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
   );
+
+  await initializeDateFormatting('ar', null);
 
   final notificationService = NotificationService();
   await notificationService.init();
@@ -47,6 +52,7 @@ class Lammah extends StatelessWidget {
               NotificationCubit(notificationService)..requestPermissions(),
         ),
         BlocProvider(create: (context) => ImageUploadCubit()),
+        BlocProvider(create: (context) => TransactionCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

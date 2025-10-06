@@ -154,6 +154,14 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
               ),
+              Positioned(
+                bottom: 150,
+                child: Icon(
+                  Icons.airplanemode_active,
+                  size: 40,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ],
           );
         },
