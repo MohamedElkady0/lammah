@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:lammah/fetcher/data/model/category.dart';
 import 'package:lammah/fetcher/domian/transaction/transaction_cubit.dart';
-import 'package:lammah/fetcher/presentation/views/notes/view/category_details_page.dart';
+import 'package:lammah/fetcher/presentation/views/notes/widgets/expense_analysis_item.dart';
 
 class BalanceAndAnalyticsSection extends StatelessWidget {
   const BalanceAndAnalyticsSection({super.key});
@@ -38,7 +37,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(300),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -69,7 +68,9 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${NumberFormat.currency(symbol: '\$').format(state.totalBalance)}',
+                  NumberFormat.currency(
+                    symbol: '\$',
+                  ).format(state.totalBalance),
                   style: GoogleFonts.ptSansNarrow(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
@@ -102,7 +103,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                       amount: amount,
                       percentage: percentage,
                     );
-                  }).toList(),
+                  }),
               ],
             ),
           );
@@ -110,72 +111,6 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
         // إظهار مؤشر تحميل أو حالة أولية
         return const Center(child: CircularProgressIndicator());
       },
-    );
-  }
-}
-
-// واجهة عرض عنصر تحليل المصروفات
-class ExpenseAnalysisItem extends StatelessWidget {
-  final Category category;
-  final double amount;
-  final double percentage;
-
-  const ExpenseAnalysisItem({
-    super.key,
-    required this.category,
-    required this.amount,
-    required this.percentage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CategoryDetailsPage(category: category),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(category.icon, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Text(
-                  category.name,
-                  style: GoogleFonts.cairo(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  NumberFormat.currency(symbol: '\$').format(amount),
-                  style: GoogleFonts.cairo(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: percentage / 100,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(category.color),
-                minHeight: 6,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -25,18 +25,31 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> loadInitialData() async {
     emit(TransactionLoading());
     try {
-      // جلب كل المعاملات من قاعدة البيانات
+      // ١. جلب كل المعاملات
       final allTransactions = await dbHelper.getAllTransactions(
         _availableCategories,
       );
 
+      // ٢. جلب كل الملاحظات (هذا هو الجزء الذي كان يُتجاهل)
       final allNotes = await dbHelper.getAllNotes();
 
-      // استدعاء الدالة التي تحسب كل شيء وتصدر الحالة الجديدة
+      // ٣. تمرير كلتا القائمتين للدالة التالية (هذا هو الإصلاح الحاسم)
       _recalculateAndEmitState(allTransactions, allNotes);
     } catch (e) {
       emit(TransactionError("فشل في تحميل البيانات: ${e.toString()}"));
     }
+  }
+
+  Future<void> deleteTransaction(String transactionId) async {
+    await dbHelper.deleteTransaction(transactionId);
+    // أعد تحميل كل شيء لتحديث الواجهة (الرصيد، القائمة، نقاط التقويم)
+    await loadInitialData();
+  }
+
+  Future<void> deleteNote(String noteId) async {
+    await dbHelper.deleteNote(noteId);
+    // أعد تحميل كل شيء لتحديث الواجهة
+    await loadInitialData();
   }
 
   // هذه الدالة ستصبح مركزية. أي تغيير في البيانات سيستدعيها
@@ -70,20 +83,22 @@ class TransactionCubit extends Cubit<TransactionState> {
         });
 
     for (var transaction in transactions) {
-      final day = DateTime.utc(
+      final dayKey = DateTime.utc(
         transaction.date.year,
         transaction.date.month,
         transaction.date.day,
       );
-      if (events[day] == null) events[day] = [];
-      events[day]!.add(transaction);
+      events.putIfAbsent(dayKey, () => []).add(transaction);
     }
 
-    // ثانياً، أضف كل الملاحظات
+    // أضف الملاحظات إلى نفس الخريطة
     for (var note in notes) {
-      final day = DateTime.utc(note.date.year, note.date.month, note.date.day);
-      if (events[day] == null) events[day] = [];
-      events[day]!.add(note);
+      final dayKey = DateTime.utc(
+        note.date.year,
+        note.date.month,
+        note.date.day,
+      );
+      events.putIfAbsent(dayKey, () => []).add(note);
     }
 
     emit(

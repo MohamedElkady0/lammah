@@ -32,7 +32,7 @@ class DatabaseHelper {
       amount REAL NOT NULL,      -- هذا هو العمود الصحيح للمبلغ
       date TEXT NOT NULL,
       type TEXT NOT NULL,
-      categoryId TEXT NOT NULL   -- هذا هو العمود الصحيح لمعرف الفئة
+      categoryId TEXT NOT NULL   -- هذا هو العمود الصحيح لمعرف دافئة
     )
     ''');
 
@@ -143,9 +143,20 @@ class DatabaseHelper {
     DateTime day,
     List<Category> allCategories,
   ) async {
-    final notes = await getNotesForDay(day);
-    // الآن نستدعي النسخة الصحيحة من الدالة
-    final transactions = await getTransactionsForDay(day, allCategories);
+    // استخدم .toUtc() لضمان تطابق التواريخ بدون تأثير المنطقة الزمنية
+    final dateOnly = DateTime.utc(day.year, day.month, day.day);
+
+    // ١. جلب الملاحظات لهذا اليوم
+    final notes = await getNotesForDay(dateOnly);
+    print("Found ${notes.length} notes for $dateOnly"); // <-- أضف هذا للتحقق
+
+    // ٢. جلب المعاملات لهذا اليوم
+    final transactions = await getTransactionsForDay(dateOnly, allCategories);
+    print(
+      "Found ${transactions.length} transactions for $dateOnly",
+    ); // <-- أضف هذا للتحقق
+
+    // ٣. دمج القائمتين
     return [...notes, ...transactions];
   }
 
@@ -154,5 +165,15 @@ class DatabaseHelper {
     final maps = await db.query('notes', orderBy: 'date DESC');
     if (maps.isEmpty) return [];
     return List.generate(maps.length, (i) => Note.fromMap(maps[i]));
+  }
+
+  Future<int> deleteNote(String id) async {
+    final db = await instance.database;
+    return await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteTransaction(String id) async {
+    final db = await instance.database;
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 }

@@ -17,11 +17,14 @@ import 'package:lammah/fetcher/presentation/views/home/home.dart';
 import 'package:lammah/fetcher/presentation/views/splach/splash_view.dart';
 import 'package:lammah/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  tz.initializeTimeZones();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await FirebaseAppCheck.instance.activate(

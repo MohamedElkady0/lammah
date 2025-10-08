@@ -7,34 +7,31 @@ class AddReminderSheet extends StatefulWidget {
   const AddReminderSheet({super.key, required this.selectedDate});
 
   @override
-  _AddReminderSheetState createState() => _AddReminderSheetState();
+  State<AddReminderSheet> createState() => _AddReminderSheetState();
 }
 
 class _AddReminderSheetState extends State<AddReminderSheet> {
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
-  late DateTime _scheduledDateTime;
+  // سنخزن الوقت المختار بشكل منفصل
+  late TimeOfDay _selectedTime;
 
   @override
   void initState() {
     super.initState();
-    _scheduledDateTime = widget.selectedDate;
+    // قم بتهيئة الوقت لوقت لاحق من اليوم الحالي لتجنب "الماضي"
+    final now = DateTime.now();
+    _selectedTime = TimeOfDay.fromDateTime(now.add(const Duration(minutes: 5)));
   }
 
-  Future<void> _selectTime() async {
+  Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_scheduledDateTime),
+      initialTime: _selectedTime,
     );
     if (pickedTime != null) {
       setState(() {
-        _scheduledDateTime = DateTime(
-          _scheduledDateTime.year,
-          _scheduledDateTime.month,
-          _scheduledDateTime.day,
-          pickedTime.hour,
-          pickedTime.minute,
-        );
+        _selectedTime = pickedTime;
       });
     }
   }
@@ -63,19 +60,41 @@ class _AddReminderSheetState extends State<AddReminderSheet> {
               decoration: InputDecoration(labelText: 'تفاصيل'),
             ),
             ListTile(
-              title: Text(
-                'وقت التنبيه: ${TimeOfDay.fromDateTime(_scheduledDateTime).format(context)}',
-              ),
+              title: Text('وقت التنبيه: ${_selectedTime.format(context)}'),
               trailing: Icon(Icons.edit),
-              onTap: _selectTime,
+              onTap: () => _selectTime(context),
             ),
             ElevatedButton(
               onPressed: () {
                 if (_titleController.text.isNotEmpty) {
+                  // ======== هنا الإصلاح الحاسم ========
+                  // ١. ابدأ بالتاريخ المختار من التقويم (بدون وقت)
+                  final date = widget.selectedDate;
+
+                  // ٢. أنشئ كائن DateTime جديد يدمج التاريخ الصحيح مع الوقت الصحيح
+                  final DateTime scheduledDateTime = DateTime(
+                    date.year,
+                    date.month,
+                    date.day,
+                    _selectedTime.hour,
+                    _selectedTime.minute,
+                  );
+
+                  // ٣. تحقق مرة أخرى إذا كان الوقت لا يزال في الماضي
+                  if (scheduledDateTime.isBefore(DateTime.now())) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('لا يمكن جدولة تذكير في وقت قد مضى!'),
+                      ),
+                    );
+                    return; // أوقف التنفيذ
+                  }
+
+                  // ٤. مرر التاريخ والوقت المدمجين بشكل صحيح
                   context.read<NotificationCubit>().scheduleNotification(
                     title: _titleController.text,
                     body: _bodyController.text,
-                    scheduledDateTime: _scheduledDateTime,
+                    scheduledDateTime: scheduledDateTime,
                   );
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(

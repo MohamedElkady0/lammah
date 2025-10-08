@@ -19,17 +19,20 @@ class Note extends Equatable {
       'id': id,
       'title': title,
       'content': content,
-      'date': date.toIso8601String().substring(0, 10), // YYYY-MM-DD
+      // تأكد من التخزين بصيغة ISO 8601 كاملة لضمان الدقة
+      'date': date.toIso8601String(),
     };
   }
 
-  // لتحويل Map من DB إلى Note
+  // =========== هنا يكمن الإصلاح على الأغلب ===========
+  // لتحويل Map من DB إلى كائن Note
   factory Note.fromMap(Map<String, dynamic> map) {
     return Note(
-      id: map['id'],
-      title: map['title'],
-      content: map['content'],
-      date: DateTime.parse(map['date']),
+      id: map['id'] as String,
+      title: map['title'] as String,
+      content: map['content'] as String?,
+      // استخدم DateTime.parse لتحويل النص إلى تاريخ
+      date: DateTime.parse(map['date'] as String),
     );
   }
 

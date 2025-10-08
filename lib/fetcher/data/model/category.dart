@@ -19,7 +19,7 @@ class Category extends Equatable {
       'id': id,
       'name': name,
       'icon': icon.codePoint,
-      'color': color.value,
+      'color': color.toString(),
     };
   }
 

@@ -1,4 +1,3 @@
-// هذا مثال مبسط لواجهة إضافة المعاملة، يمكنك تطويره أكثر
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/fetcher/data/model/category.dart';
@@ -11,13 +10,13 @@ class AddTransactionSheet extends StatefulWidget {
   const AddTransactionSheet({super.key, required this.selectedDate});
 
   @override
-  _AddTransactionSheetState createState() => _AddTransactionSheetState();
+  State<AddTransactionSheet> createState() => _AddTransactionSheetState();
 }
 
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
-  TransactionType _selectedType = TransactionType.expense;
+  TransactionType selectedType = TransactionType.expense;
   Category? _selectedCategory;
 
   @override
@@ -76,7 +75,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     title: _titleController.text,
                     amount: amount,
                     date: widget.selectedDate,
-                    type: _selectedType,
+                    type: selectedType,
                     category: _selectedCategory!,
                   );
                   context.read<TransactionCubit>().addTransaction(

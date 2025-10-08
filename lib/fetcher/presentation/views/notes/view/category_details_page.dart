@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/fetcher/data/model/category.dart';
 import 'package:lammah/fetcher/data/model/transaction.dart';
-import 'package:lammah/fetcher/presentation/views/notes/note_page.dart';
+import 'package:lammah/fetcher/presentation/views/notes/widgets/cart/transaction_card.dart';
 // ... وأي imports أخرى
 
 class CategoryDetailsPage extends StatelessWidget {
