@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
 import 'package:lammah/fetcher/presentation/views/chat/views/chat/chat_widget.dart';
 import 'package:uuid/uuid.dart';
 
@@ -37,7 +39,7 @@ class _SendResChatState extends State<SendResChat> {
 
   @override
   Widget build(BuildContext context) {
-    // final userPro = Provider.of<UserProvider>(context);
+    final user = context.read<AuthCubit>().currentUserInfo;
 
     return Scaffold(
       appBar: AppBar(
@@ -105,6 +107,7 @@ class _SendResChatState extends State<SendResChat> {
                 ),
                 suffix: IconButton(
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     if (control.text.trim().isNotEmpty) {
                       final uuid = const Uuid().v4();
                       try {
@@ -112,13 +115,13 @@ class _SendResChatState extends State<SendResChat> {
                             .collection('chat')
                             .doc(chatRoomId())
                             .set({
-                              // 'senderName': userPro.getUser?.userName ?? '',
-                              // 'senderImage': userPro.getUser?.userImage ?? '',
-                              // 'senderId': userPro.getUser?.uId ?? '',
+                              'senderName': user?.name ?? '',
+                              'senderImage': user?.image ?? '',
+                              'senderId': user?.userId ?? '',
                               'receiverName': widget.userName,
                               'receiverImage': widget.userImage,
                               'receiverId': widget.uid,
-                              // 'partial': [userPro.getUser?.uId ?? '', widget.uid],
+                              'partial': [user?.userId ?? '', widget.uid],
                               'chatRoomId': chatRoomId(),
                               'date': Timestamp.now(),
                             });
@@ -130,19 +133,19 @@ class _SendResChatState extends State<SendResChat> {
                             .doc(uuid)
                             .set({
                               'message': control.text,
-                              // 'userId': userPro.getUser?.uId ?? '',
+                              'userId': user?.userId ?? '',
                               'date': Timestamp.now(),
                               'messageId': uuid,
                             });
                         control.clear();
                       } catch (e) {
-                        // if (!mounted) {
-                        //   return;
-                        // }
+                        if (!mounted) {
+                          return;
+                        }
 
-                        // ScaffoldMessenger.of(context).showSnackBar(
-                        //   SnackBar(content: Text('Failed to send message: $e')),
-                        // );
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Failed to send message: $e')),
+                        );
                       }
                     }
                   },

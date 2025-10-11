@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/fetcher/data/const/list_shop.dart';
+import 'package:lammah/fetcher/presentation/views/stories/widgets/add_table.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_image.dart';
 import 'package:lammah/fetcher/presentation/widgets/button_style.dart';
 import 'package:lammah/fetcher/presentation/widgets/drop2.dart';
@@ -23,6 +24,8 @@ class _NewShopState extends State<NewShop> {
   bool value = false;
   bool value1 = false;
   bool value2 = false;
+  bool value3 = false;
+  bool value4 = false;
 
   @override
   void dispose() {
@@ -163,7 +166,12 @@ class _NewShopState extends State<NewShop> {
                       CheckboxListTile.adaptive(
                         value: value,
                         onChanged: (val) {
-                          setState(() => value = val!);
+                          setState(() {
+                            value = val!;
+                            if (value == true) {
+                              value4 = false;
+                            }
+                          });
                         },
                         title: Text(
                           'الشحن مجانى',
@@ -174,12 +182,33 @@ class _NewShopState extends State<NewShop> {
                       ),
 
                       const SizedBox(height: 10),
-                      InputNewItem(
-                        title: 'مصاريف الشحن',
-                        controller: sourceController,
-                        isValidator: true,
-                        keyboardType: TextInputType.number,
+                      CheckboxListTile.adaptive(
+                        value: value4,
+                        onChanged: (val) {
+                          setState(() {
+                            value4 = val!;
+                            if (value4 == true) {
+                              value = false;
+                            }
+                          });
+                        },
+                        title: Text(
+                          'الشحن غير مجانى',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
                       ),
+
+                      value4
+                          ? InputNewItem(
+                              title: 'مصاريف الشحن',
+                              controller: sourceController,
+                              isValidator: true,
+                              keyboardType: TextInputType.number,
+                            )
+                          : Container(),
+                      const SizedBox(height: 10),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -234,6 +263,7 @@ class _NewShopState extends State<NewShop> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -243,12 +273,70 @@ class _NewShopState extends State<NewShop> {
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     title: Text(
-                      'هل تريد عمل باقه',
+                      'الباقه',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
-                    children: [const SizedBox(height: 10)],
+                    children: [
+                      const SizedBox(height: 10),
+                      CheckboxListTile.adaptive(
+                        value: value3,
+                        onChanged: (val) {
+                          setState(() {
+                            value3 = val!;
+                          });
+                        },
+                        title: Text(
+                          'هل تريد عمل باقه',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                      value3
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.45,
+                                  child: InputNewItem(
+                                    title: 'عدد القطع',
+                                    controller: sourceController,
+                                    isValidator: true,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.45,
+                                  child: InputNewItem(
+                                    title: 'السعر لكل قطعه',
+                                    isValidator: true,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Container(),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ExpansionTile(
+                    trailing: Icon(
+                      Icons.arrow_drop_down,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    title: Text(
+                      'المواصفات',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    children: [AddTable(), SizedBox(height: 10)],
                   ),
                   const SizedBox(height: 10),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/fetcher/domian/auth/auth_cubit.dart';
+import 'package:lammah/fetcher/presentation/views/chat/views/chat/chat_screen.dart';
 import 'package:lammah/fetcher/presentation/views/chat/views/friends.dart';
 import 'package:lammah/fetcher/presentation/widgets/pop_app.dart';
 import 'package:lammah/fetcher/presentation/views/help/help_page.dart';
@@ -25,16 +26,10 @@ class SideBarChat extends StatelessWidget {
         children: [
           PopApp(
             offset: const Offset(50, 0),
-            index: 4,
-            title: [
-              ChatString.account,
-              ChatString.settings,
-              ChatString.help,
-              ChatString.logout,
-            ],
+            index: 3,
+            title: [ChatString.settings, ChatString.help, ChatString.logout],
             isMenu: true,
             onTap: [
-              () {},
               () {
                 Navigator.of(
                   context,
@@ -72,24 +67,36 @@ class SideBarChat extends StatelessWidget {
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
-          PopApp(
+
+          IconButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => ChatView()));
+            },
             icon: Icon(
               Icons.chat_bubble_outline,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
-            offset: const Offset(50, -97),
-            isMenu: false,
-            index: 4,
-            title: ['Ali', 'Adel', 'Samy', 'Mohamed'],
-            images: [
-              'assets/images/chat.png',
-              'assets/images/house.png',
-              'assets/images/slack.png',
-              'assets/images/translate.png',
-            ],
-            chats: ['Hello world', 'Hello world', 'Hello world', 'Hello world'],
-            dates: ['today', 'yesterday', '2 days ago', '3 days ago'],
           ),
+          // PopApp(
+          //   icon: Icon(
+          //     Icons.chat_bubble_outline,
+          //     color: Theme.of(context).colorScheme.onPrimary,
+          //   ),
+          //   offset: const Offset(50, -97),
+          //   isMenu: false,
+          //   index: 4,
+          //   title: ['Ali', 'Adel', 'Samy', 'Mohamed'],
+          //   images: [
+          //     'assets/images/chat.png',
+          //     'assets/images/house.png',
+          //     'assets/images/slack.png',
+          //     'assets/images/translate.png',
+          //   ],
+          //   chats: ['Hello world', 'Hello world', 'Hello world', 'Hello world'],
+          //   dates: ['today', 'yesterday', '2 days ago', '3 days ago'],
+          // ),
           IconButton(
             onPressed: () {
               Navigator.of(
