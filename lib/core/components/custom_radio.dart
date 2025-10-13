@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CustmRadio extends StatefulWidget {
-  const CustmRadio({super.key});
+class CustomRadio extends StatefulWidget {
+  const CustomRadio({super.key});
 
   @override
-  State<CustmRadio> createState() => _CustmRadioState();
+  State<CustomRadio> createState() => _CustomRadioState();
 }
 
-class _CustmRadioState extends State<CustmRadio> {
+class _CustomRadioState extends State<CustomRadio> {
   int _radioValue = 0;
   String result = '';
   Color resultColor = Colors.green;

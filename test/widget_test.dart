@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lammah/fetcher/data/service/notification_service.dart';
+import 'package:lammah/data/service/notification_service.dart';
 
 import 'package:lammah/main.dart';
 
