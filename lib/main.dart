@@ -1,4 +1,5 @@
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:lammah/core/utils/string_app.dart';
 import 'package:lammah/data/service/notification_service.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/notification/notification_cubit.dart';
+import 'package:lammah/domian/search/search_cubit.dart';
 import 'package:lammah/domian/theme/theme_cubit.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
 import 'package:lammah/domian/upload/image_upload_cubit.dart';
@@ -56,6 +58,13 @@ class Lammah extends StatelessWidget {
         ),
         BlocProvider(create: (context) => ImageUploadCubit()),
         BlocProvider(create: (context) => TransactionCubit()),
+        BlocProvider(
+          create: (context) {
+            final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+            return SearchCubit(currentUserId: currentUserId);
+          },
+        ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

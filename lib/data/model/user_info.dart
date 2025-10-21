@@ -1,21 +1,23 @@
 //import 'package:lammah/fetcher/data/model/user_message.dart';
 
-class UserInfoData {
-  String? userId;
-  String? name;
-  String? email;
-  String? phoneNumber;
-  String? image;
-  List<String>? friends;
-  String? userPlace;
-  String? userCity;
-  String? userCountry;
-  // UserMessage? userMessage;
-  int? points;
-  int? adsCount;
-  String? language;
+import 'package:equatable/equatable.dart';
 
-  UserInfoData({
+class UserInfoData extends Equatable {
+  final String? userId;
+  final String? name;
+  final String? email;
+  final String? phoneNumber;
+  final String? image;
+  final List<String>? friends;
+  final String? userPlace;
+  final String? userCity;
+  final String? userCountry;
+  // UserMessage? userMessage;
+  final int? points;
+  final int? adsCount;
+  final String? language;
+
+  const UserInfoData({
     // this.userMessage,
     this.userId,
     this.name,
@@ -147,4 +149,7 @@ class UserInfoData {
       points = userInfoData.points,
       adsCount = userInfoData.adsCount,
       language = userInfoData.language;
+
+  @override
+  List<Object?> get props => [userId, name];
 }
