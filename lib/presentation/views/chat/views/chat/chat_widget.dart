@@ -1,98 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lammah/core/config/config_app.dart';
 
 class ChatWidget extends StatelessWidget {
-  const ChatWidget({super.key, required this.message});
+  const ChatWidget({super.key, required this.message, required this.isFriend});
   final Map<String, dynamic> message;
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: InkWell(
-        onLongPress: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('are you sure ?'),
-                actions: [
-                  TextButton(onPressed: () {}, child: const Text('yes')),
-                  TextButton(onPressed: () {}, child: const Text('no')),
-                ],
-              );
-            },
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  message['message'],
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-              Text(DateFormat.jm().format(message['date'].toDate())),
-            ],
-          ),
-        ),
+  final bool isFriend;
+
+  // ويدجت لعرض الرسائل النصية
+  Widget _buildTextMessage(BuildContext context) {
+    return Text(
+      message['message'] ?? '', // التأكد من عدم وجود قيمة null
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+        color: Theme.of(context).colorScheme.onPrimary,
       ),
     );
   }
-}
 
-class ChatWidgetForFried extends StatelessWidget {
-  const ChatWidgetForFried({super.key, required this.message});
-  final Map<String, dynamic> message;
+  // ويدجت لعرض الصور مع الشرح
+  Widget _buildImageMessage(BuildContext context) {
+    final List<dynamic> imageUrls = message['imageUrls'] ?? [];
+    final String caption = message['caption'] ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // استخدام GridView لعرض الصور بشكل أنيق
+        GridView.builder(
+          itemCount: imageUrls.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: imageUrls.length > 1
+                ? 2
+                : 1, // عمود واحد إذا كانت صورة، عمودان لأكثر
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+          ),
+          itemBuilder: (context, index) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrls[index],
+                fit: BoxFit.cover,
+                // إظهار مؤشر تحميل أثناء جلب الصورة
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(child: CircularProgressIndicator());
+                },
+                // إظهار أيقونة خطأ في حال فشل التحميل
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error);
+                },
+              ),
+            );
+          },
+        ),
+        // عرض الشرح فقط إذا لم يكن فارغاً
+        if (caption.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, right: 5, left: 5),
+            child: Text(
+              caption,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ConfigApp.initConfig(context);
+
+    // التحقق من نوع الرسالة
+    final bool isImageMessage =
+        message.containsKey('type') && message['type'] == 'image';
+
     return Align(
-      alignment: Alignment.topRight,
+      alignment: isFriend
+          ? Alignment.topLeft
+          : Alignment.topRight, // يمكنك تعديل هذا بناءً على المُرسِل
       child: InkWell(
         onLongPress: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('are you sure ?'),
-                actions: [
-                  TextButton(onPressed: () {}, child: const Text('yes')),
-                  TextButton(onPressed: () {}, child: const Text('no')),
-                ],
-              );
-            },
-          );
+          // ... (الكود الخاص بك للحذف)
         },
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
+                constraints: BoxConstraints(
+                  maxWidth: ConfigApp.width * 0.7,
+                ), // تحديد عرض أقصى للرسالة
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Colors.grey,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
-                    bottomLeft: Radius.circular(8),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                    bottomRight: isFriend ? Radius.circular(12) : Radius.zero,
+                    bottomLeft: isFriend ? Radius.zero : Radius.circular(12),
                   ),
                 ),
-                child: Text(
-                  message['message'],
-                  style: Theme.of(context).textTheme.bodyMedium,
+                // عرض الويدجت المناسبة بناءً على نوع الرسالة
+                child: isImageMessage
+                    ? _buildImageMessage(context)
+                    : _buildTextMessage(context),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat.jm().format(message['date'].toDate()),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 12,
                 ),
               ),
-              Text(DateFormat.jm().format(message['date'].toDate())),
             ],
           ),
         ),

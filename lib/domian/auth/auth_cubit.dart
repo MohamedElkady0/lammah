@@ -337,7 +337,7 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
 
-      final String imgUrl = await _uploadImageAndGetUrl(img!);
+      final String imgUrl = await uploadImageAndGetUrl(img!);
 
       final userInfo = UserInfoData(
         image: imgUrl,
@@ -715,7 +715,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   //----------------------------------------------------------------------------
-  Future<String> _uploadImageAndGetUrl(File imageFile) async {
+  Future<String> uploadImageAndGetUrl(File imageFile) async {
     try {
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -741,7 +741,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
-      final String imgUrl = await _uploadImageAndGetUrl(img!);
+      final String imgUrl = await uploadImageAndGetUrl(img!);
 
       await _updateUserDocument(imgUrl);
 

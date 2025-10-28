@@ -29,10 +29,36 @@
 
 
 
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+
+
+
+
+
+
+
+    <!-- إذن الكاميرا (مطلوب إذا كنت ستستخدم الكاميرا) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ==== أذونات الوصول إلى المعرض (مهم جداً) ==== -->
+
+    <!-- للإصدارات الحديثة (أندرويد 13 وما فوق) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- أضف هذا أيضاً إذا كنت تخطط لاختيار فيديوهات في المستقبل -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- للإصدارات القديمة (أندرويد 12 وما قبل) -->
+    <!-- نستخدم maxSdkVersion="32" لكي يتم طلب هذا الإذن فقط على الأنظمة القديمة -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+
+
+
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
 
     <!---
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>

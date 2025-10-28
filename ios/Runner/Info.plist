@@ -19,6 +19,25 @@
 
 
 
+	<key>NSCameraUsageDescription</key>
+	<string>يحتاج التطبيق للوصول إلى الكاميرا لالتقاط الصور.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يحتاج التطبيق للوصول إلى مكتبة الصور لاختيار صورة.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يحتاج التطبيق لاستخدام الميكروفون لتسجيل الصوت.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يحتاج التطبيق للوصول إلى موقعك أثناء الاستخدام.</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>يحتاج التطبيق للوصول إلى موقعك حتى في الخلفية.</string>
+
+
+
+
+
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>نحتاج إلى الوصول إلى مكتبة الصور لاختيار الصور.</string>
 	<key>NSCameraUsageDescription</key>

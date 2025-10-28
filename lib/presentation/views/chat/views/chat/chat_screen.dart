@@ -81,9 +81,17 @@ class _ChatViewState extends State<ChatView> {
                       ),
                     );
                   },
-                  title: Text(name),
+                  title: Text(
+                    name,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                   subtitle: Text(
                     chatMap['date']?.toDate().toString() ?? 'No date',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                   leading: CircleAvatar(
                     radius: 30,
@@ -100,7 +108,10 @@ class _ChatViewState extends State<ChatView> {
                         // Handle block
                       }
                     },
-                    icon: const Icon(Icons.more_vert),
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     itemBuilder: (BuildContext context) {
                       return <PopupMenuEntry<String>>[
                         const PopupMenuItem(
