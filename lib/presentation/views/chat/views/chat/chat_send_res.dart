@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
-import 'package:lammah/domian/upload/image_upload_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
+import 'package:lammah/domian/upload/upload_state.dart';
 import 'package:lammah/presentation/views/chat/views/chat/chat_widget.dart';
 import 'package:lammah/presentation/views/chat/views/chat/image_preview_screen.dart';
 import 'package:uuid/uuid.dart';
@@ -27,10 +28,12 @@ class SendResChat extends StatefulWidget {
 
 class _SendResChatState extends State<SendResChat> {
   final TextEditingController control = TextEditingController();
+  final ScrollController scrollController = ScrollController();
 
   @override
   void dispose() {
     control.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
@@ -106,7 +109,9 @@ class _SendResChatState extends State<SendResChat> {
                     return const Center(child: Text('No messages yet.'));
                   }
                   return ListView.builder(
-                    shrinkWrap: true,
+                    // reverse: true,
+                    controller: scrollController,
+                    // shrinkWrap: true,
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
                       Map<String, dynamic> message =
@@ -117,6 +122,7 @@ class _SendResChatState extends State<SendResChat> {
                       String senderId =
                           message['senderId'] ?? message['userId'] ?? '';
                       print('message user id $senderId');
+
                       return currentUser == senderId
                           ? ChatWidget(message: message, isFriend: false)
                           : ChatWidget(message: message, isFriend: true);
@@ -134,7 +140,7 @@ class _SendResChatState extends State<SendResChat> {
               decoration: InputDecoration(
                 prefix: IconButton(
                   onPressed: () async {
-                    var auth = context.read<ImageUploadCubit>();
+                    var auth = context.read<UploadCubit>();
                     final messenger = ScaffoldMessenger.of(context);
                     var nav = Navigator.of(context);
 
@@ -222,55 +228,100 @@ class _SendResChatState extends State<SendResChat> {
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-                suffix: IconButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
+                suffix: BlocBuilder<UploadCubit, UploadState>(
+                  builder: (context, state) {
+                    final auth = context.read<UploadCubit>();
+                    final isRecording = auth.isRecording;
                     if (control.text.trim().isNotEmpty) {
-                      final uuid = const Uuid().v4();
-                      try {
-                        await FirebaseFirestore.instance
-                            .collection('chat')
-                            .doc(chatRoomId())
-                            .set({
-                              'senderName': user?.name ?? '',
-                              'senderImage': user?.image ?? '',
-                              'senderId': user?.userId ?? '',
-                              'receiverName': widget.userName,
-                              'receiverImage': widget.userImage,
-                              'receiverId': widget.uid,
-                              'partial': [user?.userId ?? '', widget.uid],
-                              'chatRoomId': chatRoomId(),
-                              'date': Timestamp.now(),
-                            });
+                      return IconButton(
+                        onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          if (control.text.trim().isNotEmpty) {
+                            final uuid = const Uuid().v4();
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('chat')
+                                  .doc(chatRoomId())
+                                  .set({
+                                    'senderName': user?.name ?? '',
+                                    'senderImage': user?.image ?? '',
+                                    'senderId': user?.userId ?? '',
+                                    'receiverName': widget.userName,
+                                    'receiverImage': widget.userImage,
+                                    'receiverId': widget.uid,
+                                    'partial': [user?.userId ?? '', widget.uid],
+                                    'chatRoomId': chatRoomId(),
+                                    'date': Timestamp.now(),
+                                  });
 
-                        await FirebaseFirestore.instance
-                            .collection('chat')
-                            .doc(chatRoomId())
-                            .collection('message')
-                            .doc(uuid)
-                            .set({
-                              'message': control.text,
-                              'userId': user?.userId ?? '',
-                              'date': Timestamp.now(),
-                              'image': '',
-                              'messageId': uuid,
-                            });
-                        control.clear();
-                      } catch (e) {
-                        if (!mounted) {
-                          return;
-                        }
+                              await FirebaseFirestore.instance
+                                  .collection('chat')
+                                  .doc(chatRoomId())
+                                  .collection('message')
+                                  .doc(uuid)
+                                  .set({
+                                    'message': control.text,
+                                    'userId': user?.userId ?? '',
+                                    'date': Timestamp.now(),
+                                    'image': '',
+                                    'messageId': uuid,
+                                  });
+                              control.clear();
+                            } catch (e) {
+                              if (!mounted) {
+                                return;
+                              }
 
-                        messenger.showSnackBar(
-                          SnackBar(content: Text('Failed to send message: $e')),
-                        );
-                      }
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to send message: $e'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: Icon(
+                          Icons.send,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      );
+                    } else {
+                      return GestureDetector(
+                        onLongPress: () {
+                          // بدء التسجيل عند الضغط المطول
+                          auth.startRecording();
+                        },
+                        onLongPressEnd: (details) {
+                          // إيقاف التسجيل وإرساله عند رفع الإصبع
+                          final user = context
+                              .read<AuthCubit>()
+                              .currentUserInfo;
+                          if (user != null) {
+                            // تحويل currentUserInfo إلى Map<String, dynamic>
+                            Map<String, dynamic> userInfoMap = {
+                              'userId': user.userId,
+                              'name': user.name,
+                              'image': user.image,
+                              // أضف أي حقول أخرى تحتاجها
+                            };
+                            auth.stopRecordingAndSend(
+                              chatRoomId: chatRoomId(),
+                              currentUserInfo: userInfoMap,
+                            );
+                          }
+                        },
+                        child: Icon(
+                          isRecording
+                              ? Icons.stop_circle_outlined
+                              : Icons.mic, // تغيير الأيقونة أثناء التسجيل
+                          color: isRecording
+                              ? Colors.red
+                              : Theme.of(context).colorScheme.onPrimary,
+                          size: 30,
+                        ),
+                      );
                     }
                   },
-                  icon: Icon(
-                    Icons.send,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
                 ),
                 border: const OutlineInputBorder(),
                 hintText: 'اكتب رسالتك هنا',

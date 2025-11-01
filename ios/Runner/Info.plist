@@ -17,6 +17,16 @@
   	<string>هذا الوصف يشرح لماذا نحتاج لدقة الموقع الكاملة مؤقتًا.</string>
 
 
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Some message to describe why you need this permission</string>
+
+	<key>NSAppTransportSecurity</key>
+	<dict>
+    	<key>NSAllowsArbitraryLoads</key>
+    	<true/>
+	</dict>
+
+
 
 
 	<key>NSCameraUsageDescription</key>

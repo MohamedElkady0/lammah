@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/core/config/config_app.dart';
+import 'package:lammah/presentation/views/chat/views/chat/record_widget.dart';
 
 class ChatWidget extends StatelessWidget {
   const ChatWidget({super.key, required this.message, required this.isFriend});
@@ -15,6 +16,21 @@ class ChatWidget extends StatelessWidget {
         color: Theme.of(context).colorScheme.onPrimary,
       ),
     );
+  }
+
+  /// ويدجت لعرض الرسائل الصوتية
+  Widget _buildAudioMessage(BuildContext context) {
+    final String audioUrl = message['audioUrl'] ?? '';
+    final int duration = message['duration'] ?? 0;
+
+    if (audioUrl.isEmpty) {
+      return const Text(
+        'لا يمكن تشغيل الرسالة الصوتية',
+        style: TextStyle(color: Colors.white),
+      );
+    }
+
+    return AudioPlayerWidget(audioUrl: audioUrl, durationInMillis: duration);
   }
 
   // ويدجت لعرض الصور مع الشرح
@@ -79,6 +95,9 @@ class ChatWidget extends StatelessWidget {
     final bool isImageMessage =
         message.containsKey('type') && message['type'] == 'image';
 
+    final bool isAudioMessage =
+        message.containsKey('type') && message['type'] == 'audio';
+
     return Align(
       alignment: isFriend
           ? Alignment.topLeft
@@ -107,9 +126,11 @@ class ChatWidget extends StatelessWidget {
                   ),
                 ),
                 // عرض الويدجت المناسبة بناءً على نوع الرسالة
-                child: isImageMessage
-                    ? _buildImageMessage(context)
-                    : _buildTextMessage(context),
+                child: isAudioMessage
+                    ? _buildAudioMessage(context)
+                    : (isImageMessage
+                          ? _buildImageMessage(context)
+                          : _buildTextMessage(context)),
               ),
               const SizedBox(height: 4),
               Text(

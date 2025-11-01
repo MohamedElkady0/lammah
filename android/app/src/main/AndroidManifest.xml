@@ -1,95 +1,52 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.lammah">
 
+    <!-- =========== الأذونات الأساسية ============= -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Permissions -->
-
-    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-
-        <!-- إذن إظهار الإشعارات (إجباري لـ Android 13+) -->
+    <!-- ===== أذونات الإشعارات (Notification Permissions) ===== -->
+    <!-- إجباري لـ Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-    <!-- أذونات لتشغيل الإشعارات المجدولة بدقة حتى لو كان الجهاز في وضع الخمول -->
-    <!-- لـ Android 12 وما فوق -->
+    <!-- لتشغيل المنبهات الدقيقة -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- لـ Android 14 وما فوق -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-
-
-    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-
     
+    <!-- ===== أذونات الموقع (Location Permissions) ===== -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
+    <!-- ===اذونات تسجيل الصوت    ==== -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-
-
-
-
-
-
-
-
-
-
-    <!-- إذن الكاميرا (مطلوب إذا كنت ستستخدم الكاميرا) -->
+    <!-- ===== أذونات المعرض والكاميرا (Storage & Camera) ===== -->
+    <!-- استخدام الكاميرا -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- ==== أذونات الوصول إلى المعرض (مهم جداً) ==== -->
-
-    <!-- للإصدارات الحديثة (أندرويد 13 وما فوق) -->
+    <!-- الوصول للمعرض (للأجهزة الحديثة أندرويد 13+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <!-- أضف هذا أيضاً إذا كنت تخطط لاختيار فيديوهات في المستقبل -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-
-    <!-- للإصدارات القديمة (أندرويد 12 وما قبل) -->
-    <!-- نستخدم maxSdkVersion="32" لكي يتم طلب هذا الإذن فقط على الأنظمة القديمة -->
+    <!-- الوصول للمعرض (للأجهزة القديمة أندرويد 12 وما قبلها) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    
 
-
-
-
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-
-
-    <!---
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
-    -->
     <application
         android:label="lammah"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true"
+        android:networkSecurityConfig="@xml/network_security_config"> <!-- حيوي لأندرويد 10 -->
         
-        <!-- Activity Section -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true">
+            android:windowSoftInputMode="adjustResize">
             
-            <!-- This intent-filter makes this the main entry point of the app -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -99,29 +56,23 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-        </activity> <!-- <<== تم إغلاق وسم الـ activity هنا -->
+        </activity>
 
-        <!-- Service and Receivers should be outside the activity tag, but inside the application tag -->
+        <!-- Services and Receivers for notifications -->
         <service
             android:name="com.dexterous.flutterlocalnotifications.ForegroundService"        
             android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="To demonstrate how to use foreground services to show notifications"/>
-        </service>
-
+            android:stopWithTask="false"/>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
-        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
-            <!-- The original intent-filter from here was moved to the MainActivity -->
-        </receiver>
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver" />
 
-        <!-- Don't delete the meta-data below. -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
 
+    <!-- (Optional) For intents like sharing text to your app -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
@@ -129,3 +80,6 @@
         </intent>
     </queries>
 </manifest>
+
+
+

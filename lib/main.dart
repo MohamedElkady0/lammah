@@ -12,7 +12,7 @@ import 'package:lammah/domian/notification/notification_cubit.dart';
 import 'package:lammah/domian/search/search_cubit.dart';
 import 'package:lammah/domian/theme/theme_cubit.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
-import 'package:lammah/domian/upload/image_upload_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/presentation/views/Introduction/Introduction.dart';
 import 'package:lammah/presentation/views/auth/view/welcome_page.dart';
 import 'package:lammah/presentation/views/home/home.dart';
@@ -56,7 +56,7 @@ class Lammah extends StatelessWidget {
           create: (context) =>
               NotificationCubit(notificationService)..requestPermissions(),
         ),
-        BlocProvider(create: (context) => ImageUploadCubit()),
+        BlocProvider(create: (context) => UploadCubit()),
         BlocProvider(create: (context) => TransactionCubit()),
         BlocProvider(
           create: (context) {
@@ -74,7 +74,7 @@ class Lammah extends StatelessWidget {
             themeMode: themeState.themeMode,
             theme: ThemesApp.light,
             darkTheme: ThemesApp.dark,
-            home: AppStartDecider(),
+            home: const AppStartDecider(),
           );
         },
       ),
