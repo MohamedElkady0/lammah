@@ -4,6 +4,7 @@
     <!-- =========== الأذونات الأساسية ============= -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <!-- ===== أذونات الإشعارات (Notification Permissions) ===== -->
     <!-- إجباري لـ Android 13+ -->

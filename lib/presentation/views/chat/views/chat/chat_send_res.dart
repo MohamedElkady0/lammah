@@ -6,8 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/domian/upload/upload_state.dart';
+import 'package:lammah/presentation/views/chat/views/chat/call_screen.dart';
 import 'package:lammah/presentation/views/chat/views/chat/chat_widget.dart';
 import 'package:lammah/presentation/views/chat/views/chat/image_preview_screen.dart';
+import 'package:lammah/presentation/views/game/game_screen.dart';
 import 'package:uuid/uuid.dart';
 
 class SendResChat extends StatefulWidget {
@@ -31,7 +33,20 @@ class _SendResChatState extends State<SendResChat> {
   final ScrollController scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // أضف هذا المستمع. سيقوم بتحديث الواجهة مع كل حرف تكتبه
+    control.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
+    // لا تنس إزالة المستمع لتجنب تسرب الذاكرة
+    control.removeListener(() {
+      setState(() {});
+    });
     control.dispose();
     scrollController.dispose();
     super.dispose();
@@ -63,21 +78,72 @@ class _SendResChatState extends State<SendResChat> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // مكالمة فيديو
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(
+                    appId:
+                        "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
+                    channelName: chatRoomId(), // استخدام chatRoomId كاسم للقناة
+                    isVideoCall: true,
+                  ),
+                ),
+              );
+            },
             icon: Icon(
               Icons.video_camera_back,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              var nav = Navigator.of(context);
+              final auth = context.read<AuthCubit>();
+              final currentUser = auth.currentUserInfo;
+              final otherUserUid = widget.uid; // uid للطرف الآخر
+
+              if (currentUser != null) {
+                // إنشاء مستند جديد للعبة
+                final gameSession = await FirebaseFirestore.instance
+                    .collection('games')
+                    .add({
+                      'players': [currentUser.userId, otherUserUid],
+                      'board': List.generate(9, (_) => ""), // لوحة فارغة
+                      'currentPlayerUid': currentUser.userId, // أنت تبدأ
+                      'winner': "",
+                      'status': "playing",
+                    });
+
+                // الانتقال إلى شاشة اللعبة
+                nav.push(
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(gameId: gameSession.id),
+                  ),
+                );
+              }
+            },
             icon: Icon(
               Icons.gamepad,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // مكالمة صوتية
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(
+                    appId:
+                        "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
+                    channelName: chatRoomId(),
+                    isVideoCall: false,
+                  ),
+                ),
+              );
+            },
             icon: Icon(
               Icons.phone,
               color: Theme.of(context).colorScheme.onPrimary,
@@ -108,6 +174,14 @@ class _SendResChatState extends State<SendResChat> {
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(child: Text('No messages yet.'));
                   }
+                  // هذا الكود يضمن أن التمرير يحدث بعد بناء الواجهة
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (scrollController.hasClients) {
+                      scrollController.jumpTo(
+                        scrollController.position.maxScrollExtent,
+                      );
+                    }
+                  });
                   return ListView.builder(
                     // reverse: true,
                     controller: scrollController,
@@ -228,12 +302,48 @@ class _SendResChatState extends State<SendResChat> {
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-                suffix: BlocBuilder<UploadCubit, UploadState>(
-                  builder: (context, state) {
-                    final auth = context.read<UploadCubit>();
-                    final isRecording = auth.isRecording;
-                    if (control.text.trim().isNotEmpty) {
-                      return IconButton(
+                suffix: control.text.trim().isEmpty
+                    ? BlocBuilder<UploadCubit, UploadState>(
+                        builder: (context, state) {
+                          final upload = context.read<UploadCubit>();
+                          final isRecording = upload.isRecording;
+
+                          return GestureDetector(
+                            onLongPress: () {
+                              upload.startRecording();
+                            },
+                            onLongPressEnd: (details) {
+                              final user = context
+                                  .read<AuthCubit>()
+                                  .currentUserInfo;
+                              if (user != null) {
+                                Map<String, dynamic> userInfoMap = {
+                                  'userId': user.userId,
+                                };
+                                upload.stopRecordingAndSend(
+                                  chatRoomId: chatRoomId(),
+                                  currentUserInfo: userInfoMap,
+                                );
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ),
+                              child: Icon(
+                                isRecording
+                                    ? Icons.stop_circle_outlined
+                                    : Icons.mic,
+                                color: isRecording
+                                    ? Colors.red
+                                    : Theme.of(context).colorScheme.onPrimary,
+                                size: 28,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : IconButton(
                         onPressed: () async {
                           final messenger = ScaffoldMessenger.of(context);
                           if (control.text.trim().isNotEmpty) {
@@ -284,45 +394,7 @@ class _SendResChatState extends State<SendResChat> {
                           Icons.send,
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
-                      );
-                    } else {
-                      return GestureDetector(
-                        onLongPress: () {
-                          // بدء التسجيل عند الضغط المطول
-                          auth.startRecording();
-                        },
-                        onLongPressEnd: (details) {
-                          // إيقاف التسجيل وإرساله عند رفع الإصبع
-                          final user = context
-                              .read<AuthCubit>()
-                              .currentUserInfo;
-                          if (user != null) {
-                            // تحويل currentUserInfo إلى Map<String, dynamic>
-                            Map<String, dynamic> userInfoMap = {
-                              'userId': user.userId,
-                              'name': user.name,
-                              'image': user.image,
-                              // أضف أي حقول أخرى تحتاجها
-                            };
-                            auth.stopRecordingAndSend(
-                              chatRoomId: chatRoomId(),
-                              currentUserInfo: userInfoMap,
-                            );
-                          }
-                        },
-                        child: Icon(
-                          isRecording
-                              ? Icons.stop_circle_outlined
-                              : Icons.mic, // تغيير الأيقونة أثناء التسجيل
-                          color: isRecording
-                              ? Colors.red
-                              : Theme.of(context).colorScheme.onPrimary,
-                          size: 30,
-                        ),
-                      );
-                    }
-                  },
-                ),
+                      ),
                 border: const OutlineInputBorder(),
                 hintText: 'اكتب رسالتك هنا',
                 contentPadding: const EdgeInsets.symmetric(

@@ -89,21 +89,23 @@ class UploadCubit extends Cubit<UploadState> {
   // 2. وظيفة لبدء التسجيل
   Future<void> startRecording() async {
     try {
-      // التحقق من إذن الميكروفون
-      if (await _audioRecorder.hasPermission()) {
-        // الحصول على مسار مؤقت لحفظ الملف
+      // 1. اطلب الإذن باستخدام permission_handler
+      var status = await Permission.microphone.request();
+
+      // 2. تحقق من حالة الإذن بعد الطلب
+      if (status.isGranted) {
+        // إذا تم منح الإذن، ابدأ التسجيل
         final appDocumentsDir = await getApplicationDocumentsDirectory();
         _audioPath = '${appDocumentsDir.path}/${const Uuid().v4()}.m4a';
 
-        // بدء التسجيل
         await _audioRecorder.start(const RecordConfig(), path: _audioPath!);
 
         isRecording = true;
-        emit(
-          RecordingStateChanged(isRecording),
-        ); // إصدار حالة جديدة لإعلام الواجهة
+        emit(RecordingStateChanged(isRecording));
       } else {
-        emit(UploadFailure("يرجى منح إذن استخدام الميكروفون"));
+        // إذا تم رفض الإذن، أبلغ المستخدم
+        debugPrint("Microphone permission denied.");
+        emit(UploadFailure("تم رفض إذن استخدام الميكروفون"));
       }
     } catch (e) {
       debugPrint("Error starting recording: $e");
