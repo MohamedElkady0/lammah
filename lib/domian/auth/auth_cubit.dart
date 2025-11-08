@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +48,9 @@ class AuthCubit extends Cubit<AuthState> {
   String? currentCountryCode;
   bool isLoading = true;
   SharedPreferences? prefs;
+
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
   // ---------------------------------------------------------------------------
 
   final FirebaseAuth _credential = FirebaseAuth.instance;
@@ -339,6 +343,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       final String imgUrl = await uploadImageAndGetUrl(img!);
 
+      String? fcmToken = await messaging.getToken();
       final userInfo = UserInfoData(
         image: imgUrl,
         email: email,
@@ -350,6 +355,7 @@ class AuthCubit extends Cubit<AuthState> {
         userCity:
             '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
         userCountry: currentAddress.split(',')[0],
+        fcmToken: fcmToken,
       );
 
       await FirebaseFirestore.instance
@@ -434,7 +440,7 @@ class AuthCubit extends Cubit<AuthState> {
         currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
         currentPosition = LatLng(0, 0);
       }
-
+      String? fcmToken = await messaging.getToken();
       UserInfoData userInfo = UserInfoData(
         userId: _credential.currentUser!.uid,
         name: userCredential.user!.displayName ?? AuthString.empty,
@@ -446,6 +452,7 @@ class AuthCubit extends Cubit<AuthState> {
         userCity:
             '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
         userCountry: currentAddress.split(',')[0],
+        fcmToken: fcmToken,
       );
 
       final userDoc = await FirebaseFirestore.instance
@@ -600,6 +607,7 @@ class AuthCubit extends Cubit<AuthState> {
               currentAddress = AuthString.noAddressSelected;
               currentPosition = LatLng(0, 0);
             }
+            String? fcmToken = await messaging.getToken();
             final userInfo = UserInfoData(
               image: AuthString.empty,
               email: AuthString.empty,
@@ -613,6 +621,7 @@ class AuthCubit extends Cubit<AuthState> {
               userCity:
                   '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
               userCountry: currentAddress.split(',')[0],
+              fcmToken: fcmToken,
             );
             await FirebaseFirestore.instance
                 .collection(AuthString.fSUsers)

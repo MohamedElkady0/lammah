@@ -12,13 +12,13 @@ class UserInfoData extends Equatable {
   final String? userPlace;
   final String? userCity;
   final String? userCountry;
-  // UserMessage? userMessage;
   final int? points;
   final int? adsCount;
   final String? language;
+  final String? fcmToken;
 
   const UserInfoData({
-    // this.userMessage,
+    this.fcmToken,
     this.userId,
     this.name,
     this.email,
@@ -45,9 +45,7 @@ class UserInfoData extends Equatable {
     points: json['points'],
     adsCount: json['adsCount'],
     language: json['language'],
-    // userMessage: json['userMessage'] != null
-    // ? UserMessage.fromJson(json['userMessage'])
-    // : null,
+    fcmToken: json['fcmToken'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -63,7 +61,7 @@ class UserInfoData extends Equatable {
     'points': points,
     'adsCount': adsCount,
     'language': language,
-    // 'userMessage': userMessage?.toJson(),
+    'fcmToken': fcmToken,
   };
 
   @override
@@ -86,6 +84,7 @@ class UserInfoData extends Equatable {
         other.userCountry == userCountry &&
         other.points == points &&
         other.adsCount == adsCount &&
+        other.fcmToken == fcmToken &&
         other.language == language;
   }
 
@@ -102,8 +101,8 @@ class UserInfoData extends Equatable {
         userCountry.hashCode ^
         points.hashCode ^
         adsCount.hashCode ^
+        fcmToken.hashCode ^
         language.hashCode;
-    // userMessage.hashCode;
   }
 
   UserInfoData copyWith({
@@ -119,6 +118,7 @@ class UserInfoData extends Equatable {
     int? points,
     int? adsCount,
     String? language,
+    String? fcmToken,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -133,6 +133,7 @@ class UserInfoData extends Equatable {
       points: points ?? this.points,
       adsCount: adsCount ?? this.adsCount,
       language: language ?? this.language,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 
@@ -148,6 +149,7 @@ class UserInfoData extends Equatable {
       userCountry = userInfoData.userCountry,
       points = userInfoData.points,
       adsCount = userInfoData.adsCount,
+      fcmToken = userInfoData.fcmToken,
       language = userInfoData.language;
 
   @override

@@ -1,5 +1,7 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:lammah/core/function/firebase_messaging.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -45,6 +47,14 @@ class NotificationService {
       onDidReceiveBackgroundNotificationResponse:
           onDidReceiveBackgroundNotificationResponse,
     );
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // عندما يكون التطبيق مفتوحاً
+      // هنا يمكنك عرض شاشة استقبال المكالمة مباشرة
+      String callId = message.data['callId'];
+      // Navigate to IncomingCallScreen
+    });
+
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
 
   void onDidReceiveLocalNotification(

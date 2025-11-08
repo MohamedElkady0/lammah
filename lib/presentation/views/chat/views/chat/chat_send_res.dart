@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lammah/core/function/send_call_notification.dart';
+import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/domian/upload/upload_state.dart';
@@ -78,19 +80,62 @@ class _SendResChatState extends State<SendResChat> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              // مكالمة فيديو
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CallScreen(
-                    appId:
-                        "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
-                    channelName: chatRoomId(), // استخدام chatRoomId كاسم للقناة
-                    isVideoCall: true,
+            onPressed: () async {
+              var nav = Navigator.of(context);
+              final caller = context.read<AuthCubit>().currentUserInfo;
+              final receiverDoc = await FirebaseFirestore.instance
+                  .collection(AuthString.fSUsers)
+                  .doc(widget.uid)
+                  .get();
+              final receiverData = receiverDoc.data() as Map<String, dynamic>;
+              final receiverFcmToken = receiverData['fcmToken'];
+
+              if (caller != null && receiverFcmToken != null) {
+                // 2. إنشاء مستند المكالمة
+                final callDoc = FirebaseFirestore.instance
+                    .collection('calls')
+                    .doc();
+                final callId = callDoc.id;
+                final channelName =
+                    callId; // استخدام ID المستند كاسم للقناة لضمان التفرد
+
+                await callDoc.set({
+                  'callerId': caller.userId,
+                  'callerName': caller.name,
+                  'callerImage': caller.image,
+                  'receiverId': widget.uid,
+                  'receiverName': widget.userName,
+                  'receiverImage': widget.userImage,
+                  'channelName': channelName,
+                  'isVideoCall': true, // أو false للمكالمة الصوتية
+                  'status': 'ringing', // (ringing, accepted, rejected, missed)
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
+
+                // 3. إرسال إشعار FCM (هذا يتطلب Cloud Function للأمان)
+                // هذا مثال مبسط. في الإنتاج، يجب أن يتم هذا عبر Cloud Function
+                // لإرسال الإشعار إلى receiverFcmToken مع بيانات المكالمة (callId)
+                // Placeholder for sending FCM notification
+                sendCallNotification(
+                  receiverFcmToken,
+                  callId,
+                  caller.name ?? "Someone",
+                  '',
+                  true,
+                );
+                // مكالمة فيديو
+                nav.push(
+                  MaterialPageRoute(
+                    builder: (context) => CallScreen(
+                      appId:
+                          "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
+                      channelName:
+                          chatRoomId(), // استخدام chatRoomId كاسم للقناة
+                      isVideoCall: true,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
             icon: Icon(
               Icons.video_camera_back,

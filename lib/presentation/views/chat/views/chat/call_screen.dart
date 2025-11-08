@@ -66,7 +66,7 @@ class _CallScreenState extends State<CallScreen> {
     // الانضمام إلى القناة
     await _engine.joinChannel(
       token:
-          '5d7dd5867101474e8207d864bf39fc94', // ضع التوكن هنا إذا كنت تستخدمه
+          '007eJxTYFA7PG1JzSTR2e3a3t2pmrbPT537cIKlILd8lfesKe9UVnxTYDBNMU9JMbUwMzc0MDQxN0m1MDIwT7EwM0lKM7ZMS7Y0WefEndkQyMjwUfoEMyMDKwMjAxMDiM/AAACvRR4I', // ضع التوكن هنا إذا كنت تستخدمه
       channelId: widget.channelName,
       uid: 0, // 0 يعني أن Agora ستعين UID تلقائياً
       options: const ChannelMediaOptions(),
