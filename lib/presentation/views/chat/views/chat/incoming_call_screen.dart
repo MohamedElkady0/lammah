@@ -10,6 +10,8 @@ class IncomingCallScreen extends StatelessWidget {
     super.key,
     required this.callId,
     required this.callerName,
+    required channelName,
+    required bool isVideoCall,
   });
 
   @override

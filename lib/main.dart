@@ -41,6 +41,8 @@ void main() async {
   runApp(Lammah(notificationService: notificationService));
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class Lammah extends StatelessWidget {
   const Lammah({super.key, required this.notificationService});
   final NotificationService notificationService;
@@ -69,6 +71,7 @@ class Lammah extends StatelessWidget {
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
           return MaterialApp(
+            navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
             title: StringApp.appName,
             themeMode: themeState.themeMode,

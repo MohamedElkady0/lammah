@@ -63,14 +63,31 @@ class GameScreen extends StatelessWidget {
                           });
                         }
                       },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                        ),
+                      child: Card(
+                        elevation: 4,
                         child: Center(
-                          child: Text(
-                            board[index],
-                            style: const TextStyle(fontSize: 40),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                                  return ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  );
+                                },
+                            child: Text(
+                              board[index],
+                              key: ValueKey<String>(
+                                board[index],
+                              ), // مهم للـ AnimatedSwitcher
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: board[index] == 'X'
+                                    ? Colors.blue
+                                    : Colors.red,
+                              ),
+                            ),
                           ),
                         ),
                       ),

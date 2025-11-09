@@ -2,6 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lammah/core/function/firebase_messaging.dart';
+import 'package:lammah/main.dart';
+import 'package:lammah/presentation/views/chat/views/chat/incoming_call_screen.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -48,10 +50,32 @@ class NotificationService {
           onDidReceiveBackgroundNotificationResponse,
     );
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // عندما يكون التطبيق مفتوحاً
-      // هنا يمكنك عرض شاشة استقبال المكالمة مباشرة
-      String callId = message.data['callId'];
-      // Navigate to IncomingCallScreen
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        print('Message also contained a notification: ${message.notification}');
+      }
+
+      // استخراج بيانات المكالمة من حمولة البيانات (data payload)
+      final callId = message.data['callId'];
+      final callerName = message.data['callerName'];
+      final channelName = message.data['channelName'];
+      final isVideoCall = message.data['isVideoCall'] == 'true';
+
+      if (callId != null && callerName != null && channelName != null) {
+        // استخدم المفتاح العام للتنقل
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => IncomingCallScreen(
+              callId: callId,
+              callerName: callerName,
+              channelName: channelName,
+              isVideoCall: isVideoCall,
+            ),
+          ),
+        );
+      }
     });
 
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
