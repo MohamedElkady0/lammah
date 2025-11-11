@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -59,6 +63,197 @@ class _SendResChatState extends State<SendResChat> {
     List<String> userIds = [FirebaseAuth.instance.currentUser!.uid, widget.uid];
     userIds.sort();
     return '${userIds[0]}_${userIds[1]}';
+  }
+
+  _sendImage() async {
+    var auth = context.read<UploadCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    var nav = Navigator.of(context);
+
+    final user = context.read<AuthCubit>().currentUserInfo;
+    // 1. اختيار عدة صور
+    List<XFile> selectedImages = await auth.pickMultipleImages();
+
+    if (selectedImages.isNotEmpty && mounted) {
+      // 2. الانتقال إلى شاشة المعاينة وتمرير الصور ووظيفة الإرسال
+      nav.push(
+        MaterialPageRoute(
+          builder: (context) => ImagePreviewScreen(
+            images: selectedImages,
+            onSend: (imagesToSend, caption) async {
+              try {
+                // 3. رفع الصور إلى Storage
+                List<String> imageUrls = await auth
+                    .uploadMultipleImagesAndGetUrls(imagesToSend);
+
+                // 4. إرسال الرسالة إلى Firestore
+                final uuid = const Uuid().v4();
+
+                // التأكد من أن chatRoom document موجود
+                await FirebaseFirestore.instance
+                    .collection('chat')
+                    .doc(chatRoomId())
+                    .set(
+                      {
+                        'senderName': user?.name ?? '',
+                        'senderImage': user?.image ?? '',
+                        'senderId': user?.userId ?? '',
+                        'receiverName': widget.userName,
+                        'receiverImage': widget.userImage,
+                        'receiverId': widget.uid,
+                        'partial': [user?.userId ?? '', widget.uid],
+                        'chatRoomId': chatRoomId(),
+                        'date': Timestamp.now(),
+                      },
+                      SetOptions(merge: true),
+                    ); // استخدام merge لتجنب الكتابة فوق البيانات
+
+                await FirebaseFirestore.instance
+                    .collection('chat')
+                    .doc(chatRoomId())
+                    .collection('message')
+                    .doc(uuid)
+                    .set({
+                      'type': 'image', // نوع الرسالة
+                      'senderId': user?.userId ?? '',
+                      'date': Timestamp.now(),
+                      'imageUrls': imageUrls, // قائمة روابط الصور
+                      'caption': caption, // الشرح المكتوب
+                      'messageId': uuid,
+                    });
+
+                // 5. العودة من شاشة المعاينة
+                if (mounted) {
+                  nav.pop();
+                }
+              } catch (e) {
+                if (mounted) {
+                  nav.pop(); // إغلاق شاشة المعاينة في حال حدوث خطأ
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('فشل إرسال الصور: $e')),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendVideo() async {
+    final ImagePicker picker = ImagePicker();
+    // اختيار فيديو من المعرض
+    final auth = context.read<AuthCubit>();
+    final XFile? videoFile = await picker.pickVideo(
+      source: ImageSource.gallery,
+    );
+
+    if (videoFile != null) {
+      // يمكنك عرض شاشة معاينة مشابهة للصور إذا أردت
+
+      // 1. رفع الفيديو إلى Storage
+      final fileId = const Uuid().v4();
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('video_messages')
+          .child('$fileId.mp4');
+      // إظهار مؤشر تحميل...
+      await ref.putFile(File(videoFile.path));
+      final videoUrl = await ref.getDownloadURL();
+
+      // 2. إرسال الرسالة إلى Firestore
+      final user = auth.currentUserInfo;
+      final messageId = const Uuid().v4();
+      await FirebaseFirestore.instance
+          .collection('chat')
+          .doc(chatRoomId())
+          .collection('message')
+          .doc(messageId)
+          .set({
+            'type': 'video', // نوع الرسالة
+            'senderId': user?.userId ?? '',
+            'date': Timestamp.now(),
+            'videoUrl': videoUrl,
+            'fileName': videoFile.name, // حفظ اسم الملف
+            'messageId': messageId,
+          });
+    }
+  }
+
+  // داخل _SendResChatState
+  Future<void> _sendFile() async {
+    // اختيار أي نوع من الملفات
+    final auth = context.read<AuthCubit>();
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String fileName = result.files.single.name;
+
+      // 1. رفع الملف إلى Storage
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('file_messages')
+          .child(fileName);
+      await ref.putFile(file);
+      final fileUrl = await ref.getDownloadURL();
+
+      // 2. إرسال الرسالة إلى Firestore
+      final user = auth.currentUserInfo;
+      final messageId = const Uuid().v4();
+      await FirebaseFirestore.instance
+          .collection('chat')
+          .doc(chatRoomId())
+          .collection('message')
+          .doc(messageId)
+          .set({
+            'type': 'file',
+            'senderId': user?.userId ?? '',
+            'date': Timestamp.now(),
+            'fileUrl': fileUrl,
+            'fileName': fileName,
+            'messageId': messageId,
+          });
+    }
+  }
+
+  void _showAttachmentMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('صورة'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _sendImage(); // دالتك الحالية لإرسال الصور
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.videocam),
+                title: Text('فيديو'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _sendVideo();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.insert_drive_file),
+                title: Text('ملف'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _sendFile();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -264,91 +459,10 @@ class _SendResChatState extends State<SendResChat> {
               decoration: InputDecoration(
                 prefix: IconButton(
                   onPressed: () async {
-                    var auth = context.read<UploadCubit>();
-                    final messenger = ScaffoldMessenger.of(context);
-                    var nav = Navigator.of(context);
-
-                    final user = context.read<AuthCubit>().currentUserInfo;
-                    // 1. اختيار عدة صور
-                    List<XFile> selectedImages = await auth
-                        .pickMultipleImages();
-
-                    if (selectedImages.isNotEmpty && mounted) {
-                      // 2. الانتقال إلى شاشة المعاينة وتمرير الصور ووظيفة الإرسال
-                      nav.push(
-                        MaterialPageRoute(
-                          builder: (context) => ImagePreviewScreen(
-                            images: selectedImages,
-                            onSend: (imagesToSend, caption) async {
-                              try {
-                                // 3. رفع الصور إلى Storage
-                                List<String> imageUrls = await auth
-                                    .uploadMultipleImagesAndGetUrls(
-                                      imagesToSend,
-                                    );
-
-                                // 4. إرسال الرسالة إلى Firestore
-                                final uuid = const Uuid().v4();
-
-                                // التأكد من أن chatRoom document موجود
-                                await FirebaseFirestore.instance
-                                    .collection('chat')
-                                    .doc(chatRoomId())
-                                    .set(
-                                      {
-                                        'senderName': user?.name ?? '',
-                                        'senderImage': user?.image ?? '',
-                                        'senderId': user?.userId ?? '',
-                                        'receiverName': widget.userName,
-                                        'receiverImage': widget.userImage,
-                                        'receiverId': widget.uid,
-                                        'partial': [
-                                          user?.userId ?? '',
-                                          widget.uid,
-                                        ],
-                                        'chatRoomId': chatRoomId(),
-                                        'date': Timestamp.now(),
-                                      },
-                                      SetOptions(merge: true),
-                                    ); // استخدام merge لتجنب الكتابة فوق البيانات
-
-                                await FirebaseFirestore.instance
-                                    .collection('chat')
-                                    .doc(chatRoomId())
-                                    .collection('message')
-                                    .doc(uuid)
-                                    .set({
-                                      'type': 'image', // نوع الرسالة
-                                      'senderId': user?.userId ?? '',
-                                      'date': Timestamp.now(),
-                                      'imageUrls':
-                                          imageUrls, // قائمة روابط الصور
-                                      'caption': caption, // الشرح المكتوب
-                                      'messageId': uuid,
-                                    });
-
-                                // 5. العودة من شاشة المعاينة
-                                if (mounted) {
-                                  nav.pop();
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  nav.pop(); // إغلاق شاشة المعاينة في حال حدوث خطأ
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text('فشل إرسال الصور: $e'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                        ),
-                      );
-                    }
+                    _showAttachmentMenu(context);
                   },
                   icon: Icon(
-                    Icons.image,
+                    Icons.attach_file,
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),

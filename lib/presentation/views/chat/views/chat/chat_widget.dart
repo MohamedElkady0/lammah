@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/presentation/views/chat/views/chat/record_widget.dart';
+import 'package:lammah/presentation/views/chat/views/chat/video_player_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatWidget extends StatelessWidget {
   const ChatWidget({super.key, required this.message, required this.isFriend});
@@ -31,6 +33,11 @@ class ChatWidget extends StatelessWidget {
     }
 
     return AudioPlayerWidget(audioUrl: audioUrl, durationInMillis: duration);
+  }
+
+  Widget _buildVideoMessage(BuildContext context) {
+    final videoUrl = message['videoUrl'] ?? '';
+    return VideoPlayerWidget(videoUrl: videoUrl);
   }
 
   // ويدجت لعرض الصور مع الشرح
@@ -87,9 +94,49 @@ class ChatWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildFileMessage(BuildContext context) {
+    final fileName = message['fileName'] ?? 'ملف';
+    final fileUrl = message['fileUrl'] ?? '';
+
+    return InkWell(
+      onTap: () async {
+        if (await canLaunchUrl(Uri.parse(fileUrl))) {
+          await launchUrl(Uri.parse(fileUrl));
+        } else {
+          // عرض رسالة خطأ
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.insert_drive_file, color: Colors.white),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                fileName,
+                style: TextStyle(
+                  color: Colors.white,
+                  decoration: TextDecoration.underline,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(Icons.download_for_offline, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
+
+    final bool isVideoMessage = message['type'] == 'video';
+
+    final bool isFileMessage = message['type'] == 'file';
 
     // التحقق من نوع الرسالة
     final bool isImageMessage =
@@ -126,7 +173,11 @@ class ChatWidget extends StatelessWidget {
                   ),
                 ),
                 // عرض الويدجت المناسبة بناءً على نوع الرسالة
-                child: isAudioMessage
+                child: isFileMessage
+                    ? _buildFileMessage(context)
+                    : isVideoMessage
+                    ? _buildVideoMessage(context)
+                    : isAudioMessage
                     ? _buildAudioMessage(context)
                     : (isImageMessage
                           ? _buildImageMessage(context)
