@@ -73,7 +73,26 @@ class ChatWidget extends StatelessWidget {
                 },
                 // إظهار أيقونة خطأ في حال فشل التحميل
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.error);
+                  return Container(
+                    color: Colors.grey.shade300,
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cloud_off, color: Colors.grey),
+                          SizedBox(height: 4),
+                          Text(
+                            'انتهت صلاحية الصورة',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 },
               ),
             );
@@ -133,6 +152,7 @@ class ChatWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
+    final bool isEdited = message['isEdited'] ?? false;
 
     final bool isVideoMessage = message['type'] == 'video';
 
@@ -150,9 +170,6 @@ class ChatWidget extends StatelessWidget {
           ? Alignment.topLeft
           : Alignment.topRight, // يمكنك تعديل هذا بناءً على المُرسِل
       child: InkWell(
-        onLongPress: () {
-          // ... (الكود الخاص بك للحذف)
-        },
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -184,12 +201,29 @@ class ChatWidget extends StatelessWidget {
                           : _buildTextMessage(context)),
               ),
               const SizedBox(height: 4),
-              Text(
-                DateFormat.jm().format(message['date'].toDate()),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 12,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    DateFormat.jm().format(message['date'].toDate()),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (isEdited)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        '(تم التعديل)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),

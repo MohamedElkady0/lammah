@@ -1,6 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
-Future<void> sendCallNotification(
+Future<void> sendNotification(
   String receiverFcmToken,
   String callId,
   String callerName,

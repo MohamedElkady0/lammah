@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -65,6 +66,107 @@ class _SendResChatState extends State<SendResChat> {
     return '${userIds[0]}_${userIds[1]}';
   }
 
+  void _showEditDialog(BuildContext context, Map<String, dynamic> message) {
+    final String messageId = message['messageId'];
+    final String currentText = message['message'];
+    final TextEditingController editController = TextEditingController(
+      text: currentText,
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('تعديل الرسالة'),
+          content: TextField(
+            controller: editController,
+            autofocus: true,
+            maxLines: null, // للسماح بتعدد الأسطر
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('إلغاء'),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('حفظ'),
+              onPressed: () {
+                final newText = editController.text.trim();
+                if (newText.isNotEmpty) {
+                  // تحديث الرسالة في Firestore وإضافة علامة التعديل
+                  FirebaseFirestore.instance
+                      .collection('chat')
+                      .doc(chatRoomId())
+                      .collection('message')
+                      .doc(messageId)
+                      .update({
+                        'message': newText,
+                        'isEdited': true, // حقل جديد لتتبع التعديل
+                      });
+                  Navigator.of(ctx).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showActionsDialog(
+    BuildContext context,
+    Map<String, dynamic> message,
+    bool isCurrentUserMessage,
+  ) {
+    // استخراج البيانات المهمة من الرسالة
+    final String messageId = message['messageId'];
+    final String messageType =
+        message['type'] ?? 'text'; // افترض 'text' للرسائل القديمة
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        // بناء قائمة الأزرار ديناميكياً
+        List<Widget> actions = [];
+
+        // 1. إضافة زر "تعديل" فقط إذا كانت رسالة نصية ومن المستخدم الحالي
+        if (isCurrentUserMessage &&
+            (messageType == 'text' || messageType == '')) {
+          actions.add(
+            TextButton(
+              child: const Text('تعديل'),
+              onPressed: () {
+                Navigator.of(ctx).pop(); // إغلاق قائمة الخيارات
+                _showEditDialog(context, message); // فتح قائمة التعديل
+              },
+            ),
+          );
+        }
+
+        // 2. إضافة زر "حذف" دائماً (يمكنك تعديل هذا الشرط إذا أردت)
+        actions.add(
+          TextButton(
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+            onPressed: () {
+              // حذف الرسالة
+              FirebaseFirestore.instance
+                  .collection('chat')
+                  .doc(chatRoomId())
+                  .collection('message')
+                  .doc(messageId)
+                  .delete();
+              Navigator.of(ctx).pop(); // إغلاق القائمة
+            },
+          ),
+        );
+
+        return AlertDialog(title: const Text('اختر إجراء'), actions: actions);
+      },
+    );
+  }
+
   _sendImage() async {
     var auth = context.read<UploadCubit>();
     final messenger = ScaffoldMessenger.of(context);
@@ -121,7 +223,7 @@ class _SendResChatState extends State<SendResChat> {
                       'caption': caption, // الشرح المكتوب
                       'messageId': uuid,
                     });
-
+                await notifiMessage();
                 // 5. العودة من شاشة المعاينة
                 if (mounted) {
                   nav.pop();
@@ -178,6 +280,7 @@ class _SendResChatState extends State<SendResChat> {
             'fileName': videoFile.name, // حفظ اسم الملف
             'messageId': messageId,
           });
+      await notifiMessage();
     }
   }
 
@@ -215,6 +318,7 @@ class _SendResChatState extends State<SendResChat> {
             'fileName': fileName,
             'messageId': messageId,
           });
+      await notifiMessage();
     }
   }
 
@@ -254,6 +358,33 @@ class _SendResChatState extends State<SendResChat> {
         );
       },
     );
+  }
+
+  notifiMessage() async {
+    final user = context.read<AuthCubit>().currentUserInfo;
+
+    // 1. احصل على بيانات المستقبل (FCM Token)
+    final receiverDoc = await FirebaseFirestore.instance
+        .collection(AuthString.fSUsers)
+        .doc(widget.uid)
+        .get();
+    final receiverFcmToken = receiverDoc.data()?['fcmToken'];
+
+    if (receiverFcmToken != null) {
+      // 3. استدعِ الدالة السحابية
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+        'sendNotification',
+      );
+      await callable.call(<String, dynamic>{
+        'receiverFcmToken': receiverFcmToken,
+        'type': 'message', // نوع الإشعار
+        'senderName': user?.name ?? 'مستخدم جديد',
+        'senderImage': user?.image ?? '', // رابط الصورة الشخصية للمرسل
+        'messageContent': control.text, // محتوى الرسالة
+        'chatRoomId': chatRoomId(),
+        'senderId': user?.userId ?? '',
+      });
+    }
   }
 
   @override
@@ -312,7 +443,7 @@ class _SendResChatState extends State<SendResChat> {
                 // هذا مثال مبسط. في الإنتاج، يجب أن يتم هذا عبر Cloud Function
                 // لإرسال الإشعار إلى receiverFcmToken مع بيانات المكالمة (callId)
                 // Placeholder for sending FCM notification
-                sendCallNotification(
+                sendNotification(
                   receiverFcmToken,
                   callId,
                   caller.name ?? "Someone",
@@ -442,9 +573,22 @@ class _SendResChatState extends State<SendResChat> {
                           message['senderId'] ?? message['userId'] ?? '';
                       print('message user id $senderId');
 
-                      return currentUser == senderId
+                      bool isCurrentUserMessage = currentUser == senderId;
+
+                      Widget messageWidget = isCurrentUserMessage
                           ? ChatWidget(message: message, isFriend: false)
                           : ChatWidget(message: message, isFriend: true);
+
+                      return GestureDetector(
+                        onLongPress: () {
+                          _showActionsDialog(
+                            context,
+                            message,
+                            isCurrentUserMessage,
+                          );
+                        },
+                        child: messageWidget,
+                      );
                     },
                   );
                 },
@@ -540,6 +684,7 @@ class _SendResChatState extends State<SendResChat> {
                                     'image': '',
                                     'messageId': uuid,
                                   });
+                              await notifiMessage();
                               control.clear();
                             } catch (e) {
                               if (!mounted) {

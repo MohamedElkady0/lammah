@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lammah/core/function/firebase_messaging.dart';
 import 'package:lammah/main.dart';
+import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
 import 'package:lammah/presentation/views/chat/views/chat/incoming_call_screen.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -78,6 +80,17 @@ class NotificationService {
       }
     });
 
+    // --- >> الخطوة 2: استدعِ الدالة الجديدة هنا << ---
+    await setupInteractedMessage();
+
+    // هذا المستمع للرسائل التي تصل عندما يكون التطبيق مفتوحاً في المقدمة (Foreground)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      // يمكنك هنا إما عرض شاشة المكالمة مباشرة (إذا كانت مكالمة)
+      // أو عرض إشعار محلي (إذا كانت رسالة عادية)
+      _handleMessage(message); // يمكن إعادة استخدام نفس المنطق
+    });
+
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
 
@@ -99,6 +112,75 @@ class NotificationService {
     if (notificationResponse.payload != null) {
       debugPrint('Notification payload: $payload');
     }
+  }
+
+  // هذه الدالة تعالج الإشعار وتحدد أين تذهب
+  void _handleMessage(RemoteMessage message) async {
+    final type = message.data['type'];
+
+    if (type == 'new_message') {
+      final senderId = message.data['senderId'];
+
+      if (senderId != null) {
+        try {
+          // 2. جلب بيانات المرسل من Firestore
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(senderId)
+              .get();
+          if (userDoc.exists) {
+            final userData = userDoc.data() as Map<String, dynamic>;
+            final userName = userData['name'] ?? 'مستخدم';
+            final userImage = userData['image'] ?? '';
+
+            // 3. الآن يمكنك الانتقال بالبيانات الصحيحة
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => SendResChat(
+                  userName: userName,
+                  userImage: userImage,
+                  uid: senderId, // الـ uid هو senderId
+                ),
+              ),
+            );
+          }
+        } catch (e) {
+          print("Error fetching user data for notification: $e");
+        }
+      }
+    } else if (type == 'incoming_call') {
+      // هذا إشعار بمكالمة واردة
+      final callId = message.data['callId'];
+      final callerName = message.data['callerName'];
+      final channelName = message.data['channelName'];
+      final isVideoCall = message.data['isVideoCall'] == 'true';
+
+      if (callId != null && callerName != null && channelName != null) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => IncomingCallScreen(
+              callId: callId,
+              callerName: callerName,
+              channelName: channelName,
+              isVideoCall: isVideoCall,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  // هذه الدالة تقوم بإعداد المستمعات للإشعارات التي يتم الضغط عليها
+  Future<void> setupInteractedMessage() async {
+    // التعامل مع الإشعار الذي فتح التطبيق من حالة الإنهاء (Terminated)
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance
+        .getInitialMessage();
+    if (initialMessage != null) {
+      _handleMessage(initialMessage);
+    }
+
+    // التعامل مع الإشعار الذي يتم الضغط عليه عندما يكون التطبيق في الخلفية (Background)
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
 
   @pragma('vm:entry-point')

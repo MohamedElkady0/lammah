@@ -3,53 +3,75 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// هذه هي الدالة التي سيستدعيها تطبيق Flutter
-exports.sendCallNotification = functions.https.onCall(async (data, context) => {
-  // التحقق من أن المستخدم الذي يستدعي الدالة مسجل دخوله
+exports.sendNotification = functions.https.onCall(async (data, context) => {
+  // التحقق من أن المستخدم مسجل دخوله
   if (!context.auth) {
     throw new functions.https.HttpsError(
-      "unauthenticated",
-      "The function must be called while authenticated.",
+        "unauthenticated",
+        "The function must be called while authenticated.",
     );
   }
 
   // استخراج البيانات المرسلة من Flutter
   const receiverFcmToken = data.receiverFcmToken;
-  const callId = data.callId;
-  const callerName = data.callerName;
-  const channelName = data.channelName;
-  const isVideoCall = data.isVideoCall;
+  const notificationType = data.type; // "call" or "message"
+  const senderName = data.senderName;
+  const senderImage = data.senderImage; //
+  let notificationTitle = "";
+  let notificationBody = "";
+  let dataPayload = {};
 
-  console.log(`Attempting to send a call notification to token: ${receiverFcmToken}`);
-
-  // إنشاء حمولة الإشعار (Notification Payload)
-  const payload = {
-    // الإشعار الذي سيراه المستخدم
-    notification: {
-      title: "مكالمة واردة 📞",
-      body: `${callerName} يتصل بك...`,
-    },
-    // البيانات المخصصة التي سيقرأها تطبيقك
-    data: {
+  // --- تخصيص الإشعار بناءً على نوعه ---
+  if (notificationType === "call") {
+    notificationTitle = `مكالمة واردة 📞 من ${senderName}`;
+    notificationBody = "اضغط للرد";
+    dataPayload = {
       type: "incoming_call",
-      callId: callId,
-      callerName: callerName,
-      channelName: channelName,
-      isVideoCall: String(isVideoCall),
+      callId: data.callId,
+      callerName: senderName,
+      channelName: data.channelName,
+      isVideoCall: String(data.isVideoCall),
+    };
+  } else if (notificationType === "message") {
+    const messageContent = data.messageContent; // محتوى الرسالة النصية
+    notificationTitle = senderName; // اسم المرسل هو العنوان
+    notificationBody = messageContent;
+    dataPayload = {
+      type: "new_message",
+      chatRoomId: data.chatRoomId, // لتوجيه المستخدم إلى المحادثة الصحيحة
+      senderId: data.senderId,
+    };
+  } else {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid type");
+  }
+
+  // --- بناء حمولة الإشعار الكاملة ---
+  const payload = {
+    // الإشعار المرئي للمستخدم
+    notification: {
+      title: notificationTitle,
+      body: notificationBody,
+      imageUrl: senderImage, // <<< هنا نضع صورة المرسل
     },
-    // إعدادات خاصة لضمان وصول الإشعار بسرعة (مهم للمكالمات)
+    // البيانات التي سيقرأها التطبيق
+    data: dataPayload,
+    // إعدادات خاصة لأندرويد
     android: {
       priority: "high",
+      notification: {
+        // لجعل الصورة تظهر بشكل كبير في الإشعار على أندرويد
+        imageUrl: senderImage,
+      },
     },
+    // إعدادات خاصة لـ iOS
     apns: {
       payload: {
         aps: {
-          contentAvailable: true,
+          "mutable-content": 1, // يسمح بتعديل الإشعار لإضافة الصورة
         },
       },
-      headers: {
-        "apns-push-type": "voip", // استخدام إشعارات VoIP لـ iOS (يتطلب إعدادات إضافية)
-        "apns-priority": "10",
+      fcm_options: {
+        image: senderImage, // <<< هنا أيضاً نضع صورة المرسل لـ iOS
       },
     },
   };
@@ -57,13 +79,10 @@ exports.sendCallNotification = functions.https.onCall(async (data, context) => {
   try {
     // إرسال الإشعار
     await admin.messaging().sendToDevice(receiverFcmToken, payload);
-    console.log("Successfully sent call notification.");
+    console.log("Successfully sent notification.");
     return {success: true};
   } catch (error) {
     console.error("Error sending notification:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      "Error sending notification",
-    );
+    throw new functions.https.HttpsError("internal", "Error sending");
   }
 });

@@ -21,12 +21,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   }
 
   Future<void> initializePlayer() async {
-    _videoPlayerController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.videoUrl),
-    );
-    await _videoPlayerController.initialize();
-    _createChewieController();
-    setState(() {});
+    try {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+      );
+      await _videoPlayerController.initialize();
+      _createChewieController();
+    } catch (e) {
+      // حدث خطأ أثناء محاولة الوصول إلى الرابط (غالباً لأنه محذوف)
+      debugPrint("Error initializing video player: $e");
+    } finally {
+      // تحديث الواجهة في كل الأحوال
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   void _createChewieController() {
@@ -52,13 +61,20 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             aspectRatio: _videoPlayerController.value.aspectRatio,
             child: Chewie(controller: _chewieController!),
           )
-        : const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 10),
-              Text('جاري تحميل الفيديو...'),
-            ],
+        : Container(
+            padding: const EdgeInsets.all(20),
+            color: Colors.grey.shade800,
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.videocam_off, color: Colors.white),
+                SizedBox(height: 8),
+                Text(
+                  'انتهت صلاحية الفيديو',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
           );
   }
 }
