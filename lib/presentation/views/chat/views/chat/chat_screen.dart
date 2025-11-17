@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/views/friends.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -11,6 +12,67 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
+  // قائمة الخيارات المنبثقة
+  Widget popButton(
+    BuildContext context,
+    Map<String, dynamic> chatMap,
+    String uId,
+  ) {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        final chatRoomId = chatMap['chatRoomId'];
+        final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+        if (value == 'delete') {
+          FirebaseFirestore.instance.collection('chat').doc(chatRoomId).update({
+            'deletedBy.${FirebaseAuth.instance.currentUser!.uid}': true,
+          });
+        }
+        if (value == 'block') {
+          final otherUserUid = uId; // الـ uId الخاص بالمستخدم الآخر في المحادثة
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUserId)
+              .update({
+                'blockedUsers': FieldValue.arrayUnion([otherUserUid]),
+              });
+          // (اختياري) يمكنك أيضاً حظره من عندك (أي أنك تحظره أيضاً)
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(otherUserUid)
+              .update({
+                'blockedBy': FieldValue.arrayUnion([currentUserId]),
+              });
+        }
+        if (value == 'markRead') {
+          FirebaseFirestore.instance
+              .collection('chat')
+              .doc(chatRoomId())
+              .update({'unreadCount.$currentUserId': 0});
+        }
+        if (value == 'MarkUnread') {
+          FirebaseFirestore.instance.collection('chat').doc(chatRoomId).update({
+            'unreadCount.$currentUserId': 1, // أو أي عدد تريده
+          });
+        }
+      },
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
+      itemBuilder: (BuildContext context) {
+        return <PopupMenuEntry<String>>[
+          const PopupMenuItem(value: 'delete', child: Text('حذف')),
+          const PopupMenuItem(value: 'block', child: Text('حظر')),
+          const PopupMenuItem(value: 'markRead', child: Text('تمييز كمقروء')),
+          const PopupMenuItem(
+            value: 'MarkUnread',
+            child: Text('تمييز كغير مقروء'),
+          ),
+        ];
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,6 +84,17 @@ class _ChatViewState extends State<ChatView> {
             Text('Chat', style: Theme.of(context).textTheme.titleLarge),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.people),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FriendsScreen()),
+              );
+            },
+          ),
+        ],
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -64,9 +137,16 @@ class _ChatViewState extends State<ChatView> {
                   ? chatMap['receiverId'] ?? ''
                   : chatMap['senderId'] ?? '';
 
+              // احصل على عدد الرسائل غير المقروءة لك
+              final unreadCountData =
+                  chatMap['unreadCount'] as Map<String, dynamic>?;
+              final int myUnreadCount = unreadCountData?[currentUser] ?? 0;
+              final bool hasUnreadMessages = myUnreadCount > 0;
+
               return Padding(
                 padding: const EdgeInsets.all(8),
                 child: ListTile(
+                  onLongPress: () {},
                   onTap: () {
                     Navigator.push(
                       context,
@@ -85,13 +165,20 @@ class _ChatViewState extends State<ChatView> {
                     name,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: hasUnreadMessages
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                   subtitle: Text(
-                    chatMap['date']?.toDate().toString() ?? 'No date',
+                    chatMap['lastMessage'], // عرض آخر رسالة
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: hasUnreadMessages
+                          ? Colors.white
+                          : Colors.grey.shade400,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   leading: CircleAvatar(
                     radius: 30,
@@ -100,31 +187,27 @@ class _ChatViewState extends State<ChatView> {
                         : null,
                     child: image.isEmpty ? const Icon(Icons.person) : null,
                   ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'option1') {
-                        // Handle delete
-                      } else if (value == 'option2') {
-                        // Handle block
-                      }
-                    },
-                    icon: Icon(
-                      Icons.more_vert,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    itemBuilder: (BuildContext context) {
-                      return <PopupMenuEntry<String>>[
-                        const PopupMenuItem(
-                          value: 'option1',
-                          child: Text('Delete'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'option2',
-                          child: Text('Block'),
-                        ),
-                      ];
-                    },
-                  ),
+                  trailing: hasUnreadMessages
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            popButton(context, chatMap, uId),
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.blue,
+                              child: Text(
+                                myUnreadCount.toString(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : popButton(context, chatMap, uId),
                 ),
               );
             },

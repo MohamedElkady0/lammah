@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/presentation/views/chat/views/chat/chat_screen.dart';
-import 'package:lammah/presentation/views/chat/views/friends.dart';
 import 'package:lammah/presentation/widgets/pop_app.dart';
 import 'package:lammah/presentation/views/help/help_page.dart';
 import 'package:lammah/presentation/views/notes/view/note_page.dart';
@@ -53,17 +52,6 @@ class SideBarChat extends StatelessWidget {
             },
             icon: Icon(
               Icons.notifications,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => Friends(index: 4)),
-              );
-            },
-            icon: Icon(
-              Icons.groups,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),

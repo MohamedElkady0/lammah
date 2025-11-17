@@ -47,6 +47,14 @@ class _SendResChatState extends State<SendResChat> {
     control.addListener(() {
       setState(() {});
     });
+    _markMessagesAsRead();
+  }
+
+  void _markMessagesAsRead() {
+    final currentUser = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseFirestore.instance.collection('chat').doc(chatRoomId()).update({
+      'unreadCount.$currentUser': 0,
+    });
   }
 
   @override
@@ -223,7 +231,18 @@ class _SendResChatState extends State<SendResChat> {
                       'caption': caption, // الشرح المكتوب
                       'messageId': uuid,
                     });
-                await notifiMessage();
+                // تحديث مستند المحادثة الرئيسي
+                FirebaseFirestore.instance
+                    .collection('chat')
+                    .doc(chatRoomId())
+                    .update({
+                      'lastMessageImage': imageUrls, // أو وصف للملف
+                      'date': Timestamp.now(),
+                      'unreadCount.${widget.uid}': FieldValue.increment(
+                        1,
+                      ), // زيادة العداد للمستقبل
+                    });
+                await notifiMessage('Image', imageUrls.first);
                 // 5. العودة من شاشة المعاينة
                 if (mounted) {
                   nav.pop();
@@ -280,7 +299,15 @@ class _SendResChatState extends State<SendResChat> {
             'fileName': videoFile.name, // حفظ اسم الملف
             'messageId': messageId,
           });
-      await notifiMessage();
+      // تحديث مستند المحادثة الرئيسي
+      FirebaseFirestore.instance.collection('chat').doc(chatRoomId()).update({
+        'lastMessageVideo': videoUrl, // أو وصف للملف
+        'date': Timestamp.now(),
+        'unreadCount.${widget.uid}': FieldValue.increment(
+          1,
+        ), // زيادة العداد للمستقبل
+      });
+      await notifiMessage('Video', videoUrl);
     }
   }
 
@@ -318,7 +345,15 @@ class _SendResChatState extends State<SendResChat> {
             'fileName': fileName,
             'messageId': messageId,
           });
-      await notifiMessage();
+      // تحديث مستند المحادثة الرئيسي
+      FirebaseFirestore.instance.collection('chat').doc(chatRoomId()).update({
+        'lastMessageFile': fileUrl, // أو وصف للملف
+        'date': Timestamp.now(),
+        'unreadCount.${widget.uid}': FieldValue.increment(
+          1,
+        ), // زيادة العداد للمستقبل
+      });
+      await notifiMessage('File', fileUrl);
     }
   }
 
@@ -360,7 +395,7 @@ class _SendResChatState extends State<SendResChat> {
     );
   }
 
-  notifiMessage() async {
+  notifiMessage(String typeMessage, String message) async {
     final user = context.read<AuthCubit>().currentUserInfo;
 
     // 1. احصل على بيانات المستقبل (FCM Token)
@@ -377,10 +412,10 @@ class _SendResChatState extends State<SendResChat> {
       );
       await callable.call(<String, dynamic>{
         'receiverFcmToken': receiverFcmToken,
-        'type': 'message', // نوع الإشعار
+        'type': typeMessage, // نوع الإشعار
         'senderName': user?.name ?? 'مستخدم جديد',
         'senderImage': user?.image ?? '', // رابط الصورة الشخصية للمرسل
-        'messageContent': control.text, // محتوى الرسالة
+        'messageContent': message, // محتوى الرسالة
         'chatRoomId': chatRoomId(),
         'senderId': user?.userId ?? '',
       });
@@ -684,7 +719,19 @@ class _SendResChatState extends State<SendResChat> {
                                     'image': '',
                                     'messageId': uuid,
                                   });
-                              await notifiMessage();
+                              // تحديث مستند المحادثة الرئيسي
+                              FirebaseFirestore.instance
+                                  .collection('chat')
+                                  .doc(chatRoomId())
+                                  .update({
+                                    'lastMessage': control.text, // أو وصف للملف
+                                    'date': Timestamp.now(),
+                                    'unreadCount.${widget.uid}':
+                                        FieldValue.increment(
+                                          1,
+                                        ), // زيادة العداد للمستقبل
+                                  });
+                              await notifiMessage('Text', control.text);
                               control.clear();
                             } catch (e) {
                               if (!mounted) {

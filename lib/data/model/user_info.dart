@@ -16,8 +16,14 @@ class UserInfoData extends Equatable {
   final int? adsCount;
   final String? language;
   final String? fcmToken;
+  final List<String>? friendRequestsSent;
+  final List<String>? friendRequestsReceived;
+  final List<String>? blockedUsers;
 
   const UserInfoData({
+    this.friendRequestsSent,
+    this.friendRequestsReceived,
+    this.blockedUsers,
     this.fcmToken,
     this.userId,
     this.name,
@@ -46,6 +52,11 @@ class UserInfoData extends Equatable {
     adsCount: json['adsCount'],
     language: json['language'],
     fcmToken: json['fcmToken'],
+    friendRequestsSent: List<String>.from(json['friendRequestsSent'] ?? []),
+    friendRequestsReceived: List<String>.from(
+      json['friendRequestsReceived'] ?? [],
+    ),
+    blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
   );
 
   Map<String, dynamic> toJson() => {
@@ -62,6 +73,9 @@ class UserInfoData extends Equatable {
     'adsCount': adsCount,
     'language': language,
     'fcmToken': fcmToken,
+    'friendRequestsSent': friendRequestsSent,
+    'friendRequestsReceived': friendRequestsReceived,
+    'blockedUsers': blockedUsers,
   };
 
   @override
@@ -85,7 +99,10 @@ class UserInfoData extends Equatable {
         other.points == points &&
         other.adsCount == adsCount &&
         other.fcmToken == fcmToken &&
-        other.language == language;
+        other.language == language &&
+        other.friendRequestsSent == friendRequestsSent &&
+        other.friendRequestsReceived == friendRequestsReceived &&
+        other.blockedUsers == blockedUsers;
   }
 
   @override
@@ -102,7 +119,10 @@ class UserInfoData extends Equatable {
         points.hashCode ^
         adsCount.hashCode ^
         fcmToken.hashCode ^
-        language.hashCode;
+        language.hashCode ^
+        friendRequestsSent.hashCode ^
+        friendRequestsReceived.hashCode ^
+        blockedUsers.hashCode;
   }
 
   UserInfoData copyWith({
@@ -119,6 +139,9 @@ class UserInfoData extends Equatable {
     int? adsCount,
     String? language,
     String? fcmToken,
+    List<String>? friendRequestsSent,
+    List<String>? friendRequestsReceived,
+    List<String>? blockedUsers,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -134,6 +157,10 @@ class UserInfoData extends Equatable {
       adsCount: adsCount ?? this.adsCount,
       language: language ?? this.language,
       fcmToken: fcmToken ?? this.fcmToken,
+      friendRequestsSent: friendRequestsSent ?? this.friendRequestsSent,
+      friendRequestsReceived:
+          friendRequestsReceived ?? this.friendRequestsReceived,
+      blockedUsers: blockedUsers ?? this.blockedUsers,
     );
   }
 
@@ -150,7 +177,14 @@ class UserInfoData extends Equatable {
       points = userInfoData.points,
       adsCount = userInfoData.adsCount,
       fcmToken = userInfoData.fcmToken,
-      language = userInfoData.language;
+      language = userInfoData.language,
+      friendRequestsSent = List<String>.from(
+        userInfoData.friendRequestsSent ?? [],
+      ),
+      friendRequestsReceived = List<String>.from(
+        userInfoData.friendRequestsReceived ?? [],
+      ),
+      blockedUsers = List<String>.from(userInfoData.blockedUsers ?? []);
 
   @override
   List<Object?> get props => [userId, name];

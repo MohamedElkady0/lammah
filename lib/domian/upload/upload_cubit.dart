@@ -157,6 +157,14 @@ class UploadCubit extends Cubit<UploadState> {
                   duration?.inMilliseconds ?? 0, // حفظ المدة بالمللي ثانية
               'messageId': messageId,
             });
+        // تحديث مستند المحادثة الرئيسي
+        FirebaseFirestore.instance.collection('chat').doc(chatRoomId).update({
+          'lastRecord': audioUrl, // أو وصف للملف
+          'date': Timestamp.now(),
+          'unreadCount.${currentUserInfo['userId']}': FieldValue.increment(
+            1,
+          ), // زيادة العداد للمستقبل
+        });
       }
     } catch (e) {
       debugPrint("Error stopping recording and sending: $e");
