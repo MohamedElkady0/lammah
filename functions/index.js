@@ -86,3 +86,43 @@ exports.sendNotification = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("internal", "Error sending");
   }
 });
+
+
+exports.sendFriendRequestNotification = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+  }
+
+  const senderName = data.senderName;
+  const receiverFcmToken = data.receiverFcmToken;
+  const senderId = context.auth.uid; // الحصول على ID المرسل بشكل آمن من context
+
+  if (!receiverFcmToken || !senderName) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing required data.");
+  }
+
+  const payload = {
+    notification: {
+      title: "طلب صداقة جديد 💌",
+      body: `${senderName} أرسل لك طلب صداقة.`,
+    },
+    data: {
+      type: "friend_request",
+      senderId: senderId,
+      senderName: senderName,
+      // يمكنك إضافة صورة المرسل هنا أيضاً إذا أردت
+    },
+    android: {
+      priority: "high",
+    },
+  };
+
+  try {
+    await admin.messaging().sendToDevice(receiverFcmToken, payload);
+    console.log(`Friend request notification sent to token: ${receiverFcmToken}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending friend request notification:", error);
+    throw new functions.https.HttpsError("internal", "Failed to send notification.");
+  }
+});

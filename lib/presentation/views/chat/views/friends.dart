@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lammah/core/utils/auth_string.dart';
@@ -208,13 +209,23 @@ class _FriendsScreenState extends State<FriendsScreen>
       trailingButton = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // زر القبول
           IconButton(
+            tooltip: 'قبول',
             icon: const Icon(Icons.check_circle, color: Colors.green),
             onPressed: () => _acceptFriendRequest(uid),
           ),
+          // زر الرفض (الحذف)
           IconButton(
-            icon: const Icon(Icons.cancel, color: Colors.red),
+            tooltip: 'رفض',
+            icon: const Icon(Icons.cancel, color: Colors.orange),
             onPressed: () => _rejectFriendRequest(uid),
+          ),
+          // زر الحظر
+          IconButton(
+            tooltip: 'حظر',
+            icon: const Icon(Icons.block, color: Colors.red),
+            onPressed: () => _blockUser(uid),
           ),
         ],
       );
@@ -241,15 +252,52 @@ class _FriendsScreenState extends State<FriendsScreen>
 
   // --- وظائف التعامل مع طلبات الصداقة ---
 
-  void _sendFriendRequest(String recipientUid) {
-    // إضافة UID الخاص بك إلى قائمة طلبات المستلم
-    _firestore.collection(AuthString.fSUsers).doc(recipientUid).update({
+  void _sendFriendRequest(String recipientUid) async {
+    var scaffoldMessengers = ScaffoldMessenger.of(context);
+    // أولاً، تحقق مما إذا كان هذا المستخدم قد حظرك
+    final recipientDoc = await _firestore
+        .collection('users')
+        .doc(recipientUid)
+        .get();
+    final List<dynamic> blockedByRecipient =
+        recipientDoc.data()?['blockedUsers'] ?? [];
+    if (blockedByRecipient.contains(_currentUserUid)) {
+      scaffoldMessengers.showSnackBar(
+        const SnackBar(content: Text('لا يمكنك إرسال طلب لهذا المستخدم.')),
+      );
+      return;
+    }
+
+    // 1. تحديث قاعدة البيانات كما في السابق
+    _firestore.collection('users').doc(recipientUid).update({
       'friendRequestsReceived': FieldValue.arrayUnion([_currentUserUid]),
     });
-    // إضافة UID المستلم إلى قائمة طلباتك المرسلة
-    _firestore.collection(AuthString.fSUsers).doc(_currentUserUid).update({
+    _firestore.collection('users').doc(_currentUserUid).update({
       'friendRequestsSent': FieldValue.arrayUnion([recipientUid]),
     });
+
+    // 2. إرسال الإشعار
+    try {
+      // جلب بياناتك (المرسل) وبيانات المستلم (FCM Token)
+      final myDoc = await _firestore
+          .collection('users')
+          .doc(_currentUserUid)
+          .get();
+      final myName = myDoc.data()?['name'] ?? 'مستخدم';
+      final receiverFcmToken = recipientDoc.data()?['fcmToken'];
+
+      if (receiverFcmToken != null) {
+        final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+          'sendFriendRequestNotification',
+        );
+        await callable.call(<String, dynamic>{
+          'receiverFcmToken': receiverFcmToken,
+          'senderName': myName,
+        });
+      }
+    } catch (e) {
+      print("Failed to send friend request notification: $e");
+    }
   }
 
   void _acceptFriendRequest(String senderUid) {
@@ -296,5 +344,42 @@ class _FriendsScreenState extends State<FriendsScreen>
     });
 
     batch.commit();
+  }
+  // داخل _FriendsScreenState
+
+  void _blockUser(String userToBlockUid) {
+    // هذا سيتم استدعاؤه عندما تضغط على أيقونة الحظر من قائمة الطلبات
+    // سيقوم برفض الطلب أولاً ثم حظر المستخدم نهائياً
+
+    final batch = _firestore.batch();
+    var scaffoldMessengers = ScaffoldMessenger.of(context);
+
+    // 1. (مثل الرفض) إزالة الطلب من قائمة طلباتك المستلمة
+    batch.update(_firestore.collection('users').doc(_currentUserUid), {
+      'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
+    });
+
+    // 2. (مثل الرفض) إزالة الطلب من قائمة طلباته المرسلة
+    batch.update(_firestore.collection('users').doc(userToBlockUid), {
+      'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
+    });
+
+    // 3. (الخطوة الجديدة) إضافة هذا المستخدم إلى قائمة الحظر الخاصة بك
+    batch.update(_firestore.collection('users').doc(_currentUserUid), {
+      'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
+    });
+
+    // 4. (اختياري ولكن موصى به) إضافتك إلى قائمة "محظور من قبل" لديه
+    // هذا يساعد في منعه من رؤيتك أيضاً
+    batch.update(_firestore.collection('users').doc(userToBlockUid), {
+      'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
+    });
+
+    // تنفيذ كل العمليات دفعة واحدة
+    batch.commit().then((_) {
+      scaffoldMessengers.showSnackBar(
+        const SnackBar(content: Text('تم حظر المستخدم بنجاح.')),
+      );
+    });
   }
 }
