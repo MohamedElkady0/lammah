@@ -7,6 +7,7 @@ import 'package:lammah/core/theme/themes_app.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
 import 'package:lammah/data/service/notification_service.dart';
+import 'package:lammah/data/service/presence_manager.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/notification/notification_cubit.dart';
 import 'package:lammah/domian/search/search_cubit.dart';
@@ -70,14 +71,16 @@ class Lammah extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
-          return MaterialApp(
-            navigatorKey: navigatorKey,
-            debugShowCheckedModeBanner: false,
-            title: StringApp.appName,
-            themeMode: themeState.themeMode,
-            theme: ThemesApp.light,
-            darkTheme: ThemesApp.dark,
-            home: const AppStartDecider(),
+          return PresenceManager(
+            child: MaterialApp(
+              navigatorKey: navigatorKey,
+              debugShowCheckedModeBanner: false,
+              title: StringApp.appName,
+              themeMode: themeState.themeMode,
+              theme: ThemesApp.light,
+              darkTheme: ThemesApp.dark,
+              home: const AppStartDecider(),
+            ),
           );
         },
       ),

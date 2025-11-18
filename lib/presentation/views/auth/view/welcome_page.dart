@@ -137,7 +137,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.onPrimary,
-                                      fontSize: height * 0.05,
+                                      fontSize: width * 0.1,
                                     ),
                               ),
                             ],

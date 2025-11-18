@@ -256,7 +256,7 @@ class _FriendsScreenState extends State<FriendsScreen>
     var scaffoldMessengers = ScaffoldMessenger.of(context);
     // أولاً، تحقق مما إذا كان هذا المستخدم قد حظرك
     final recipientDoc = await _firestore
-        .collection('users')
+        .collection(AuthString.fSUsers)
         .doc(recipientUid)
         .get();
     final List<dynamic> blockedByRecipient =
@@ -269,10 +269,10 @@ class _FriendsScreenState extends State<FriendsScreen>
     }
 
     // 1. تحديث قاعدة البيانات كما في السابق
-    _firestore.collection('users').doc(recipientUid).update({
+    _firestore.collection(AuthString.fSUsers).doc(recipientUid).update({
       'friendRequestsReceived': FieldValue.arrayUnion([_currentUserUid]),
     });
-    _firestore.collection('users').doc(_currentUserUid).update({
+    _firestore.collection(AuthString.fSUsers).doc(_currentUserUid).update({
       'friendRequestsSent': FieldValue.arrayUnion([recipientUid]),
     });
 
@@ -280,7 +280,7 @@ class _FriendsScreenState extends State<FriendsScreen>
     try {
       // جلب بياناتك (المرسل) وبيانات المستلم (FCM Token)
       final myDoc = await _firestore
-          .collection('users')
+          .collection(AuthString.fSUsers)
           .doc(_currentUserUid)
           .get();
       final myName = myDoc.data()?['name'] ?? 'مستخدم';
@@ -355,25 +355,37 @@ class _FriendsScreenState extends State<FriendsScreen>
     var scaffoldMessengers = ScaffoldMessenger.of(context);
 
     // 1. (مثل الرفض) إزالة الطلب من قائمة طلباتك المستلمة
-    batch.update(_firestore.collection('users').doc(_currentUserUid), {
-      'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
-    });
+    batch.update(
+      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
+      {
+        'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
+      },
+    );
 
     // 2. (مثل الرفض) إزالة الطلب من قائمة طلباته المرسلة
-    batch.update(_firestore.collection('users').doc(userToBlockUid), {
-      'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
-    });
+    batch.update(
+      _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
+      {
+        'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
+      },
+    );
 
     // 3. (الخطوة الجديدة) إضافة هذا المستخدم إلى قائمة الحظر الخاصة بك
-    batch.update(_firestore.collection('users').doc(_currentUserUid), {
-      'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
-    });
+    batch.update(
+      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
+      {
+        'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
+      },
+    );
 
     // 4. (اختياري ولكن موصى به) إضافتك إلى قائمة "محظور من قبل" لديه
     // هذا يساعد في منعه من رؤيتك أيضاً
-    batch.update(_firestore.collection('users').doc(userToBlockUid), {
-      'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
-    });
+    batch.update(
+      _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
+      {
+        'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
+      },
+    );
 
     // تنفيذ كل العمليات دفعة واحدة
     batch.commit().then((_) {

@@ -19,8 +19,10 @@ class UserInfoData extends Equatable {
   final List<String>? friendRequestsSent;
   final List<String>? friendRequestsReceived;
   final List<String>? blockedUsers;
+  final bool? isOnline;
 
   const UserInfoData({
+    this.isOnline,
     this.friendRequestsSent,
     this.friendRequestsReceived,
     this.blockedUsers,
@@ -57,6 +59,7 @@ class UserInfoData extends Equatable {
       json['friendRequestsReceived'] ?? [],
     ),
     blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
+    isOnline: json['isOnline'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +79,7 @@ class UserInfoData extends Equatable {
     'friendRequestsSent': friendRequestsSent,
     'friendRequestsReceived': friendRequestsReceived,
     'blockedUsers': blockedUsers,
+    'isOnline': isOnline,
   };
 
   @override
@@ -102,7 +106,8 @@ class UserInfoData extends Equatable {
         other.language == language &&
         other.friendRequestsSent == friendRequestsSent &&
         other.friendRequestsReceived == friendRequestsReceived &&
-        other.blockedUsers == blockedUsers;
+        other.blockedUsers == blockedUsers &&
+        other.isOnline == isOnline;
   }
 
   @override
@@ -122,7 +127,8 @@ class UserInfoData extends Equatable {
         language.hashCode ^
         friendRequestsSent.hashCode ^
         friendRequestsReceived.hashCode ^
-        blockedUsers.hashCode;
+        blockedUsers.hashCode ^
+        isOnline.hashCode;
   }
 
   UserInfoData copyWith({
@@ -142,6 +148,7 @@ class UserInfoData extends Equatable {
     List<String>? friendRequestsSent,
     List<String>? friendRequestsReceived,
     List<String>? blockedUsers,
+    bool? isOnline,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -161,11 +168,13 @@ class UserInfoData extends Equatable {
       friendRequestsReceived:
           friendRequestsReceived ?? this.friendRequestsReceived,
       blockedUsers: blockedUsers ?? this.blockedUsers,
+      isOnline: isOnline ?? this.isOnline,
     );
   }
 
   UserInfoData.fromUserInfoData(UserInfoData userInfoData) //this.userMessage
     : userId = userInfoData.userId,
+      isOnline = userInfoData.isOnline,
       name = userInfoData.name,
       email = userInfoData.email,
       phoneNumber = userInfoData.phoneNumber,
@@ -184,6 +193,7 @@ class UserInfoData extends Equatable {
       friendRequestsReceived = List<String>.from(
         userInfoData.friendRequestsReceived ?? [],
       ),
+
       blockedUsers = List<String>.from(userInfoData.blockedUsers ?? []);
 
   @override

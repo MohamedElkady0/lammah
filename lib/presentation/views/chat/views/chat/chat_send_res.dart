@@ -425,6 +425,8 @@ class _SendResChatState extends State<SendResChat> {
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthCubit>().currentUserInfo;
+    // ... جلب قائمة الأصدقاء (مثلاً من AuthCubit)
+    final isFriend = user?.friends?.contains(widget.uid) ?? false;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -560,6 +562,74 @@ class _SendResChatState extends State<SendResChat> {
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
+          !isFriend
+              ? IconButton(
+                  icon: Icon(Icons.person_add),
+                  onPressed: () => (String recipientUid) async {
+                    var scaffoldMessengers = ScaffoldMessenger.of(context);
+                    final FirebaseFirestore firestore =
+                        FirebaseFirestore.instance;
+                    final String currentUserUid =
+                        FirebaseAuth.instance.currentUser!.uid;
+                    // أولاً، تحقق مما إذا كان هذا المستخدم قد حظرك
+                    final recipientDoc = await firestore
+                        .collection(AuthString.fSUsers)
+                        .doc(recipientUid)
+                        .get();
+                    final List<dynamic> blockedByRecipient =
+                        recipientDoc.data()?['blockedUsers'] ?? [];
+                    if (blockedByRecipient.contains(currentUserUid)) {
+                      scaffoldMessengers.showSnackBar(
+                        const SnackBar(
+                          content: Text('لا يمكنك إرسال طلب لهذا المستخدم.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // 1. تحديث قاعدة البيانات كما في السابق
+                    firestore
+                        .collection(AuthString.fSUsers)
+                        .doc(recipientUid)
+                        .update({
+                          'friendRequestsReceived': FieldValue.arrayUnion([
+                            currentUserUid,
+                          ]),
+                        });
+                    firestore
+                        .collection(AuthString.fSUsers)
+                        .doc(currentUserUid)
+                        .update({
+                          'friendRequestsSent': FieldValue.arrayUnion([
+                            recipientUid,
+                          ]),
+                        });
+
+                    // 2. إرسال الإشعار
+                    try {
+                      // جلب بياناتك (المرسل) وبيانات المستلم (FCM Token)
+                      final myDoc = await firestore
+                          .collection(AuthString.fSUsers)
+                          .doc(currentUserUid)
+                          .get();
+                      final myName = myDoc.data()?['name'] ?? 'مستخدم';
+                      final receiverFcmToken = recipientDoc.data()?['fcmToken'];
+
+                      if (receiverFcmToken != null) {
+                        final HttpsCallable callable = FirebaseFunctions
+                            .instance
+                            .httpsCallable('sendFriendRequestNotification');
+                        await callable.call(<String, dynamic>{
+                          'receiverFcmToken': receiverFcmToken,
+                          'senderName': myName,
+                        });
+                      }
+                    } catch (e) {
+                      print("Failed to send friend request notification: $e");
+                    }
+                  },
+                )
+              : const SizedBox.shrink(),
         ],
       ),
       body: Padding(
