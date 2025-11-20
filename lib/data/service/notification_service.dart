@@ -119,53 +119,80 @@ class NotificationService {
     final type = message.data['type'];
 
     if (type == 'new_message') {
-      final senderId = message.data['senderId'];
+      // هل هذا الإشعار لجروب؟ (يجب أن ترسل هذا الحقل من Cloud Function)
+      // إذا لم يكن الحقل موجوداً، نعتبره false
+      // 1. استخراج معرف الغرفة من بيانات الإشعار
+      final chatRoomId = message.data['chatRoomId'];
+      final isGroup = message.data['isGroup'] == 'true';
+      if (isGroup) {
+        // --- منطق الجروب ---
+        final groupName = message.data['groupName'] ?? 'مجموعة';
+        // في الجروب لا يهمنا صورة المرسل الفردي في الـ AppBar، بل صورة الجروب
+        // أو يمكننا تمرير صورة افتراضية
 
-      if (senderId != null) {
-        try {
-          // 2. جلب بيانات المرسل من Firestore
-          final userDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(senderId)
-              .get();
-          if (userDoc.exists) {
-            final userData = userDoc.data() as Map<String, dynamic>;
-            final userName = userData['name'] ?? 'مستخدم';
-            final userImage = userData['image'] ?? '';
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => SendResChat(
+              userName: groupName,
+              userImage: '', // أو صورة الجروب إذا كانت متوفرة في الإشعار
+              uid: '', // لا نحتاج UID فردي في الجروب
+              isGroupChat: true, // <--- تفعيل وضع الجروب
+              chatId: chatRoomId,
+            ),
+          ),
+        );
+      } else {
+        final senderId = message.data['senderId'];
 
-            // 3. الآن يمكنك الانتقال بالبيانات الصحيحة
+        if (senderId != null) {
+          try {
+            final userDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(senderId)
+                .get();
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              final userName = userData['name'] ?? 'مستخدم';
+              final userImage = userData['image'] ?? '';
+
+              navigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => SendResChat(
+                    userName: userName,
+                    userImage: userImage,
+                    uid: senderId,
+                    // 2. تمرير البارامترات الناقصة
+                    isGroupChat:
+                        false, // لأننا جلبنا بيانات مستخدم، فهي محادثة فردية
+                    chatId:
+                        chatRoomId ?? '', // تمرير معرف الغرفة القادم من الإشعار
+                  ),
+                ),
+              );
+            }
+          } catch (e) {
+            print("Error fetching user data for notification: $e");
+          }
+        } else if (type == 'incoming_call') {
+          // هذا إشعار بمكالمة واردة
+          final callId = message.data['callId'];
+          final callerName = message.data['callerName'];
+          final channelName = message.data['channelName'];
+          final isVideoCall = message.data['isVideoCall'] == 'true';
+
+          if (callId != null && callerName != null && channelName != null) {
             navigatorKey.currentState?.push(
               MaterialPageRoute(
-                builder: (context) => SendResChat(
-                  userName: userName,
-                  userImage: userImage,
-                  uid: senderId, // الـ uid هو senderId
+                builder: (context) => IncomingCallScreen(
+                  callId: callId,
+                  callerName: callerName,
+                  channelName: channelName,
+                  isVideoCall: isVideoCall,
                 ),
               ),
             );
           }
-        } catch (e) {
-          print("Error fetching user data for notification: $e");
         }
-      }
-    } else if (type == 'incoming_call') {
-      // هذا إشعار بمكالمة واردة
-      final callId = message.data['callId'];
-      final callerName = message.data['callerName'];
-      final channelName = message.data['channelName'];
-      final isVideoCall = message.data['isVideoCall'] == 'true';
-
-      if (callId != null && callerName != null && channelName != null) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => IncomingCallScreen(
-              callId: callId,
-              callerName: callerName,
-              channelName: channelName,
-              isVideoCall: isVideoCall,
-            ),
-          ),
-        );
       }
     }
   }

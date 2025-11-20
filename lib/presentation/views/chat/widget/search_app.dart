@@ -6,7 +6,6 @@ import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/data/model/user_info.dart';
 import 'package:lammah/domian/search/search_cubit.dart';
 import 'package:lammah/domian/search/search_state.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
 
 class SearchApp extends StatefulWidget {
   const SearchApp({super.key});
@@ -105,20 +104,6 @@ class _SearchAppState extends State<SearchApp> {
                           IconButton(
                             onPressed: () {},
                             icon: const Icon(Icons.person_add),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => SendResChat(
-                                    userName: user.name ?? '',
-                                    userImage: user.image ?? '',
-                                    uid: user.userId ?? '',
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.chat),
                           ),
                         ],
                       ),

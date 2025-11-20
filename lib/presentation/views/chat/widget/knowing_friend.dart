@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -185,8 +186,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       barrierDismissible: false,
       builder: (ctx) {
         final authCubit = context.read<AuthCubit>();
-        final isFriend =
-            authCubit.currentUserInfo!.friends?.contains(user.uid) ?? false;
+        final currentUserInfo = authCubit.currentUserInfo;
+        final isFriend = currentUserInfo!.friends?.contains(user.uid) ?? false;
+        final currentUserId =
+            currentUserInfo.userId ?? FirebaseAuth.instance.currentUser!.uid;
 
         return AlertDialog(
           contentPadding: const EdgeInsets.all(16.0),
@@ -237,6 +240,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               child: const Text('تأكيد وبدء المحادثة'),
               onPressed: () {
                 Navigator.of(ctx).pop();
+
+                // 1. حساب Chat ID (الغرفة)
+                // يجب ترتيب الـ IDs أبجدياً لضمان أن الطرفين يدخلان نفس الغرفة
+                List<String> userIds = [currentUserId, user.uid];
+                userIds.sort();
+                String chatRoomId = '${userIds[0]}_${userIds[1]}';
+
+                // 2. الانتقال مع البارامترات الجديدة المطلوبة
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -244,6 +255,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       userName: user.name,
                       userImage: user.image,
                       uid: user.uid,
+                      isGroupChat: false, // لأنها محادثة فردية
+                      chatId: chatRoomId, // تمرير معرف الغرفة الذي حسبناه
                     ),
                   ),
                 );

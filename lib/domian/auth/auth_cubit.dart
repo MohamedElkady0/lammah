@@ -238,7 +238,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthLoading());
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy.medium,
       );
 
       final newPosition = LatLng(position.latitude, position.longitude);
@@ -269,19 +269,22 @@ class AuthCubit extends Cubit<AuthState> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
 
+        // تعديل: استخدام administrativeArea بدلاً من تكرار locality
+        // وتأكدنا أننا خزننا العنوان أولاً قبل الدخول في العمليات الخطرة التالية
         currentAddress =
-            '${place.country},${place.locality},${place.street},${place.locality},${place.postalCode}';
+            '${place.country},${place.locality},${place.street},${place.administrativeArea},${place.postalCode}';
 
+        // العمليات الإضافية (جلب كود الدولة وموقعها)
         if (place.country != null && place.country!.isNotEmpty) {
+          // محاولة جلب كود الدولة
           try {
             Country country = Country.parse(place.country!);
             currentCountryCode = country.countryCode;
           } catch (e) {
-            debugPrint(
-              "Could not parse country name to get code: ${e.toString()}",
-            );
             currentCountryCode = null;
           }
+
+          // محاولة جلب إحداثيات الدولة
           try {
             List<Location> locations = await locationFromAddress(
               place.country!,
@@ -294,16 +297,17 @@ class AuthCubit extends Cubit<AuthState> {
             }
           } catch (e) {
             debugPrint("Could not geocode the country: ${e.toString()}");
+            // في حالة الفشل هنا، نستخدم موقع المستخدم الحالي كبديل لموقع الدولة
             countryPosition = LatLng(position.latitude, position.longitude);
-            currentCountryCode = null;
-            currentAddress =
-                '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+
+            // هام: قمنا بإزالة السطر الذي كان يمسح currentAddress ويجعله unknown
+            // لأننا بالفعل نمتلك العنوان الصحيح من الخطوة الأولى
           }
         }
       }
     } catch (e) {
       debugPrint(e.toString());
-
+      // هنا فقط (إذا فشل كل شيء) نضع القيم المجهولة
       currentAddress =
           '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
       countryPosition = LatLng(0, 0);
@@ -324,38 +328,36 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: AuthString.fillAllAr));
       return;
     }
-    if (currentPosition == null || currentAddress.isEmpty) {
-      Future.delayed(Duration(seconds: 5));
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
-      currentPosition = LatLng(0, 0);
-      emit(AuthFailure(message: AuthString.noLocation));
-    }
 
     emit(AuthLoading());
 
     UserCredential? userCredential;
 
     try {
+      final String imgUrl = await uploadImageAndGetUrl(img!);
       userCredential = await _credential.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final String imgUrl = await uploadImageAndGetUrl(img!);
-
       String? fcmToken = await messaging.getToken();
       final userInfo = UserInfoData(
         image: imgUrl,
         email: email,
-        phoneNumber: number.phoneNumber ?? AuthString.empty,
+        phoneNumber: '',
         userId: _credential.currentUser!.uid,
         name: name,
         friends: [],
-        userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
-        userCity:
-            '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
-        userCountry: currentAddress.split(',')[0],
+        userPlace: '',
+        userCity: '',
+        userCountry: '',
         fcmToken: fcmToken,
+        friendRequestsReceived: [],
+        friendRequestsSent: [],
+        blockedUsers: [],
+        points: 0,
+        adsCount: 0,
+        language: '',
       );
 
       await FirebaseFirestore.instance
@@ -401,13 +403,11 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (userDoc.exists) {
         _currentUserInfo = UserInfoData.fromJson(userDoc.data()!);
+        emit(AuthSuccess(userInfo: _currentUserInfo!));
       } else {
         emit(AuthFailure(message: AuthString.userDoesNotExist));
         return;
       }
-      await _cacheService.saveUserData(_currentUserInfo!);
-
-      emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException {
       emit(AuthFailure(message: AuthString.errAuth4));
     } catch (e) {
@@ -435,11 +435,6 @@ class AuthCubit extends Cubit<AuthState> {
       final UserCredential userCredential = await _credential
           .signInWithCredential(credential);
 
-      if (currentPosition == null || currentAddress.isEmpty) {
-        emit(AuthFailure(message: AuthString.noLocation));
-        currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
-        currentPosition = LatLng(0, 0);
-      }
       String? fcmToken = await messaging.getToken();
       UserInfoData userInfo = UserInfoData(
         userId: _credential.currentUser!.uid,
@@ -448,11 +443,16 @@ class AuthCubit extends Cubit<AuthState> {
         phoneNumber: userCredential.user!.phoneNumber ?? AuthString.empty,
         image: userCredential.user!.photoURL ?? AuthString.empty,
         friends: _currentUserInfo?.friends ?? [],
-        userPlace: '${currentPosition?.latitude}-${currentPosition?.longitude}',
-        userCity:
-            '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
-        userCountry: currentAddress.split(',')[0],
+        userPlace: '',
+        userCity: '',
+        userCountry: '',
         fcmToken: fcmToken,
+        friendRequestsReceived: [],
+        friendRequestsSent: [],
+        blockedUsers: [],
+        points: 0,
+        adsCount: 0,
+        language: '',
       );
 
       final userDoc = await FirebaseFirestore.instance
@@ -578,11 +578,6 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: AuthString.otpVerificationFailed));
       return;
     }
-    if (currentPosition == null || currentAddress.isEmpty) {
-      emit(AuthFailure(message: AuthString.noLocation));
-      currentAddress = '${AuthString.noAddressSelected},unknown,unknown';
-      currentPosition = LatLng(0, 0);
-    }
 
     emit(AuthLoading());
     final credential = PhoneAuthProvider.credential(
@@ -602,11 +597,6 @@ class AuthCubit extends Cubit<AuthState> {
           if (userDoc.exists) {
             _currentUserInfo = UserInfoData.fromJson(userDoc.data()!);
           } else {
-            if (currentPosition == null || currentAddress.isEmpty) {
-              emit(AuthFailure(message: AuthString.noLocation));
-              currentAddress = AuthString.noAddressSelected;
-              currentPosition = LatLng(0, 0);
-            }
             String? fcmToken = await messaging.getToken();
             final userInfo = UserInfoData(
               image: AuthString.empty,
@@ -616,12 +606,16 @@ class AuthCubit extends Cubit<AuthState> {
               userId: _credential.currentUser!.uid,
               name: AuthString.empty,
               friends: _currentUserInfo?.friends ?? [],
-              userPlace:
-                  '${currentPosition?.latitude}-${currentPosition?.longitude}',
-              userCity:
-                  '${currentAddress.split(',')[1]}-${currentAddress.split(',')[2]}',
-              userCountry: currentAddress.split(',')[0],
+              userPlace: '',
+              userCity: '',
+              userCountry: '',
               fcmToken: fcmToken,
+              friendRequestsReceived: [],
+              friendRequestsSent: [],
+              blockedUsers: [],
+              points: 0,
+              adsCount: 0,
+              language: '',
             );
             await FirebaseFirestore.instance
                 .collection(AuthString.fSUsers)

@@ -26,11 +26,15 @@ class SendResChat extends StatefulWidget {
     required this.userName,
     required this.userImage,
     required this.uid,
+    required this.isGroupChat,
+    required this.chatId,
   });
 
   final String userName;
   final String userImage;
   final String uid;
+  final bool isGroupChat;
+  final String chatId;
 
   @override
   State<SendResChat> createState() => _SendResChatState();
@@ -173,6 +177,24 @@ class _SendResChatState extends State<SendResChat> {
         return AlertDialog(title: const Text('اختر إجراء'), actions: actions);
       },
     );
+  }
+
+  Stream<QuerySnapshot> _getMessageStream() {
+    if (widget.isGroupChat) {
+      return FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.chatId)
+          .collection('messages')
+          .orderBy('date')
+          .snapshots();
+    } else {
+      return FirebaseFirestore.instance
+          .collection('chat')
+          .doc(widget.chatId)
+          .collection('message')
+          .orderBy('date')
+          .snapshots();
+    }
   }
 
   _sendImage() async {
@@ -639,12 +661,7 @@ class _SendResChatState extends State<SendResChat> {
           children: [
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('chat')
-                    .doc(chatRoomId())
-                    .collection('message')
-                    .orderBy('date', descending: false)
-                    .snapshots(),
+                stream: _getMessageStream(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -758,56 +775,94 @@ class _SendResChatState extends State<SendResChat> {
                       )
                     : IconButton(
                         onPressed: () async {
+                          // تحديد المسار بناءً على نوع المحادثة
+                          final collectionPath = widget.isGroupChat
+                              ? 'groups'
+                              : 'chat';
+                          final messageSubCollection = widget.isGroupChat
+                              ? 'messages'
+                              : 'message';
+
                           final messenger = ScaffoldMessenger.of(context);
+
                           if (control.text.trim().isNotEmpty) {
                             final uuid = const Uuid().v4();
                             try {
-                              await FirebaseFirestore.instance
-                                  .collection('chat')
-                                  .doc(chatRoomId())
-                                  .set({
-                                    'senderName': user?.name ?? '',
-                                    'senderImage': user?.image ?? '',
-                                    'senderId': user?.userId ?? '',
-                                    'receiverName': widget.userName,
-                                    'receiverImage': widget.userImage,
-                                    'receiverId': widget.uid,
-                                    'partial': [user?.userId ?? '', widget.uid],
-                                    'chatRoomId': chatRoomId(),
-                                    'date': Timestamp.now(),
-                                  });
+                              // 1. إذا كانت محادثة فردية، تأكد من إنشاء الغرفة أولاً (أو تحديث بياناتها)
+                              // في الجروبات، الغرفة موجودة بالفعل لذا لا نحتاج لـ .set() الكاملة هنا
+                              if (!widget.isGroupChat) {
+                                await FirebaseFirestore.instance
+                                    .collection('chat')
+                                    .doc(
+                                      widget.chatId,
+                                    ) // استخدم widget.chatId بدلاً من chatRoomId()
+                                    .set(
+                                      {
+                                        'senderName': user?.name ?? '',
+                                        'senderImage': user?.image ?? '',
+                                        'senderId': user?.userId ?? '',
+                                        'receiverName': widget.userName,
+                                        'receiverImage': widget.userImage,
+                                        'receiverId': widget.uid,
+                                        'partial': [
+                                          user?.userId ?? '',
+                                          widget.uid,
+                                        ],
+                                        'chatRoomId': widget.chatId,
+                                        'date': Timestamp.now(),
+                                      },
+                                      SetOptions(merge: true),
+                                    ); // merge مهم جداً لعدم مسح البيانات الأخرى
+                              }
 
+                              // 2. إضافة الرسالة في الـ Collection الصحيح
                               await FirebaseFirestore.instance
-                                  .collection('chat')
-                                  .doc(chatRoomId())
-                                  .collection('message')
-                                  .doc(uuid)
-                                  .set({
+                                  .collection(collectionPath)
+                                  .doc(widget.chatId)
+                                  .collection(messageSubCollection)
+                                  .add({
+                                    // استخدم .add أو .doc(uuid).set
                                     'message': control.text,
-                                    'userId': user?.userId ?? '',
+                                    'userId': user?.userId ?? '', // أو senderId
+                                    'senderId': user?.userId ?? '',
                                     'date': Timestamp.now(),
                                     'image': '',
                                     'messageId': uuid,
+                                    'type': 'text',
                                   });
-                              // تحديث مستند المحادثة الرئيسي
-                              FirebaseFirestore.instance
-                                  .collection('chat')
-                                  .doc(chatRoomId())
-                                  .update({
-                                    'lastMessage': control.text, // أو وصف للملف
-                                    'date': Timestamp.now(),
-                                    'unreadCount.${widget.uid}':
-                                        FieldValue.increment(
-                                          1,
-                                        ), // زيادة العداد للمستقبل
-                                  });
+
+                              // 3. تحديث "آخر رسالة" والعدادات في المستند الرئيسي
+                              // ملاحظة: في الجروبات نحتاج لتحديث العداد لكل الأعضاء
+                              // هذا الجزء قد يتطلب Cloud Function للأداء الأفضل، لكن هنا مثال بسيط
+
+                              Map<String, dynamic> updateData = {
+                                'lastMessage': control.text,
+                                'date': Timestamp.now(),
+                                // تحديث timestamp للجروبات باسم مختلف اذا لزم
+                                if (widget.isGroupChat)
+                                  'lastMessageTimestamp': Timestamp.now(),
+                              };
+
+                              // تحديث عداد الرسائل غير المقروءة
+                              if (!widget.isGroupChat) {
+                                // للمحادثة الفردية: زود عداد الطرف الآخر
+                                updateData['unreadCount.${widget.uid}'] =
+                                    FieldValue.increment(1);
+                              } else {
+                                // للجروبات: هذا معقد من الكود مباشرة، يفضل Cloud Function
+                                // لأنك تحتاج لزيادة العداد لكل الأعضاء ما عدا المرسل
+                                // كحل مؤقت: لا تحدث العداد هنا للجروبات، أو قم بجلب قائمة الأعضاء وتحديثهم
+                              }
+
+                              await FirebaseFirestore.instance
+                                  .collection(collectionPath)
+                                  .doc(widget.chatId)
+                                  .update(updateData);
+
                               await notifiMessage('Text', control.text);
                               control.clear();
                             } catch (e) {
-                              if (!mounted) {
-                                return;
-                              }
-
+                              if (!mounted) return;
                               messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to send message: $e'),

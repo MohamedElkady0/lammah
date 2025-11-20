@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lammah/core/function/date_utils.dart';
 import 'package:lammah/core/utils/auth_string.dart';
+import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/widget/user_avatar_with_status.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -193,7 +196,6 @@ class _FriendsScreenState extends State<FriendsScreen>
     );
   }
 
-  // --- ويدجت لعرض عنصر مستخدم واحد (Tile) ---
   Widget _buildUserTile(
     DocumentSnapshot userDoc, {
     bool isRequest = false,
@@ -204,24 +206,59 @@ class _FriendsScreenState extends State<FriendsScreen>
     final String image = userData['image'] ?? '';
     final String uid = userDoc.id;
 
-    Widget trailingButton;
+    // جلب بيانات الحالة (أونلاين / آخر ظهور)
+    final bool isOnline = userData['isOnline'] ?? false;
+    final Timestamp? lastSeen = userData['lastSeen'];
+
+    return ListTile(
+      // استخدام ويدجت الصورة مع حالة الأونلاين
+      leading: UserAvatarWithStatus(image: image, isOnline: isOnline),
+      title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+      // عرض حالة الاتصال فقط للأصدقاء الحاليين
+      subtitle: !isRequest && !isSuggestion
+          ? Text(
+              isOnline ? 'متصل الآن' : formatLastSeen(lastSeen),
+              style: TextStyle(
+                color: isOnline ? Colors.green : Colors.grey,
+                fontSize: 12,
+              ),
+            )
+          : null,
+
+      // استدعاء الدالة المساعدة لبناء الأزرار الجانبية
+      trailing: _buildTrailingButton(isRequest, isSuggestion, uid, name, image),
+
+      onTap: () {
+        // الانتقال للمحادثة فقط إذا كانوا أصدقاء
+        if (!isRequest && !isSuggestion) {
+          _navigateToChat(name, image, uid);
+        }
+      },
+    );
+  }
+
+  Widget _buildTrailingButton(
+    bool isRequest,
+    bool isSuggestion,
+    String uid,
+    String name,
+    String image,
+  ) {
     if (isRequest) {
-      trailingButton = Row(
+      // حالة طلب الصداقة: عرض أزرار قبول، رفض، حظر
+      return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // زر القبول
           IconButton(
             tooltip: 'قبول',
             icon: const Icon(Icons.check_circle, color: Colors.green),
             onPressed: () => _acceptFriendRequest(uid),
           ),
-          // زر الرفض (الحذف)
           IconButton(
             tooltip: 'رفض',
             icon: const Icon(Icons.cancel, color: Colors.orange),
             onPressed: () => _rejectFriendRequest(uid),
           ),
-          // زر الحظر
           IconButton(
             tooltip: 'حظر',
             icon: const Icon(Icons.block, color: Colors.red),
@@ -230,24 +267,45 @@ class _FriendsScreenState extends State<FriendsScreen>
         ],
       );
     } else if (isSuggestion) {
-      trailingButton = ElevatedButton(
+      // حالة الاقتراح: زر إضافة
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
         child: const Text('إضافة'),
         onPressed: () => _sendFriendRequest(uid),
       );
     } else {
-      // لعرض الأصدقاء الحاليين، يمكن وضع زر محادثة أو لا شيء
-      trailingButton = const Icon(Icons.chat);
+      // حالة الصديق الحالي: زر المحادثة
+      return IconButton(
+        icon: const Icon(Icons.chat, color: Colors.blue),
+        onPressed: () => _navigateToChat(name, image, uid),
+      );
     }
+  }
 
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: image.isNotEmpty ? NetworkImage(image) : null,
-        child: image.isEmpty ? const Icon(Icons.person) : null,
+  // دالة مساعدة للانتقال للشات (لتجنب تكرار الكود)
+  void _navigateToChat(String name, String image, String uid) {
+    // تأكد من استيراد SendResChat
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SendResChat(
+          userName: name,
+          userImage: image,
+          uid: uid,
+          isGroupChat: false,
+          chatId: _getChatRoomId(_currentUserUid, uid), // دالة حساب الـ ID
+        ),
       ),
-      title: Text(name),
-      trailing: trailingButton,
-      // يمكنك إضافة onTap للانتقال للمحادثة مع الأصدقاء
     );
+  }
+
+  // دالة حساب ChatRoomId (نفس الموجودة في MapScreen)
+  String _getChatRoomId(String user1, String user2) {
+    List<String> userIds = [user1, user2];
+    userIds.sort();
+    return '${userIds[0]}_${userIds[1]}';
   }
 
   // --- وظائف التعامل مع طلبات الصداقة ---
