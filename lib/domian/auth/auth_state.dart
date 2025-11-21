@@ -41,11 +41,6 @@ class AuthLoadingProgress extends AuthState {
   AuthLoadingProgress(this.progress);
 }
 
-class LocationUpdateSuccess extends AuthState {
-  final LatLng position;
-  LocationUpdateSuccess(this.position);
-}
-
 class ShowOnboardingState extends AuthState {}
 
 class AuthAuthenticated extends AuthState {}

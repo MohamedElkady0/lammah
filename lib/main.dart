@@ -9,10 +9,12 @@ import 'package:lammah/core/utils/string_app.dart';
 import 'package:lammah/data/service/notification_service.dart';
 import 'package:lammah/data/service/presence_manager.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/location/location_cubit.dart';
 import 'package:lammah/domian/notification/notification_cubit.dart';
 import 'package:lammah/domian/search/search_cubit.dart';
 import 'package:lammah/domian/theme/theme_cubit.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
+import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
 import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/presentation/views/Introduction/Introduction.dart';
 import 'package:lammah/presentation/views/auth/view/welcome_page.dart';
@@ -68,6 +70,8 @@ class Lammah extends StatelessWidget {
             return SearchCubit(currentUserId: currentUserId);
           },
         ),
+        BlocProvider(create: (context) => UpdateUserCubit()),
+        BlocProvider(create: (context) => LocationCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

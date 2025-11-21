@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:lammah/core/utils/auth_string.dart';
+import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
 import 'package:multi_image_picker_view/multi_image_picker_view.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,6 +24,10 @@ class UploadCubit extends Cubit<UploadState> {
   final AudioRecorder _audioRecorder = AudioRecorder();
   bool isRecording = false;
   String? _audioPath;
+  File? img;
+  final FirebaseAuth _credential = FirebaseAuth.instance;
+
+  final UpdateUserCubit uploadCubit = UpdateUserCubit();
 
   Future<void> uploadImages(List<ImageFile> images) async {
     if (images.isEmpty) return;
@@ -168,6 +175,60 @@ class UploadCubit extends Cubit<UploadState> {
       }
     } catch (e) {
       debugPrint("Error stopping recording and sending: $e");
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  void pickImage({required String title}) async {
+    final ImagePicker picker = ImagePicker();
+    XFile? pickedFile;
+    if (title == AuthString.gallery) {
+      pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    } else {
+      pickedFile = await picker.pickImage(source: ImageSource.camera);
+    }
+    if (pickedFile == null) {
+      return;
+    }
+
+    img = File(pickedFile.path);
+    emit(ImagePicked(img!));
+  }
+
+  //----------------------------------------------------------------------------
+  Future<String> uploadImageAndGetUrl(File imageFile) async {
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child(AuthString.fSUserImages)
+          .child('${_credential.currentUser!.uid}.png');
+
+      await storageRef.putFile(imageFile);
+      final imgUrl = await storageRef.getDownloadURL();
+      return imgUrl;
+    } catch (e) {
+      emit(UploadFailure('فشل رفع الصورة: ${e.toString()}'));
+      throw Exception('فشل رفع الصورة: ${e.toString()}');
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  void uploadAndUpdateProfileImage() async {
+    if (img == null) {
+      emit(UploadFailure(AuthString.choseImg));
+      return;
+    }
+
+    emit(UploadLoading());
+
+    try {
+      final String imgUrl = await uploadImageAndGetUrl(img!);
+
+      await uploadCubit.updateUserDocument(imgUrl);
+
+      emit(UploadSuccessImage(imgUrl));
+    } catch (e) {
+      emit(UploadFailure(e.toString()));
     }
   }
 }

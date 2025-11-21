@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/presentation/views/auth/widget/button_auth.dart';
 import 'package:lammah/presentation/views/auth/widget/fun_service.dart';
 import 'package:lammah/presentation/views/auth/widget/image_auth.dart';
@@ -88,9 +90,9 @@ class _ScapePhoneAuthState extends State<ScapePhoneAuth> {
                                 if (formKey.currentState!.validate()) {
                                   formKey.currentState!.save();
 
-                                  final authCubit = BlocProvider.of<AuthCubit>(
-                                    context,
-                                  );
+                                  final upload = context.read<UploadCubit>();
+                                  final updateuser = context
+                                      .read<UpdateUserCubit>();
                                   final scaffoldMessenger =
                                       ScaffoldMessenger.of(context);
 
@@ -106,9 +108,9 @@ class _ScapePhoneAuthState extends State<ScapePhoneAuth> {
                                       agree = true;
                                     });
 
-                                    authCubit.uploadAndUpdateProfileImage();
+                                    upload.uploadAndUpdateProfileImage();
 
-                                    authCubit.updateName(nameController.text);
+                                    updateuser.updateName(nameController.text);
                                   } else {
                                     scaffoldMessenger.clearSnackBars();
                                     scaffoldMessenger.showSnackBar(

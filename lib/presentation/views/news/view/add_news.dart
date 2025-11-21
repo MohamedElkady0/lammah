@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/data/const/list_news.dart';
-import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/presentation/widgets/button_image.dart';
 import 'package:lammah/presentation/widgets/button_style.dart';
 import 'package:lammah/presentation/widgets/drop2.dart';
@@ -40,6 +40,7 @@ class _AddNewsState extends State<AddNews> {
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
     double height = ConfigApp.height;
+    final upload = BlocProvider.of<UploadCubit>(context);
 
     return SafeArea(
       child: Scaffold(
@@ -137,9 +138,7 @@ class _AddNewsState extends State<AddNews> {
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    context.read<AuthCubit>().pickImage(
-                                      title: 'Gallery',
-                                    );
+                                    upload.pickImage(title: 'Gallery');
                                   },
                                   icon: const Icon(Icons.camera),
                                 ),

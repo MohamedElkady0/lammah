@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
 abstract class UploadState extends Equatable {
@@ -32,4 +34,14 @@ class UploadFailure extends UploadState {
 class RecordingStateChanged extends UploadState {
   final bool isRecording;
   const RecordingStateChanged(this.isRecording);
+}
+
+class ImagePicked extends UploadState {
+  final File image;
+  const ImagePicked(this.image);
+}
+
+class UploadSuccessImage extends UploadState {
+  final String imageUrl;
+  const UploadSuccessImage(this.imageUrl);
 }

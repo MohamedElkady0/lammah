@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:lammah/domian/location/location_cubit.dart';
 import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lammah/core/utils/chat_string.dart';
@@ -51,10 +52,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Tween<double>? _latTween;
   Tween<double>? _lngTween;
 
+  final LocationCubit locationCubit = LocationCubit();
+
   @override
   void initState() {
     super.initState();
-    context.read<AuthCubit>().getCurrentLocation();
+    context.read<LocationCubit>().getCurrentLocation();
 
     _animationController = AnimationController(
       vsync: this,
@@ -133,7 +136,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           position: position,
         );
         _startFlightAnimation(
-          authCubit.currentPosition!,
+          locationCubit.currentPosition!,
           position,
           matchedUser,
         );
@@ -273,7 +276,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         final authCubit = context.read<AuthCubit>();
-        final positionForMap = authCubit.currentPosition;
+        final positionForMap = locationCubit.currentPosition;
         final userInfoData = authCubit.currentUserInfo;
 
         if (positionForMap == null || userInfoData == null) {
@@ -304,8 +307,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          if (authCubit.currentCountryCode != null)
-                            CircleFlag(authCubit.currentCountryCode!, size: 60),
+                          if (locationCubit.currentCountryCode != null)
+                            CircleFlag(
+                              locationCubit.currentCountryCode!,
+                              size: 60,
+                            ),
                           Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: CircleAvatar(
@@ -403,19 +409,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (authCubit.currentCountryCode != null)
+                      if (locationCubit.currentCountryCode != null)
                         CountryFlag.fromCountryCode(
-                          authCubit.currentCountryCode!,
+                          locationCubit.currentCountryCode!,
                           height: 20,
                           width: 30,
                         ),
 
-                      if (authCubit.currentCountryCode != null)
+                      if (locationCubit.currentCountryCode != null)
                         const SizedBox(width: 8),
 
                       Text(
                         userInfoData.userCountry ??
-                            authCubit.currentAddress.split(',')[0],
+                            locationCubit.currentAddress.split(',')[0],
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
 
 class ImageAuth extends StatelessWidget {
   const ImageAuth({super.key});
@@ -11,6 +12,7 @@ class ImageAuth extends StatelessWidget {
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
     double width = ConfigApp.width;
+    final upload = BlocProvider.of<UploadCubit>(context);
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
@@ -22,7 +24,7 @@ class ImageAuth extends StatelessWidget {
         return InkWell(
           borderRadius: BorderRadius.circular(40),
           onTap: () {
-            context.read<AuthCubit>().pickImage(title: 'Gallery');
+            upload.pickImage(title: 'Gallery');
             imageFile = context.read<AuthCubit>().img;
           },
           child: CircleAvatar(
@@ -33,7 +35,7 @@ class ImageAuth extends StatelessWidget {
             child: imageFile == null
                 ? IconButton(
                     onPressed: () {
-                      context.read<AuthCubit>().pickImage(title: 'Camera');
+                      upload.pickImage(title: 'Camera');
                       imageFile = context.read<AuthCubit>().img;
                     },
                     icon: Icon(
