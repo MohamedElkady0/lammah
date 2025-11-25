@@ -81,19 +81,31 @@ class LocationCubit extends Cubit<LocationState> {
       final newPosition = LatLng(position.latitude, position.longitude);
       currentPosition = newPosition;
 
-      await getAddressFromLatLng(position);
+      try {
+        await getAddressFromLatLng(position);
+      } catch (e) {
+        print("Error getting address: $e");
+      }
 
-      currentUserInfo = currentUserInfo?.copyWith(
-        userPlace:
-            '${currentPosition?.latitude ?? 0.0}-${currentPosition?.longitude ?? 0.0}',
-        userCity: currentAddress,
-        userCountry: currentAddress.split(',')[0],
-      );
-      if (currentUserInfo != null) {
+      if (_credential.currentUser != null) {
+        currentUserInfo = currentUserInfo?.copyWith(
+          userPlace:
+              '${currentPosition?.latitude ?? 0.0}-${currentPosition?.longitude ?? 0.0}',
+          userCity: currentAddress,
+          userCountry: currentAddress.split(',')[0],
+        );
+
         await FirebaseFirestore.instance
             .collection(AuthString.fSUsers)
             .doc(_credential.currentUser!.uid)
-            .update(currentUserInfo!.toJson());
+            .update({
+              'latitude': newPosition.latitude,
+              'longitude': newPosition.longitude,
+              'userPlace': '${newPosition.latitude}-${newPosition.longitude}',
+              'userCity': currentAddress,
+              'userCountry': currentAddress.split(',')[0],
+              'isOnline': true, // تحديث حالة الاتصال
+            });
       }
 
       isLoading = false;

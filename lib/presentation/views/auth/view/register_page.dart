@@ -164,12 +164,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                     initialAgreeValue: agree,
                                   );
 
-                                  if (!mounted) return;
-
                                   if (didAgree == true) {
                                     setState(() {
                                       agree = true;
                                     });
+                                    if (!mounted) return;
 
                                     authCubit.onSignUp(
                                       name: nameController.text,

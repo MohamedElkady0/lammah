@@ -13,12 +13,6 @@ class AuthSuccess extends AuthState {
   AuthSuccess({required this.userInfo});
 }
 
-class AuthSuccessSetUserInfo extends AuthState {
-  final UserInfoData userInfo;
-
-  AuthSuccessSetUserInfo({required this.userInfo});
-}
-
 class AuthFailure extends AuthState {
   final String message;
 
@@ -36,17 +30,6 @@ class AuthImagePicked extends AuthState {
   AuthImagePicked(this.image);
 }
 
-class AuthLoadingProgress extends AuthState {
-  final double progress;
-  AuthLoadingProgress(this.progress);
-}
-
-class ShowOnboardingState extends AuthState {}
-
-class AuthAuthenticated extends AuthState {}
-
 class AuthUnauthenticated extends AuthState {}
 
 class AuthCodeSentSuccess extends AuthState {}
-
-class AuthUpdateSuccess extends AuthState {}

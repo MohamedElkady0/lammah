@@ -4,8 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:lammah/data/model/matched_user.dart';
 import 'package:lammah/domian/location/location_cubit.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
@@ -16,21 +17,6 @@ import 'package:circle_flags/circle_flags.dart';
 import 'package:country_flags/country_flags.dart';
 
 // نموذج بسيط لبيانات المستخدم الذي تم اختياره
-class MatchedUser {
-  final String uid;
-  final String name;
-  final String image;
-  final String country;
-  final LatLng position;
-
-  MatchedUser({
-    required this.uid,
-    required this.name,
-    required this.image,
-    required this.country,
-    required this.position,
-  });
-}
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -52,11 +38,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Tween<double>? _latTween;
   Tween<double>? _lngTween;
 
-  final LocationCubit locationCubit = LocationCubit();
-
   @override
   void initState() {
     super.initState();
+    // التأكد من أن البيانات موجودة، وإلا طلبها مرة أخرى
+    final authCubit = context.read<AuthCubit>();
+    if (authCubit.currentUserInfo == null) {
+      authCubit.getUserData();
+    }
+
     context.read<LocationCubit>().getCurrentLocation();
 
     _animationController = AnimationController(
@@ -89,6 +79,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     final authCubit = context.read<AuthCubit>();
     final currentUser = authCubit.currentUserInfo;
+    final locationCubit = BlocProvider.of<LocationCubit>(context);
+
     if (currentUser == null) {
       setState(() {
         _isFindingTrip = false;
@@ -273,14 +265,25 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
+    final locationCubit = BlocProvider.of<LocationCubit>(context);
+    return BlocBuilder<LocationCubit, LocationState>(
       builder: (context, state) {
         final authCubit = context.read<AuthCubit>();
         final positionForMap = locationCubit.currentPosition;
         final userInfoData = authCubit.currentUserInfo;
 
-        if (positionForMap == null || userInfoData == null) {
+        if (state is LocationLoading && positionForMap == null) {
           return const Center(child: CircularProgressIndicator());
+        }
+        if (state is LocationFailure) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('خطأ في الحصول على موقع المستخدم')),
+          );
+          return Center(child: Text(state.message));
+        }
+        if (positionForMap == null) {
+          return const Center(child: Text("جاري تحديد الموقع..."));
         }
 
         return Stack(
@@ -317,8 +320,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             child: CircleAvatar(
                               radius: 26,
                               backgroundColor: Colors.grey.shade300,
-                              backgroundImage: userInfoData.image != null
-                                  ? NetworkImage(userInfoData.image!)
+                              backgroundImage: userInfoData?.image != null
+                                  ? NetworkImage(userInfoData!.image!)
                                   : MemoryImage(kTransparentImage)
                                         as ImageProvider,
                             ),
@@ -420,7 +423,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         const SizedBox(width: 8),
 
                       Text(
-                        userInfoData.userCountry ??
+                        userInfoData?.userCountry ??
                             locationCubit.currentAddress.split(',')[0],
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(

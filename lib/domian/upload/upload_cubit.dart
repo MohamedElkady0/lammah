@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +17,9 @@ import 'package:uuid/uuid.dart';
 import 'upload_state.dart';
 
 class UploadCubit extends Cubit<UploadState> {
-  UploadCubit() : super(UploadInitial());
+  final UpdateUserCubit updateCubit;
+
+  UploadCubit({required this.updateCubit}) : super(UploadInitial());
 
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -26,8 +29,6 @@ class UploadCubit extends Cubit<UploadState> {
   String? _audioPath;
   File? img;
   final FirebaseAuth _credential = FirebaseAuth.instance;
-
-  final UpdateUserCubit uploadCubit = UpdateUserCubit();
 
   Future<void> uploadImages(List<ImageFile> images) async {
     if (images.isEmpty) return;
@@ -224,7 +225,7 @@ class UploadCubit extends Cubit<UploadState> {
     try {
       final String imgUrl = await uploadImageAndGetUrl(img!);
 
-      await uploadCubit.updateUserDocument(imgUrl);
+      await updateCubit.updateUserDocument(imgUrl);
 
       emit(UploadSuccessImage(imgUrl));
     } catch (e) {

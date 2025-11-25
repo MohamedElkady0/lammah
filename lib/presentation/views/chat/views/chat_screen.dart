@@ -2,7 +2,7 @@ import 'package:async/async.dart'; // <--- هام جداً: استيراد هذ�
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:lammah/presentation/views/chat/views/friends.dart';
 
 class ChatView extends StatefulWidget {
@@ -67,14 +67,14 @@ class _ChatViewState extends State<ChatView> {
     final chatsStream = FirebaseFirestore.instance
         .collection('chat')
         .where('partial', arrayContains: currentUserUid)
-        // .orderBy('date', descending: true) // ملاحظة: دمج الترتيب مع StreamZip قد يتطلب ترتيباً يدوياً لاحقاً
+        .orderBy('date', descending: true)
         .snapshots();
 
     // 2. استعلام المجموعات
     final groupsStream = FirebaseFirestore.instance
         .collection('groups')
         .where('members', arrayContains: currentUserUid)
-        // .orderBy('lastMessageTimestamp', descending: true)
+        .orderBy('lastMessageTimestamp', descending: true)
         .snapshots();
 
     return Scaffold(

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lammah/core/function/firebase_messaging.dart';
 import 'package:lammah/main.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
-import 'package:lammah/presentation/views/chat/views/chat/incoming_call_screen.dart';
+import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/views/incoming_call_screen.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 

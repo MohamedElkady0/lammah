@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lammah/core/function/date_utils.dart';
 import 'package:lammah/core/utils/auth_string.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_send_res.dart';
+import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:lammah/presentation/views/chat/widget/user_avatar_with_status.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -109,31 +109,28 @@ class _FriendsScreenState extends State<FriendsScreen>
     );
   }
 
-  // --- ويدجت لعرض قائمة الاقتراحات ---
+  // --- ويدجت لعرض قائمة الاقتراحات (مصححة) ---
   Widget _buildSuggestionsList() {
+    // 1. نجلب أي 50 مستخدم بشكل عام (بدون شرط where uid)
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection(AuthString.fSUsers)
-          .where('uid', isNotEqualTo: _currentUserUid)
-          .limit(30)
-          .snapshots(),
+      stream: _firestore.collection('users').limit(50).snapshots(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) return const Text('حدث خطأ');
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        // هذا الجزء مهم لفلترة الاقتراحات
+        // 2. نجلب بيانات المستخدم الحالي لنعرف من هم أصدقاؤه ومن حظرهم
         return FutureBuilder<DocumentSnapshot>(
-          future: _firestore
-              .collection(AuthString.fSUsers)
-              .doc(_currentUserUid)
-              .get(),
+          future: _firestore.collection('users').doc(_currentUserUid).get(),
           builder: (context, currentUserDoc) {
             if (!currentUserDoc.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final myData = currentUserDoc.data!.data() as Map<String, dynamic>;
+            // استخراج البيانات بامان
+            final myData = currentUserDoc.data!.data() as Map<String, dynamic>?;
+            if (myData == null) return const Text("بياناتك غير موجودة");
+
             final List<dynamic> myFriends = myData['friends'] ?? [];
             final List<dynamic> mySentRequests =
                 myData['friendRequestsSent'] ?? [];
@@ -141,20 +138,25 @@ class _FriendsScreenState extends State<FriendsScreen>
                 myData['friendRequestsReceived'] ?? [];
             final List<dynamic> myBlockedUsers = myData['blockedUsers'] ?? [];
 
+            // تجميع كل الأشخاص الذين لا يجب أن يظهروا في الاقتراحات
             final Set<String> excludedUids = {
               ...myFriends,
               ...mySentRequests,
               ...myReceivedRequests,
               ...myBlockedUsers,
-              _currentUserUid,
+              _currentUserUid, // استبعاد نفسك أيضاً
             }.map((e) => e.toString()).toSet();
 
+            // 3. عملية الفلترة داخل التطبيق
+            // نمر على كل المستخدمين القادمين من السيرفر ونستبعد الممنوعين
             final suggestions = snapshot.data!.docs
                 .where((doc) => !excludedUids.contains(doc.id))
                 .toList();
 
             if (suggestions.isEmpty) {
-              return const Center(child: Text('لا توجد اقتراحات جديدة.'));
+              return const Center(
+                child: Text('لا توجد اقتراحات جديدة حالياً.'),
+              );
             }
 
             return ListView.builder(

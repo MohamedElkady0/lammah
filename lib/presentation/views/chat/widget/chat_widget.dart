@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/core/config/config_app.dart';
-import 'package:lammah/presentation/views/chat/views/chat/record_widget.dart';
-import 'package:lammah/presentation/views/chat/views/chat/video_player_widget.dart';
+import 'package:lammah/presentation/views/chat/widget/record_widget.dart';
+import 'package:lammah/presentation/views/chat/widget/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ChatWidget extends StatelessWidget {

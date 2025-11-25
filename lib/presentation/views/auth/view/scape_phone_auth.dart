@@ -96,6 +96,7 @@ class _ScapePhoneAuthState extends State<ScapePhoneAuth> {
                                   final scaffoldMessenger =
                                       ScaffoldMessenger.of(context);
 
+                                  upload.uploadAndUpdateProfileImage();
                                   final bool? didAgree = await funService(
                                     context,
                                     initialAgreeValue: agree,
@@ -107,8 +108,6 @@ class _ScapePhoneAuthState extends State<ScapePhoneAuth> {
                                     setState(() {
                                       agree = true;
                                     });
-
-                                    upload.uploadAndUpdateProfileImage();
 
                                     updateuser.updateName(nameController.text);
                                   } else {

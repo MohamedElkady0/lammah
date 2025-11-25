@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_screen.dart';
+import 'package:lammah/presentation/views/chat/views/chat_screen.dart';
 import 'package:lammah/presentation/widgets/pop_app.dart';
 import 'package:lammah/presentation/views/help/help_page.dart';
 import 'package:lammah/presentation/views/notes/view/note_page.dart';

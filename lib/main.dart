@@ -56,22 +56,34 @@ class Lammah extends StatelessWidget {
       providers: [
         BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
 
-        BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
+        BlocProvider<LocationCubit>(create: (context) => LocationCubit()),
+        BlocProvider<UpdateUserCubit>(
+          create: (context) => UpdateUserCubit(
+            locationCubit: BlocProvider.of<LocationCubit>(context),
+          ),
+        ),
+        BlocProvider<UploadCubit>(
+          create: (context) => UploadCubit(
+            updateCubit: BlocProvider.of<UpdateUserCubit>(context),
+          ),
+        ),
+        BlocProvider<AuthCubit>(
+          create: (context) =>
+              AuthCubit(uploadCubit: BlocProvider.of<UploadCubit>(context))
+                ..getUserData(),
+        ),
         BlocProvider<NotificationCubit>(
           create: (context) =>
               NotificationCubit(notificationService)..requestPermissions(),
         ),
-        BlocProvider(create: (context) => UploadCubit()),
-        BlocProvider(create: (context) => TransactionCubit()),
-        BlocProvider(
+        BlocProvider<TransactionCubit>(create: (context) => TransactionCubit()),
+        BlocProvider<SearchCubit>(
           create: (context) {
             final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
             return SearchCubit(currentUserId: currentUserId);
           },
         ),
-        BlocProvider(create: (context) => UpdateUserCubit()),
-        BlocProvider(create: (context) => LocationCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

@@ -1,8 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:math';
 // import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/core/utils/string_app.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/presentation/views/auth/view/welcome_page.dart';
+import 'package:lammah/presentation/views/home/home.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -30,7 +35,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       begin: 0.3,
       end: 1.5,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
+    _loadDataAndNavigate();
     // _checkInternetConnection();
   }
 
@@ -75,6 +80,31 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   //     ),
   //   );
   // }
+
+  Future<void> _loadDataAndNavigate() async {
+    // انتظار قليل لظهور الشعار (اختياري)
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // === هنا الخطوة المهمة: جلب البيانات ===
+      await context.read<AuthCubit>().getUserData();
+
+      if (!mounted) return;
+      // الانتقال للخريطة بعد جلب البيانات
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+    } else {
+      // الانتقال لشاشة تسجيل الدخول إذا لم يكن مسجلاً
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      );
+    }
+  }
 
   @override
   void dispose() {

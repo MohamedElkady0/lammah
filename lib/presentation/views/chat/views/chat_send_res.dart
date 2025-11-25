@@ -13,9 +13,9 @@ import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/domian/upload/upload_state.dart';
-import 'package:lammah/presentation/views/chat/views/chat/call_screen.dart';
-import 'package:lammah/presentation/views/chat/views/chat/chat_widget.dart';
-import 'package:lammah/presentation/views/chat/views/chat/image_preview_screen.dart';
+import 'package:lammah/presentation/views/chat/views/call_screen.dart';
+import 'package:lammah/presentation/views/chat/widget/chat_widget.dart';
+import 'package:lammah/presentation/views/chat/views/image_preview_screen.dart';
 import 'package:lammah/presentation/views/game/game_lobby_screen.dart';
 // import 'package:lammah/presentation/views/game/game_screen.dart';
 import 'package:uuid/uuid.dart';
@@ -536,17 +536,6 @@ class _SendResChatState extends State<SendResChat> {
               // final otherUserUid = widget.uid; // uid للطرف الآخر
 
               if (currentUser != null) {
-                // // إنشاء مستند جديد للعبة
-                // final gameSession = await FirebaseFirestore.instance
-                //     .collection('games')
-                //     .add({
-                //       'players': [currentUser.userId, otherUserUid],
-                //       'board': List.generate(9, (_) => ""), // لوحة فارغة
-                //       'currentPlayerUid': currentUser.userId, // أنت تبدأ
-                //       'winner': "",
-                //       'status': "playing",
-                //     });
-
                 // الانتقال إلى شاشة اللعبة
                 nav.push(
                   MaterialPageRoute(

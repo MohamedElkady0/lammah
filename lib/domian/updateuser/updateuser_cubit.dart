@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,12 +11,13 @@ import 'package:lammah/domian/location/location_cubit.dart';
 part 'updateuser_state.dart';
 
 class UpdateUserCubit extends Cubit<UpdateUserState> {
-  UpdateUserCubit() : super(UpdateUserInitial());
+  final LocationCubit locationCubit;
+
+  // الحقن في المنشئ
+  UpdateUserCubit({required this.locationCubit}) : super(UpdateUserInitial());
 
   UserInfoData? currentUserInfo;
   final FirebaseAuth _credential = FirebaseAuth.instance;
-
-  final LocationCubit locationCubit = LocationCubit();
 
   void updateName(String name) async {
     emit(UpdateLoading());
@@ -71,21 +74,34 @@ class UpdateUserCubit extends Cubit<UpdateUserState> {
   void updateLocation() async {
     emit(UpdateLoading());
     try {
-      locationCubit.getCurrentLocation();
-      currentUserInfo = currentUserInfo?.copyWith(
-        userPlace:
-            '${locationCubit.currentPosition?.latitude ?? 0.0}-${locationCubit.currentPosition?.longitude ?? 0.0}',
-        userCity: locationCubit.currentAddress,
-        userCountry: locationCubit.currentAddress.split(',')[0],
-      );
-      if (currentUserInfo != null) {
+      // ننتظر حتى ينتهي الـ LocationCubit من جلب الموقع
+      await locationCubit.getCurrentLocation();
+
+      // نتحقق من الحالة الحالية للـ LocationCubit
+      if (locationCubit.state is LocationFailure) {
+        emit(UpdateFailure(message: "فشل تحديد الموقع"));
+        return;
+      }
+
+      // نستخدم البيانات المخزنة داخل LocationCubit
+      final pos = locationCubit.currentPosition;
+      final address = locationCubit.currentAddress;
+
+      if (pos != null) {
+        currentUserInfo = currentUserInfo?.copyWith(
+          userPlace: '${pos.latitude}-${pos.longitude}',
+          userCity: address,
+          userCountry: address.split(',')[0],
+        );
+
         await FirebaseFirestore.instance
             .collection(AuthString.fSUsers)
             .doc(_credential.currentUser!.uid)
             .update(currentUserInfo!.toJson());
+
+        emit(UpdateSuccess());
       }
-      emit(UpdateSuccess());
-    } on Exception catch (e) {
+    } catch (e) {
       emit(UpdateFailure(message: e.toString()));
     }
   }
