@@ -18,4 +18,9 @@ class ChatString {
   //------------constants for chat screen---------------------------------------
   //----------------------------------------------------------------------------
   static const String mapImg = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static const String tokenCall =
+      '007eJxTYFA7PG1JzSTR2e3a3t2pmrbPT537cIKlILd8lfesKe9UVnxTYDBNMU9JMbUwMzc0MDQxN0m1MDIwT7EwM0lKM7ZMS7Y0WefEndkQyMjwUfoEMyMDKwMjAxMDiM/AAACvRR4I';
+
+  static const String appIdVideo = "5d7dd5867101474e8207d864bf39fc94";
+  static const String appIdCall = "5d7dd5867101474e8207d864bf39fc94";
 }

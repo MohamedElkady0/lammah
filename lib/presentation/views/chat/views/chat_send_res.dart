@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lammah/core/function/send_call_notification.dart';
 import 'package:lammah/core/utils/auth_string.dart';
+import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/domian/upload/upload_state.dart';
@@ -51,14 +52,39 @@ class _SendResChatState extends State<SendResChat> {
     control.addListener(() {
       setState(() {});
     });
-    _markMessagesAsRead();
+
+    _markMessagesAsSeen();
   }
 
-  void _markMessagesAsRead() {
-    final currentUser = FirebaseAuth.instance.currentUser!.uid;
-    FirebaseFirestore.instance.collection('chat').doc(chatRoomId()).update({
-      'unreadCount.$currentUser': 0,
-    });
+  // دالة لجعل الرسائل "seen"
+  Future<void> _markMessagesAsSeen() async {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final collectionPath = widget.isGroupChat ? 'groups' : 'chat';
+    final messageSubCollection = widget.isGroupChat ? 'messages' : 'message';
+
+    // استعلام لجلب الرسائل التي ليست مني وليست "seen"
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection(collectionPath)
+        .doc(widget.chatId)
+        .collection(messageSubCollection)
+        .where('senderId', isNotEqualTo: currentUserId)
+        .where('status', isNotEqualTo: 'seen')
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in querySnapshot.docs) {
+        batch.update(doc.reference, {'status': 'seen'});
+      }
+      await batch.commit();
+
+      // أيضاً تصفير عداد الرسائل غير المقروءة (كما فعلنا سابقاً)
+      if (!widget.isGroupChat) {
+        FirebaseFirestore.instance.collection('chat').doc(widget.chatId).update(
+          {'unreadCount.$currentUserId': 0},
+        );
+      }
+    }
   }
 
   @override
@@ -514,7 +540,7 @@ class _SendResChatState extends State<SendResChat> {
                   MaterialPageRoute(
                     builder: (context) => CallScreen(
                       appId:
-                          "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
+                          ChatString.appIdVideo, // ضع الـ App ID الخاص بك هنا
                       channelName:
                           chatRoomId(), // استخدام chatRoomId كاسم للقناة
                       isVideoCall: true,
@@ -560,8 +586,7 @@ class _SendResChatState extends State<SendResChat> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => CallScreen(
-                    appId:
-                        "5d7dd5867101474e8207d864bf39fc94", // ضع الـ App ID الخاص بك هنا
+                    appId: ChatString.appIdCall, // ضع الـ App ID الخاص بك هنا
                     channelName: chatRoomId(),
                     isVideoCall: false,
                   ),
@@ -660,6 +685,26 @@ class _SendResChatState extends State<SendResChat> {
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(child: Text('No messages yet.'));
+                  }
+                  // كود بسيط لتعليم الرسائل الجديدة كمقروءة فور وصولها وأنا داخل الشاشة
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    // نقوم بعمل حلقة سريعة للتحقق
+                    // ملاحظة: لا تستخدم await هنا لأننا داخل دالة بناء
+                    for (var doc in snapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      if (data['senderId'] !=
+                              FirebaseAuth.instance.currentUser!.uid &&
+                          data['status'] != 'seen') {
+                        FirebaseFirestore.instance
+                            .collection(widget.isGroupChat ? 'groups' : 'chat')
+                            .doc(widget.chatId)
+                            .collection(
+                              widget.isGroupChat ? 'messages' : 'message',
+                            )
+                            .doc(doc.id)
+                            .update({'status': 'seen'});
+                      }
+                    }
                   }
                   // هذا الكود يضمن أن التمرير يحدث بعد بناء الواجهة
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -809,15 +854,18 @@ class _SendResChatState extends State<SendResChat> {
                                   .collection(collectionPath)
                                   .doc(widget.chatId)
                                   .collection(messageSubCollection)
-                                  .add({
-                                    // استخدم .add أو .doc(uuid).set
+                                  .doc(
+                                    uuid,
+                                  ) // استخدمنا doc(uuid).set بدلاً من add للتحكم في الـ ID
+                                  .set({
                                     'message': control.text,
-                                    'userId': user?.userId ?? '', // أو senderId
                                     'senderId': user?.userId ?? '',
                                     'date': Timestamp.now(),
                                     'image': '',
                                     'messageId': uuid,
                                     'type': 'text',
+                                    'status':
+                                        'sent', // <--- أضف هذا الحقل الجديد
                                   });
 
                               // 3. تحديث "آخر رسالة" والعدادات في المستند الرئيسي

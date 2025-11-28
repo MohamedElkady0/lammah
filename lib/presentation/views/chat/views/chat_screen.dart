@@ -59,6 +59,27 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
+  Future<void> _markMessagesAsDelivered(String chatId) async {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    // ابحث عن الرسائل التي لم أرسلها أنا، وحالتها "sent" فقط
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('chat')
+        .doc(chatId)
+        .collection('message')
+        .where('senderId', isNotEqualTo: currentUserId)
+        .where('status', isEqualTo: 'sent')
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (var doc in querySnapshot.docs) {
+      batch.update(doc.reference, {'status': 'delivered'});
+    }
+
+    await batch.commit();
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
@@ -146,6 +167,22 @@ class _ChatViewState extends State<ChatView> {
               String targetUid = ''; // للمحادثات الفردية
               bool isGroup = false;
               String lastMessage = '';
+
+              // منطق تحديث حالة "تم التسليم"
+              // إذا كانت آخر رسالة ليست مني، وحالتها "sent"، اجعلها "delivered"
+              if (chatMap['lastMessageSenderId'] != currentUserUid &&
+                  chatMap['lastMessageStatus'] == 'sent') {
+                // تحديث المستند الرئيسي (اختياري للعرض الخارجي)
+                FirebaseFirestore.instance
+                    .collection('chat')
+                    .doc(doc.id)
+                    .update({'lastMessageStatus': 'delivered'});
+
+                // الأهم: تحديث الرسائل داخل المجموعة الفرعية
+                // هذه عملية قد تكون مكلفة إذا كانت الرسائل كثيرة، لذا نحدث فقط غير المقروءة
+                // يفضل عمل دالة منفصلة لهذا الغرض
+                _markMessagesAsDelivered(doc.id);
+              }
 
               // 6. التحقق هل هو جروب أم محادثة فردية
               if (chatMap.containsKey('groupName')) {

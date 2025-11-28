@@ -1,5 +1,6 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
+import 'package:lammah/core/utils/chat_string.dart';
 
 class CallScreen extends StatefulWidget {
   final String appId;
@@ -65,8 +66,7 @@ class _CallScreenState extends State<CallScreen> {
 
     // الانضمام إلى القناة
     await _engine.joinChannel(
-      token:
-          '007eJxTYFA7PG1JzSTR2e3a3t2pmrbPT537cIKlILd8lfesKe9UVnxTYDBNMU9JMbUwMzc0MDQxN0m1MDIwT7EwM0lKM7ZMS7Y0WefEndkQyMjwUfoEMyMDKwMjAxMDiM/AAACvRR4I', // ضع التوكن هنا إذا كنت تستخدمه
+      token: ChatString.tokenCall, // ضع التوكن هنا إذا كنت تستخدمه
       channelId: widget.channelName,
       uid: 0, // 0 يعني أن Agora ستعين UID تلقائياً
       options: const ChannelMediaOptions(),

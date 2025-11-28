@@ -42,12 +42,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     // التأكد من أن البيانات موجودة، وإلا طلبها مرة أخرى
+    context.read<LocationCubit>().getCurrentLocation();
     final authCubit = context.read<AuthCubit>();
     if (authCubit.currentUserInfo == null) {
       authCubit.getUserData();
     }
-
-    context.read<LocationCubit>().getCurrentLocation();
 
     _animationController = AnimationController(
       vsync: this,
@@ -265,203 +264,266 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final locationCubit = BlocProvider.of<LocationCubit>(context);
-    return BlocBuilder<LocationCubit, LocationState>(
-      builder: (context, state) {
-        final authCubit = context.read<AuthCubit>();
-        final positionForMap = locationCubit.currentPosition;
-        final userInfoData = authCubit.currentUserInfo;
+    // 1. التغليف بـ BlocBuilder لـ AuthCubit للاستماع لتغيرات بيانات المستخدم
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        // 2. التغليف بـ BlocBuilder لـ LocationCubit للاستماع لتغيرات الموقع
 
-        if (state is LocationLoading && positionForMap == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is LocationFailure) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('خطأ في الحصول على موقع المستخدم')),
-          );
-          return Center(child: Text(state.message));
-        }
-        if (positionForMap == null) {
-          return const Center(child: Text("جاري تحديد الموقع..."));
-        }
+        return BlocBuilder<LocationCubit, LocationState>(
+          builder: (context, locationState) {
+            final locationCubit = BlocProvider.of<LocationCubit>(context);
+            final authCubit = context.read<AuthCubit>();
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            FlutterMap(
-              mapController: mapController,
-              options: MapOptions(
-                initialCenter: positionForMap,
-                initialZoom: 2.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: ChatString.mapImg,
-                  userAgentPackageName: StringApp.packageName,
-                ),
-                MarkerLayer(
-                  markers: [
-                    // --- ماركر المستخدم الحالي ---
-                    Marker(
-                      width: 60.0,
-                      height: 60.0,
-                      point: positionForMap,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (locationCubit.currentCountryCode != null)
-                            CircleFlag(
-                              locationCubit.currentCountryCode!,
-                              size: 60,
-                            ),
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Colors.grey.shade300,
-                              backgroundImage: userInfoData?.image != null
-                                  ? NetworkImage(userInfoData!.image!)
-                                  : MemoryImage(kTransparentImage)
-                                        as ImageProvider,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // --- ماركر المستخدم الذي تم اختياره ---
-                    // --- ماركر المستخدم الذي تم اختياره ---
-                    if (_matchedUser != null &&
-                        !_animationController.isAnimating)
-                      Marker(
-                        width: 60.0,
-                        height: 60.0,
-                        point: _matchedUser!.position,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // استخدام رمز 'UN' (Unknown) كاحتياطي إذا كانت الدولة غير معروفة
-                            CircleFlag(_matchedUser?.country ?? 'UN', size: 60),
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: CircleAvatar(
-                                radius: 26,
-                                backgroundColor: Colors.grey.shade300,
-                                // استخدام null-aware operators للتعامل مع الصور الفارغة
-                                backgroundImage:
-                                    _matchedUser?.image != null &&
-                                        _matchedUser!.image.isNotEmpty
-                                    ? NetworkImage(_matchedUser!.image)
-                                    : MemoryImage(kTransparentImage)
-                                          as ImageProvider,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                // --- طبقة الطائرة المتحركة ---
-                if (_animationController.isAnimating &&
-                    _latTween != null &&
-                    _lngTween != null)
-                  AnimatedBuilder(
-                    animation: _animationController,
-                    builder: (context, child) {
-                      final lat = _latTween!.transform(
-                        _animationController.value,
-                      );
-                      final lng = _lngTween!.transform(
-                        _animationController.value,
-                      );
-                      final rotation = getRotation(
-                        LatLng(_latTween!.begin!, _lngTween!.begin!),
-                        LatLng(lat, lng),
-                      );
+            final positionForMap = locationCubit.currentPosition;
+            final userInfoData = authCubit.currentUserInfo;
 
-                      return MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: LatLng(lat, lng),
-                            width: 50,
-                            height: 50,
-                            child: Transform.rotate(
-                              angle: rotation,
-                              child: const Icon(
-                                Icons.airplanemode_active,
-                                size: 40,
-                                color: Colors.blueAccent,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-              ],
-            ),
+            // === طباعة للتتبع (Debugging) ===
+            print("Location State: $locationState");
+            print("Position: $positionForMap");
+            print("User Info: $userInfoData");
+            // ================================
 
-            Positioned(
-              bottom: 100,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+            // 1. إذا كان الموقع لم يحدد بعد، اعرض التحميل
+            if (locationState is LocationLoading) {
+              return const Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (locationCubit.currentCountryCode != null)
-                        CountryFlag.fromCountryCode(
-                          locationCubit.currentCountryCode!,
-                          height: 20,
-                          width: 30,
-                        ),
+                      CircularProgressIndicator(),
+                      SizedBox(height: 10),
+                      Text("جاري تحديد الموقع..."),
+                    ],
+                  ),
+                ),
+              );
+            }
 
-                      if (locationCubit.currentCountryCode != null)
-                        const SizedBox(width: 8),
-
-                      Text(
-                        userInfoData?.userCountry ??
-                            locationCubit.currentAddress.split(',')[0],
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
+            // 2. إذا فشل تحديد الموقع
+            if (locationState is LocationFailure) {
+              return Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error, color: Colors.red, size: 50),
+                      Text(locationState.message),
+                      ElevatedButton(
+                        onPressed: () {
+                          locationCubit.getCurrentLocation();
+                        },
+                        child: const Text("حاول مرة أخرى"),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            }
 
-            // --- زر "رحلة جديدة" ---
-            Positioned(
-              bottom: 20,
-              child: ElevatedButton.icon(
-                onPressed: _isFindingTrip ? null : _findNewTrip,
-                icon: _isFindingTrip
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.flight_takeoff),
-                label: const Text('رحلة جديدة'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+            // 3. إذا الموقع موجود لكن بيانات المستخدم تتأخر (لا توقف التطبيق، اعرض الخريطة)
+            if (positionForMap == null) {
+              return const Scaffold(
+                body: Center(child: Text("في انتظار إحداثيات الموقع...")),
+              );
+            }
+            // === هنا يبدأ عرض الخريطة ===
+            // ملاحظة: قمنا بإزالة شرط (userInfoData == null) من الإيقاف
+            // وسنعالجه داخل العرض (نعرض صورة افتراضية إذا كان null)
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                FlutterMap(
+                  mapController: mapController,
+                  options: MapOptions(
+                    initialCenter: positionForMap,
+                    initialZoom: 2.0,
                   ),
-                  shape: const StadiumBorder(),
+                  children: [
+                    TileLayer(
+                      urlTemplate: ChatString.mapImg,
+                      userAgentPackageName: StringApp.packageName,
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        // --- ماركر المستخدم الحالي ---
+                        Marker(
+                          width: 60.0,
+                          height: 60.0,
+                          point: positionForMap,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (locationCubit.currentCountryCode != null)
+                                CircleFlag(
+                                  locationCubit.currentCountryCode!,
+                                  size: 60,
+                                ),
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: Colors.grey.shade300,
+                                  // هنا نعالج احتمالية أن تكون البيانات فارغة
+                                  backgroundImage:
+                                      (userInfoData?.image != null &&
+                                          userInfoData!.image!.isNotEmpty)
+                                      ? NetworkImage(userInfoData.image!)
+                                      : null, // صورة افتراضية ستظهر باللون الرمادي
+                                  child:
+                                      (userInfoData == null ||
+                                          userInfoData.image == null)
+                                      ? const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // --- ماركر المستخدم الذي تم اختياره ---
+                        // --- ماركر المستخدم الذي تم اختياره ---
+                        if (_matchedUser != null &&
+                            !_animationController.isAnimating)
+                          Marker(
+                            width: 60.0,
+                            height: 60.0,
+                            point: _matchedUser!.position,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // استخدام رمز 'UN' (Unknown) كاحتياطي إذا كانت الدولة غير معروفة
+                                CircleFlag(
+                                  _matchedUser?.country ?? 'UN',
+                                  size: 60,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: Colors.grey.shade300,
+                                    // استخدام null-aware operators للتعامل مع الصور الفارغة
+                                    backgroundImage:
+                                        _matchedUser?.image != null &&
+                                            _matchedUser!.image.isNotEmpty
+                                        ? NetworkImage(_matchedUser!.image)
+                                        : MemoryImage(kTransparentImage)
+                                              as ImageProvider,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    // --- طبقة الطائرة المتحركة ---
+                    if (_animationController.isAnimating &&
+                        _latTween != null &&
+                        _lngTween != null)
+                      AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) {
+                          final lat = _latTween!.transform(
+                            _animationController.value,
+                          );
+                          final lng = _lngTween!.transform(
+                            _animationController.value,
+                          );
+                          final rotation = getRotation(
+                            LatLng(_latTween!.begin!, _lngTween!.begin!),
+                            LatLng(lat, lng),
+                          );
+
+                          return MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(lat, lng),
+                                width: 50,
+                                height: 50,
+                                child: Transform.rotate(
+                                  angle: rotation,
+                                  child: const Icon(
+                                    Icons.airplanemode_active,
+                                    size: 40,
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                  ],
                 ),
-              ),
-            ),
-          ],
+
+                Positioned(
+                  bottom: 100,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (locationCubit.currentCountryCode != null)
+                            CountryFlag.fromCountryCode(
+                              locationCubit.currentCountryCode!,
+                              height: 20,
+                              width: 30,
+                            ),
+
+                          if (locationCubit.currentCountryCode != null)
+                            const SizedBox(width: 8),
+
+                          Text(
+                            userInfoData?.userCountry ??
+                                locationCubit.currentAddress.split(',')[0],
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge!
+                                .copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // --- زر "رحلة جديدة" ---
+                Positioned(
+                  bottom: 20,
+                  child: ElevatedButton.icon(
+                    onPressed: _isFindingTrip ? null : _findNewTrip,
+                    icon: _isFindingTrip
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.flight_takeoff),
+                    label: const Text('رحلة جديدة'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

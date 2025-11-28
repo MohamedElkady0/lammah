@@ -149,6 +149,35 @@ class ChatWidget extends StatelessWidget {
     );
   }
 
+  // دالة مساعدة لاختيار الأيقونة واللون
+  Widget _buildStatusIcon(Map<String, dynamic> message, bool isGroup) {
+    final status = message['status'];
+    final List<dynamic> seenBy = message['seenBy'] ?? [];
+
+    if (isGroup) {
+      // في المجموعات: نعتبرها مقروءة إذا رآها شخص واحد على الأقل (أو يمكنك جعلها تتطلب الجميع)
+      if (seenBy.isNotEmpty) {
+        // يمكنك هنا إضافة منطق: لو عدد seenBy == عدد أعضاء الجروب - 1، اجعلها زرقاء
+        // للتبسيط، سنعتبرها "مقروءة" إذا رآها أي شخص
+        return Icon(Icons.done_all, size: 16, color: Colors.blue);
+      } else {
+        return Icon(Icons.check, size: 16, color: Colors.grey);
+      }
+    } else {
+      // في الفردي: نعتمد على الـ status
+      switch (status) {
+        case 'sent':
+          return Icon(Icons.check, size: 16, color: Colors.grey);
+        case 'delivered':
+          return Icon(Icons.done_all, size: 16, color: Colors.grey);
+        case 'seen':
+          return Icon(Icons.done_all, size: 16, color: Colors.blue);
+        default:
+          return Icon(Icons.access_time, size: 16, color: Colors.grey);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
@@ -157,6 +186,10 @@ class ChatWidget extends StatelessWidget {
     final bool isVideoMessage = message['type'] == 'video';
 
     final bool isFileMessage = message['type'] == 'file';
+
+    bool isGroupMessage =
+        message.containsKey('isGroup') ||
+        message['receiverId'] == null; // طريقة تخمين
 
     // التحقق من نوع الرسالة
     final bool isImageMessage =
@@ -201,29 +234,37 @@ class ChatWidget extends StatelessWidget {
                           : _buildTextMessage(context)),
               ),
               const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    DateFormat.jm().format(message['date'].toDate()),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (isEdited)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        '(تم التعديل)',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
-                        ),
+              Padding(
+                padding: const EdgeInsets.only(top: 2, right: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat.jm().format(message['date'].toDate()),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 12,
                       ),
                     ),
-                ],
+                    SizedBox(width: 4),
+                    _buildStatusIcon(
+                      message,
+                      isGroupMessage,
+                    ), // تمرير الرسالة كاملة
+                    if (isEdited)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          '(تم التعديل)',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
