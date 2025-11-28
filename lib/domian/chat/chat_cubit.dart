@@ -672,20 +672,32 @@ class ChatCubit extends Cubit<ChatState> {
       final batch = _firestore.batch();
 
       // إزالة من الطلبات
-      batch.update(_firestore.collection('users').doc(_currentUserUid), {
-        'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
-      });
-      batch.update(_firestore.collection('users').doc(userToBlockUid), {
-        'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
-      });
+      batch.update(
+        _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
+        {
+          'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
+        },
+      );
+      batch.update(
+        _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
+        {
+          'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
+        },
+      );
 
       // إضافة للحظر
-      batch.update(_firestore.collection('users').doc(_currentUserUid), {
-        'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
-      });
-      batch.update(_firestore.collection('users').doc(userToBlockUid), {
-        'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
-      });
+      batch.update(
+        _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
+        {
+          'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
+        },
+      );
+      batch.update(
+        _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
+        {
+          'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
+        },
+      );
 
       await batch.commit();
       emit(UserBlockedStateChanged(isUserBlocked: true));

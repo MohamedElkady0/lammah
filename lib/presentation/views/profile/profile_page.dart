@@ -35,3 +35,24 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+//           PopApp(
+//             offset: const Offset(50, 0),
+//             index: 3,
+//             title: [ChatString.settings, ChatString.help, ChatString.logout],
+//             isMenu: true,
+//             onTap: [
+//               () {
+//                 Navigator.of(
+//                   context,
+//                 ).push(MaterialPageRoute(builder: (context) => SettingPage()));
+//               },
+//               () {
+//                 Navigator.of(
+//                   context,
+//                 ).push(MaterialPageRoute(builder: (context) => HelpPage()));
+//               },
+//               () {
+//                 context.read<AuthCubit>().signOut();
+//               },
+//             ],
+//           ),

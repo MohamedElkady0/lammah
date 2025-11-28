@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:lammah/data/model/matched_user.dart';
 import 'package:lammah/domian/location/location_cubit.dart';
+import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
 import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lammah/core/utils/chat_string.dart';
@@ -518,6 +519,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         vertical: 12,
                       ),
                       shape: const StadiumBorder(),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 10,
+                  top: 80,
+                  child: IconButton(
+                    //           IconButton(
+                    onPressed: () {
+                      context.read<UpdateUserCubit>().updateLocation();
+                    },
+                    icon: Icon(
+                      Icons.gps_fixed,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),

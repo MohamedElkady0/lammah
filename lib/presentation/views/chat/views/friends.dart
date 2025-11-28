@@ -73,6 +73,7 @@ class _FriendsScreenState extends State<FriendsScreen>
         }
       },
       child: Scaffold(
+        backgroundColor: Theme.of(context).primaryColor,
         appBar: AppBar(
           title: const Text('الأصدقاء'),
           bottom: TabBar(
