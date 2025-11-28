@@ -4,11 +4,13 @@ import 'package:just_audio/just_audio.dart';
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
   final int durationInMillis;
+  final Color contentColor; // 1. إضافة متغير للون (أبيض أو أسود)
 
   const AudioPlayerWidget({
     super.key,
     required this.audioUrl,
     required this.durationInMillis,
+    this.contentColor = Colors.white, // الافتراضي أبيض
   });
 
   @override
@@ -21,7 +23,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    _player.setUrl(widget.audioUrl);
+    // استخدام try-catch لتجنب توقف التطبيق إذا كان الرابط تالفاً
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _player.setUrl(widget.audioUrl);
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
   }
 
   @override
@@ -30,7 +41,6 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     super.dispose();
   }
 
-  // دالة لتحويل المدة إلى تنسيق 01:23
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
@@ -51,15 +61,33 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
             if (processingState == ProcessingState.loading ||
                 processingState == ProcessingState.buffering) {
-              return const CircularProgressIndicator(color: Colors.white);
+              return SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: widget.contentColor,
+                  strokeWidth: 2,
+                ),
+              );
             }
+
+            // 2. التحقق مما إذا انتهى المقطع لإظهار زر التشغيل مرة أخرى
+            bool isCompleted = processingState == ProcessingState.completed;
+
             return IconButton(
               icon: Icon(
-                playing == true ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
+                (playing == true && !isCompleted)
+                    ? Icons.pause
+                    : Icons.play_arrow,
+                color: widget.contentColor,
               ),
               onPressed: () {
-                playing == true ? _player.pause() : _player.play();
+                if (isCompleted) {
+                  _player.seek(Duration.zero); // إعادة للبداية
+                  _player.play();
+                } else {
+                  playing == true ? _player.pause() : _player.play();
+                }
               },
             );
           },
@@ -69,26 +97,30 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             stream: _player.positionStream,
             builder: (context, snapshot) {
               final position = snapshot.data ?? Duration.zero;
-              final duration = Duration(milliseconds: widget.durationInMillis);
+              // التأكد من أن المدة لا تساوي صفر لتجنب القسمة على صفر
+              final totalDuration = widget.durationInMillis > 0
+                  ? widget.durationInMillis.toDouble()
+                  : 1.0;
+
               return Slider(
                 value: position.inMilliseconds.toDouble().clamp(
                   0.0,
-                  duration.inMilliseconds.toDouble(),
+                  totalDuration,
                 ),
                 min: 0.0,
-                max: duration.inMilliseconds.toDouble(),
+                max: totalDuration,
                 onChanged: (value) {
                   _player.seek(Duration(milliseconds: value.toInt()));
                 },
-                activeColor: Colors.white,
-                inactiveColor: Colors.grey,
+                activeColor: widget.contentColor,
+                inactiveColor: widget.contentColor.withAlpha(300),
               );
             },
           ),
         ),
         Text(
           _formatDuration(Duration(milliseconds: widget.durationInMillis)),
-          style: const TextStyle(color: Colors.white, fontSize: 12),
+          style: TextStyle(color: widget.contentColor, fontSize: 12),
         ),
       ],
     );

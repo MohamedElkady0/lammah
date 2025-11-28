@@ -1,7 +1,9 @@
-import 'package:async/async.dart'; // <--- هام جداً: استيراد هذه المكتبة
+import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/domian/chat/chat_cubit.dart'; // تأكد من المسار
 import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:lammah/presentation/views/chat/views/friends.dart';
 
@@ -13,15 +15,22 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
-  // تعديل دالة القائمة المنبثقة لتقبل معرف المحادثة ونوعها
+  final String currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+
+  // القائمة المنبثقة
+  // تعديل الدالة لتقبل otherUserId (يمكن أن يكون null في حالة الجروبات)
   Widget popButton(
     BuildContext context,
-    String docId, // نستخدم ID المستند مباشرة
-    String collectionPath, // نعرف هل هو chat أم groups
+    String docId,
+    String collectionPath,
     String currentUserId,
+    String? otherUserId, // <--- معامل جديد
   ) {
     return PopupMenuButton<String>(
       onSelected: (value) {
+        // هنا نستخدم الـ Cubit، لذا سيختفي التحذير
+        final cubit = context.read<ChatCubit>();
+
         final docRef = FirebaseFirestore.instance
             .collection(collectionPath)
             .doc(docId);
@@ -29,10 +38,20 @@ class _ChatViewState extends State<ChatView> {
         if (value == 'delete') {
           docRef.update({'deletedBy.$currentUserId': true});
         }
-        // الحظر يعمل فقط مع المستخدمين وليس الجروبات
-        if (value == 'block' && collectionPath == 'chat') {
-          // (منطق الحظر كما هو...)
+
+        // تفعيل منطق الحظر
+        if (value == 'block' &&
+            collectionPath == 'chat' &&
+            otherUserId != null) {
+          // استدعاء دالة الحظر من الـ Cubit
+          cubit.blockUser(otherUserId);
+
+          // اختياري: إظهار رسالة تأكيد
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('تم حظر المستخدم')));
         }
+
         if (value == 'markRead') {
           docRef.update({'unreadCount.$currentUserId': 0});
         }
@@ -46,9 +65,10 @@ class _ChatViewState extends State<ChatView> {
       ),
       itemBuilder: (BuildContext context) {
         return <PopupMenuEntry<String>>[
-          const PopupMenuItem(value: 'delete', child: Text('حذف')),
-          if (collectionPath == 'chat') // إخفاء الحظر في الجروبات
-            const PopupMenuItem(value: 'block', child: Text('حظر')),
+          const PopupMenuItem(value: 'delete', child: Text('حذف المحادثة')),
+          // إظهار خيار الحظر فقط في المحادثات الفردية
+          if (collectionPath == 'chat')
+            const PopupMenuItem(value: 'block', child: Text('حظر المستخدم')),
           const PopupMenuItem(value: 'markRead', child: Text('تمييز كمقروء')),
           const PopupMenuItem(
             value: 'MarkUnread',
@@ -59,30 +79,9 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Future<void> _markMessagesAsDelivered(String chatId) async {
-    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
-    // ابحث عن الرسائل التي لم أرسلها أنا، وحالتها "sent" فقط
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('chat')
-        .doc(chatId)
-        .collection('message')
-        .where('senderId', isNotEqualTo: currentUserId)
-        .where('status', isEqualTo: 'sent')
-        .get();
-
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (var doc in querySnapshot.docs) {
-      batch.update(doc.reference, {'status': 'delivered'});
-    }
-
-    await batch.commit();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    final chatCubit = context.read<ChatCubit>();
 
     // 1. استعلام المحادثات الفردية
     final chatsStream = FirebaseFirestore.instance
@@ -101,7 +100,7 @@ class _ChatViewState extends State<ChatView> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
-        title: Text('Chat', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('المحادثات', style: Theme.of(context).textTheme.titleLarge),
         centerTitle: true,
         actions: [
           IconButton(
@@ -115,7 +114,6 @@ class _ChatViewState extends State<ChatView> {
           ),
         ],
       ),
-      // 3. تصحيح نوع StreamBuilder ليستقبل قائمة من الـ Snapshots
       body: StreamBuilder<List<QuerySnapshot>>(
         stream: StreamZip([chatsStream, groupsStream]),
         builder: (context, snapshot) {
@@ -123,25 +121,35 @@ class _ChatViewState extends State<ChatView> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('حدث خطأ: ${snapshot.error}'));
           }
           if (!snapshot.hasData ||
               (snapshot.data![0].docs.isEmpty &&
                   snapshot.data![1].docs.isEmpty)) {
-            return const Center(child: Text('No chats available.'));
+            return const Center(child: Text('لا توجد محادثات بعد.'));
           }
 
-          // 4. دمج القائمتين
+          // 4. دمج وتصفية القائمتين
           final chatDocs = snapshot.data![0].docs;
           final groupDocs = snapshot.data![1].docs;
           final allConversations = [...chatDocs, ...groupDocs];
 
-          // 5. الترتيب اليدوي (لأن الترتيب يضيع عند الدمج)
-          allConversations.sort((a, b) {
+          // تصفية المحادثات المحذوفة من قبلي
+          final visibleConversations = allConversations.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final deletedBy = data['deletedBy'] as Map<String, dynamic>?;
+            return deletedBy == null || deletedBy[currentUserUid] != true;
+          }).toList();
+
+          if (visibleConversations.isEmpty) {
+            return const Center(child: Text('لا توجد محادثات.'));
+          }
+
+          // 5. الترتيب اليدوي
+          visibleConversations.sort((a, b) {
             final dataA = a.data() as Map<String, dynamic>;
             final dataB = b.data() as Map<String, dynamic>;
 
-            // التعامل مع اختلاف أسماء حقول الوقت بين الجروب والمحادثة
             Timestamp timeA =
                 dataA['date'] ??
                 dataA['lastMessageTimestamp'] ??
@@ -151,63 +159,53 @@ class _ChatViewState extends State<ChatView> {
                 dataB['lastMessageTimestamp'] ??
                 Timestamp.now();
 
-            return timeB.compareTo(timeA); // تنازلي
+            return timeB.compareTo(timeA);
           });
 
           return ListView.builder(
-            itemCount: allConversations.length,
-            shrinkWrap: true,
+            itemCount: visibleConversations.length,
             itemBuilder: (context, index) {
-              final doc = allConversations[index];
+              final doc = visibleConversations[index];
               final chatMap = doc.data() as Map<String, dynamic>;
 
               // متغيرات العرض
               String name = '';
               String image = '';
-              String targetUid = ''; // للمحادثات الفردية
+              String targetUid = '';
               bool isGroup = false;
               String lastMessage = '';
 
-              // منطق تحديث حالة "تم التسليم"
-              // إذا كانت آخر رسالة ليست مني، وحالتها "sent"، اجعلها "delivered"
-              if (chatMap['lastMessageSenderId'] != currentUserUid &&
-                  chatMap['lastMessageStatus'] == 'sent') {
-                // تحديث المستند الرئيسي (اختياري للعرض الخارجي)
-                FirebaseFirestore.instance
-                    .collection('chat')
-                    .doc(doc.id)
-                    .update({'lastMessageStatus': 'delivered'});
-
-                // الأهم: تحديث الرسائل داخل المجموعة الفرعية
-                // هذه عملية قد تكون مكلفة إذا كانت الرسائل كثيرة، لذا نحدث فقط غير المقروءة
-                // يفضل عمل دالة منفصلة لهذا الغرض
-                _markMessagesAsDelivered(doc.id);
-              }
-
-              // 6. التحقق هل هو جروب أم محادثة فردية
+              // تحديد النوع (جروب أم فردي)
               if (chatMap.containsKey('groupName')) {
-                // --- حالة الجروب ---
                 isGroup = true;
-                name = chatMap['groupName'] ?? 'Unnamed Group';
+                name = chatMap['groupName'] ?? 'مجموعة';
                 image = chatMap['groupImage'] ?? '';
                 lastMessage = chatMap['lastMessage'] ?? '';
-                // الجروب ليس له targetUid واحد
               } else {
-                // --- حالة المحادثة الفردية ---
                 isGroup = false;
-                name = currentUserUid == chatMap['senderId']
-                    ? chatMap['receiverName'] ?? 'Unknown'
-                    : chatMap['senderName'] ?? 'Unknown';
-                image = currentUserUid == chatMap['senderId']
-                    ? chatMap['receiverImage'] ?? ''
-                    : chatMap['senderImage'] ?? '';
-                targetUid = currentUserUid == chatMap['senderId']
-                    ? chatMap['receiverId'] ?? ''
-                    : chatMap['senderId'] ?? '';
+                final bool isMeSender = currentUserUid == chatMap['senderId'];
+                name = isMeSender
+                    ? (chatMap['receiverName'] ?? 'مستخدم')
+                    : (chatMap['senderName'] ?? 'مستخدم');
+                image = isMeSender
+                    ? (chatMap['receiverImage'] ?? '')
+                    : (chatMap['senderImage'] ?? '');
+                targetUid = isMeSender
+                    ? (chatMap['receiverId'] ?? '')
+                    : (chatMap['senderId'] ?? '');
                 lastMessage =
-                    chatMap['lastMessage'] ??
-                    chatMap['message'] ??
-                    ''; // أحياناً تخزن كـ message
+                    chatMap['lastMessage'] ?? chatMap['message'] ?? '';
+              }
+
+              // منطق "تم التسليم" (Delivered)
+              // يتم استدعاؤه هنا لضمان تحديث الحالة بمجرد ظهور المحادثة في القائمة
+              if (!isGroup) {
+                // عادةً Delivered للمحادثات الفردية أهم
+                // يمكنك وضع شرط إضافي لعدم استدعاء الدالة بشكل متكرر جداً إذا أردت
+                chatCubit.markMessagesAsDelivered(
+                  chatId: doc.id,
+                  isGroupChat: isGroup,
+                );
               }
 
               // الرسائل غير المقروءة
@@ -216,89 +214,88 @@ class _ChatViewState extends State<ChatView> {
               final int myUnreadCount = unreadCountData?[currentUserUid] ?? 0;
               final bool hasUnreadMessages = myUnreadCount > 0;
 
-              return Padding(
-                padding: const EdgeInsets.all(8),
-                child: ListTile(
-                  onTap: () {
-                    // 7. إصلاح التنقل بتمرير البارامترات المطلوبة
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return SendResChat(
-                            userName: name,
-                            userImage: image,
-                            uid: isGroup
-                                ? ''
-                                : targetUid, // في الجروب لا يهم الـ uid الفردي
-                            isGroupChat: isGroup, // <--- تمرير نوع المحادثة
-                            chatId: doc
-                                .id, // <--- تمرير ID المستند (سواء كان غرفة أو جروب)
-                          );
-                        },
-                      ),
-                    );
-                  },
-                  leading: CircleAvatar(
-                    radius: 30,
-                    backgroundImage: image.isNotEmpty
-                        ? NetworkImage(image)
-                        : null,
-                    child: image.isEmpty
-                        ? Icon(
-                            isGroup ? Icons.groups : Icons.person,
-                          ) // أيقونة مختلفة للجروب
-                        : null,
-                  ),
-                  title: Text(
-                    name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: hasUnreadMessages
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+              return ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return SendResChat(
+                          userName: name,
+                          userImage: image,
+                          uid: isGroup ? '' : targetUid,
+                          isGroupChat: isGroup,
+                          chatId: doc.id,
+                        );
+                      },
                     ),
-                  ),
-                  subtitle: Text(
-                    lastMessage,
-                    style: TextStyle(
-                      color: hasUnreadMessages
-                          ? Colors.white
-                          : Colors.grey.shade400,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: hasUnreadMessages
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            popButton(
-                              context,
-                              doc.id,
-                              isGroup ? 'groups' : 'chat',
-                              currentUserUid,
-                            ),
-                            const SizedBox(width: 8),
-                            CircleAvatar(
-                              radius: 12,
-                              backgroundColor: Colors.blue,
-                              child: Text(
-                                myUnreadCount.toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
+                  );
+                },
+                leading: CircleAvatar(
+                  radius: 28,
+                  backgroundImage: image.isNotEmpty
+                      ? NetworkImage(image)
+                      : null,
+                  backgroundColor: Colors.grey.shade300,
+                  child: image.isEmpty
+                      ? Icon(
+                          isGroup ? Icons.groups : Icons.person,
+                          color: Colors.grey.shade700,
                         )
-                      : popButton(
-                          context,
-                          doc.id,
-                          isGroup ? 'groups' : 'chat',
-                          currentUserUid,
+                      : null,
+                ),
+                title: Text(
+                  name,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: hasUnreadMessages
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(
+                  lastMessage,
+                  style: TextStyle(
+                    color: hasUnreadMessages ? Colors.white : Colors.white70,
+                    fontWeight: hasUnreadMessages
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasUnreadMessages)
+                      CircleAvatar(
+                        radius: 10,
+                        backgroundColor: Colors.blueAccent,
+                        child: Text(
+                          myUnreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                          ),
                         ),
+                      ),
+                    // زر الخيارات (PopUp)
+                    SizedBox(
+                      height: 30,
+                      width: 30,
+                      child: popButton(
+                        context,
+                        doc.id,
+                        isGroup ? 'groups' : 'chat',
+                        currentUserUid,
+                        isGroup
+                            ? null
+                            : targetUid, // <--- تمرير معرف الطرف الآخر
+                      ),
+                    ),
+                  ],
                 ),
               );
             },

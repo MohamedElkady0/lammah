@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/function/date_utils.dart';
 import 'package:lammah/core/utils/auth_string.dart';
+import 'package:lammah/domian/chat/chat_cubit.dart'; // تأكد من المسار
 import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:lammah/presentation/views/chat/widget/user_avatar_with_status.dart';
 
@@ -34,33 +35,68 @@ class _FriendsScreenState extends State<FriendsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('الأصدقاء'),
-        bottom: TabBar(
+    // استخدام BlocListener للاستماع لنتائج العمليات (نجاح/فشل)
+    return BlocListener<ChatCubit, ChatState>(
+      listener: (context, state) {
+        if (state is FriendRequestStateChanged) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.isFriendRequestSent
+                    ? 'تم إرسال طلب الصداقة بنجاح'
+                    : 'لا يمكن إرسال الطلب (قد تكون محظوراً)',
+              ),
+              backgroundColor: state.isFriendRequestSent
+                  ? Colors.green
+                  : Colors.red,
+            ),
+          );
+        }
+        if (state is UserBlockedStateChanged) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم حظر المستخدم بنجاح'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        if (state is ChatFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        if (state is ChatSuccess) {
+          // يمكن استخدامه عند قبول/رفض الصداقة إذا أردت إشعاراً
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('الأصدقاء'),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'أصدقائي'),
+              Tab(text: 'طلبات الصداقة'),
+              Tab(text: 'إضافة صديق'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'أصدقائي'),
-            Tab(text: 'طلبات الصداقة'),
-            Tab(text: 'إضافة صديق'),
+          children: [
+            _buildFriendsList(),
+            _buildFriendRequestsList(),
+            _buildSuggestionsList(),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // التاب الأول: عرض الأصدقاء الحاليين
-          _buildFriendsList(),
-          // التاب الثاني: عرض طلبات الصداقة الواردة
-          _buildFriendRequestsList(),
-          // التاب الثالث: عرض اقتراحات الأصدقاء
-          _buildSuggestionsList(),
-        ],
       ),
     );
   }
 
-  // --- ويدجت لعرض قائمة الأصدقاء ---
+  // --- 1. قائمة الأصدقاء ---
   Widget _buildFriendsList() {
     return StreamBuilder<DocumentSnapshot>(
       stream: _firestore
@@ -84,7 +120,7 @@ class _FriendsScreenState extends State<FriendsScreen>
     );
   }
 
-  // --- ويدجت لعرض قائمة طلبات الصداقة ---
+  // --- 2. قائمة طلبات الصداقة ---
   Widget _buildFriendRequestsList() {
     return StreamBuilder<DocumentSnapshot>(
       stream: _firestore
@@ -109,9 +145,8 @@ class _FriendsScreenState extends State<FriendsScreen>
     );
   }
 
-  // --- ويدجت لعرض قائمة الاقتراحات (مصححة) ---
+  // --- 3. قائمة الاقتراحات ---
   Widget _buildSuggestionsList() {
-    // 1. نجلب أي 50 مستخدم بشكل عام (بدون شرط where uid)
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore.collection('users').limit(50).snapshots(),
       builder: (context, snapshot) {
@@ -119,7 +154,7 @@ class _FriendsScreenState extends State<FriendsScreen>
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        // 2. نجلب بيانات المستخدم الحالي لنعرف من هم أصدقاؤه ومن حظرهم
+
         return FutureBuilder<DocumentSnapshot>(
           future: _firestore.collection('users').doc(_currentUserUid).get(),
           builder: (context, currentUserDoc) {
@@ -127,7 +162,6 @@ class _FriendsScreenState extends State<FriendsScreen>
               return const Center(child: CircularProgressIndicator());
             }
 
-            // استخراج البيانات بامان
             final myData = currentUserDoc.data!.data() as Map<String, dynamic>?;
             if (myData == null) return const Text("بياناتك غير موجودة");
 
@@ -138,17 +172,14 @@ class _FriendsScreenState extends State<FriendsScreen>
                 myData['friendRequestsReceived'] ?? [];
             final List<dynamic> myBlockedUsers = myData['blockedUsers'] ?? [];
 
-            // تجميع كل الأشخاص الذين لا يجب أن يظهروا في الاقتراحات
             final Set<String> excludedUids = {
               ...myFriends,
               ...mySentRequests,
               ...myReceivedRequests,
               ...myBlockedUsers,
-              _currentUserUid, // استبعاد نفسك أيضاً
+              _currentUserUid,
             }.map((e) => e.toString()).toSet();
 
-            // 3. عملية الفلترة داخل التطبيق
-            // نمر على كل المستخدمين القادمين من السيرفر ونستبعد الممنوعين
             final suggestions = snapshot.data!.docs
                 .where((doc) => !excludedUids.contains(doc.id))
                 .toList();
@@ -162,8 +193,7 @@ class _FriendsScreenState extends State<FriendsScreen>
             return ListView.builder(
               itemCount: suggestions.length,
               itemBuilder: (context, index) {
-                final userDoc = suggestions[index];
-                return _buildUserTile(userDoc, isSuggestion: true);
+                return _buildUserTile(suggestions[index], isSuggestion: true);
               },
             );
           },
@@ -172,12 +202,11 @@ class _FriendsScreenState extends State<FriendsScreen>
     );
   }
 
-  // --- ويدجت عامة لبناء قائمة المستخدمين من قائمة ID ---
+  // --- بناء القائمة من IDs ---
   Widget _buildUserListFromIds(
     List<dynamic> userIds, {
     bool isRequestList = false,
   }) {
-    // جلب بيانات المستخدمين بناءً على IDs الخاصة بهم
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection(AuthString.fSUsers)
@@ -187,17 +216,21 @@ class _FriendsScreenState extends State<FriendsScreen>
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
+
         return ListView.builder(
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
-            final userDoc = snapshot.data!.docs[index];
-            return _buildUserTile(userDoc, isRequest: isRequestList);
+            return _buildUserTile(
+              snapshot.data!.docs[index],
+              isRequest: isRequestList,
+            );
           },
         );
       },
     );
   }
 
+  // --- بناء العنصر الواحد (User Tile) ---
   Widget _buildUserTile(
     DocumentSnapshot userDoc, {
     bool isRequest = false,
@@ -207,16 +240,12 @@ class _FriendsScreenState extends State<FriendsScreen>
     final String name = userData['name'] ?? 'Unknown';
     final String image = userData['image'] ?? '';
     final String uid = userDoc.id;
-
-    // جلب بيانات الحالة (أونلاين / آخر ظهور)
     final bool isOnline = userData['isOnline'] ?? false;
     final Timestamp? lastSeen = userData['lastSeen'];
 
     return ListTile(
-      // استخدام ويدجت الصورة مع حالة الأونلاين
       leading: UserAvatarWithStatus(image: image, isOnline: isOnline),
       title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-      // عرض حالة الاتصال فقط للأصدقاء الحاليين
       subtitle: !isRequest && !isSuggestion
           ? Text(
               isOnline ? 'متصل الآن' : formatLastSeen(lastSeen),
@@ -226,19 +255,16 @@ class _FriendsScreenState extends State<FriendsScreen>
               ),
             )
           : null,
-
-      // استدعاء الدالة المساعدة لبناء الأزرار الجانبية
       trailing: _buildTrailingButton(isRequest, isSuggestion, uid, name, image),
-
       onTap: () {
-        // الانتقال للمحادثة فقط إذا كانوا أصدقاء
         if (!isRequest && !isSuggestion) {
-          _navigateToChat(name, image, uid);
+          _navigateToChat(context, name, image, uid);
         }
       },
     );
   }
 
+  // --- الأزرار الجانبية (مع ربطها بالـ Cubit) ---
   Widget _buildTrailingButton(
     bool isRequest,
     bool isSuggestion,
@@ -246,49 +272,56 @@ class _FriendsScreenState extends State<FriendsScreen>
     String name,
     String image,
   ) {
+    // الحصول على الـ Cubit
+    final cubit = context.read<ChatCubit>();
+
     if (isRequest) {
-      // حالة طلب الصداقة: عرض أزرار قبول، رفض، حظر
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             tooltip: 'قبول',
             icon: const Icon(Icons.check_circle, color: Colors.green),
-            onPressed: () => _acceptFriendRequest(uid),
+            onPressed: () =>
+                cubit.acceptFriendRequest(uid), // استدعاء الـ Cubit
           ),
           IconButton(
             tooltip: 'رفض',
             icon: const Icon(Icons.cancel, color: Colors.orange),
-            onPressed: () => _rejectFriendRequest(uid),
+            onPressed: () =>
+                cubit.rejectFriendRequest(uid), // استدعاء الـ Cubit
           ),
           IconButton(
             tooltip: 'حظر',
             icon: const Icon(Icons.block, color: Colors.red),
-            onPressed: () => _blockUser(uid),
+            onPressed: () => cubit.blockUser(uid), // استدعاء الـ Cubit
           ),
         ],
       );
     } else if (isSuggestion) {
-      // حالة الاقتراح: زر إضافة
       return ElevatedButton(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         child: const Text('إضافة'),
-        onPressed: () => _sendFriendRequest(uid),
+        onPressed: () => cubit.sendFriendRequest(uid), // استدعاء الـ Cubit
       );
     } else {
-      // حالة الصديق الحالي: زر المحادثة
       return IconButton(
         icon: const Icon(Icons.chat, color: Colors.blue),
-        onPressed: () => _navigateToChat(name, image, uid),
+        onPressed: () => _navigateToChat(context, name, image, uid),
       );
     }
   }
 
-  // دالة مساعدة للانتقال للشات (لتجنب تكرار الكود)
-  void _navigateToChat(String name, String image, String uid) {
-    // تأكد من استيراد SendResChat
+  // الانتقال للشات باستخدام ChatCubit helper
+  void _navigateToChat(
+    BuildContext context,
+    String name,
+    String image,
+    String uid,
+  ) {
+    final cubit = context.read<ChatCubit>();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -297,161 +330,9 @@ class _FriendsScreenState extends State<FriendsScreen>
           userImage: image,
           uid: uid,
           isGroupChat: false,
-          chatId: _getChatRoomId(_currentUserUid, uid), // دالة حساب الـ ID
+          chatId: cubit.chatRoomId(uid), // استخدام دالة الـ Cubit لحساب المعرف
         ),
       ),
     );
-  }
-
-  // دالة حساب ChatRoomId (نفس الموجودة في MapScreen)
-  String _getChatRoomId(String user1, String user2) {
-    List<String> userIds = [user1, user2];
-    userIds.sort();
-    return '${userIds[0]}_${userIds[1]}';
-  }
-
-  // --- وظائف التعامل مع طلبات الصداقة ---
-
-  void _sendFriendRequest(String recipientUid) async {
-    var scaffoldMessengers = ScaffoldMessenger.of(context);
-    // أولاً، تحقق مما إذا كان هذا المستخدم قد حظرك
-    final recipientDoc = await _firestore
-        .collection(AuthString.fSUsers)
-        .doc(recipientUid)
-        .get();
-    final List<dynamic> blockedByRecipient =
-        recipientDoc.data()?['blockedUsers'] ?? [];
-    if (blockedByRecipient.contains(_currentUserUid)) {
-      scaffoldMessengers.showSnackBar(
-        const SnackBar(content: Text('لا يمكنك إرسال طلب لهذا المستخدم.')),
-      );
-      return;
-    }
-
-    // 1. تحديث قاعدة البيانات كما في السابق
-    _firestore.collection(AuthString.fSUsers).doc(recipientUid).update({
-      'friendRequestsReceived': FieldValue.arrayUnion([_currentUserUid]),
-    });
-    _firestore.collection(AuthString.fSUsers).doc(_currentUserUid).update({
-      'friendRequestsSent': FieldValue.arrayUnion([recipientUid]),
-    });
-
-    // 2. إرسال الإشعار
-    try {
-      // جلب بياناتك (المرسل) وبيانات المستلم (FCM Token)
-      final myDoc = await _firestore
-          .collection(AuthString.fSUsers)
-          .doc(_currentUserUid)
-          .get();
-      final myName = myDoc.data()?['name'] ?? 'مستخدم';
-      final receiverFcmToken = recipientDoc.data()?['fcmToken'];
-
-      if (receiverFcmToken != null) {
-        final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
-          'sendFriendRequestNotification',
-        );
-        await callable.call(<String, dynamic>{
-          'receiverFcmToken': receiverFcmToken,
-          'senderName': myName,
-        });
-      }
-    } catch (e) {
-      print("Failed to send friend request notification: $e");
-    }
-  }
-
-  void _acceptFriendRequest(String senderUid) {
-    // كتابة مجمعة (Batch Write) لضمان تنفيذ كل العمليات معاً
-    final batch = _firestore.batch();
-
-    // 1. إضافة كل منكم إلى قائمة أصدقاء الآخر
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
-      {
-        'friends': FieldValue.arrayUnion([senderUid]),
-      },
-    );
-    batch.update(_firestore.collection(AuthString.fSUsers).doc(senderUid), {
-      'friends': FieldValue.arrayUnion([_currentUserUid]),
-    });
-
-    // 2. إزالة الطلب من كلا القائمتين
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
-      {
-        'friendRequestsReceived': FieldValue.arrayRemove([senderUid]),
-      },
-    );
-    batch.update(_firestore.collection(AuthString.fSUsers).doc(senderUid), {
-      'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
-    });
-
-    batch.commit();
-  }
-
-  void _rejectFriendRequest(String senderUid) {
-    final batch = _firestore.batch();
-
-    // إزالة الطلب من كلا القائمتين
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
-      {
-        'friendRequestsReceived': FieldValue.arrayRemove([senderUid]),
-      },
-    );
-    batch.update(_firestore.collection(AuthString.fSUsers).doc(senderUid), {
-      'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
-    });
-
-    batch.commit();
-  }
-  // داخل _FriendsScreenState
-
-  void _blockUser(String userToBlockUid) {
-    // هذا سيتم استدعاؤه عندما تضغط على أيقونة الحظر من قائمة الطلبات
-    // سيقوم برفض الطلب أولاً ثم حظر المستخدم نهائياً
-
-    final batch = _firestore.batch();
-    var scaffoldMessengers = ScaffoldMessenger.of(context);
-
-    // 1. (مثل الرفض) إزالة الطلب من قائمة طلباتك المستلمة
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
-      {
-        'friendRequestsReceived': FieldValue.arrayRemove([userToBlockUid]),
-      },
-    );
-
-    // 2. (مثل الرفض) إزالة الطلب من قائمة طلباته المرسلة
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
-      {
-        'friendRequestsSent': FieldValue.arrayRemove([_currentUserUid]),
-      },
-    );
-
-    // 3. (الخطوة الجديدة) إضافة هذا المستخدم إلى قائمة الحظر الخاصة بك
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
-      {
-        'blockedUsers': FieldValue.arrayUnion([userToBlockUid]),
-      },
-    );
-
-    // 4. (اختياري ولكن موصى به) إضافتك إلى قائمة "محظور من قبل" لديه
-    // هذا يساعد في منعه من رؤيتك أيضاً
-    batch.update(
-      _firestore.collection(AuthString.fSUsers).doc(userToBlockUid),
-      {
-        'blockedBy': FieldValue.arrayUnion([_currentUserUid]),
-      },
-    );
-
-    // تنفيذ كل العمليات دفعة واحدة
-    batch.commit().then((_) {
-      scaffoldMessengers.showSnackBar(
-        const SnackBar(content: Text('تم حظر المستخدم بنجاح.')),
-      );
-    });
   }
 }

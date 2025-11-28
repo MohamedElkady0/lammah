@@ -1,38 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // للنسخ
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/presentation/views/chat/widget/record_widget.dart';
 import 'package:lammah/presentation/views/chat/widget/video_player_widget.dart';
+import 'package:lammah/domian/chat/chat_cubit.dart'; // تأكد من المسار الصحيح للـ Cubit
 import 'package:url_launcher/url_launcher.dart';
 
 class ChatWidget extends StatelessWidget {
-  const ChatWidget({super.key, required this.message, required this.isFriend});
+  const ChatWidget({
+    super.key,
+    required this.message,
+    required this.isFriend,
+    required this.isGroupChat, // إضافة مهمة لمنطق المجموعات
+    required this.chatId, // ضروري لعمليات الحذف والتعديل
+  });
+
   final Map<String, dynamic> message;
   final bool isFriend;
+  final bool isGroupChat;
+  final String chatId;
 
-  // ويدجت لعرض الرسائل النصية
+  // --- دوال بناء الواجهة (Text, Audio, etc.) بقيت كما هي تقريباً ---
+
   Widget _buildTextMessage(BuildContext context) {
     return Text(
-      message['message'] ?? '', // التأكد من عدم وجود قيمة null
+      message['message'] ?? '',
       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-        color: Theme.of(context).colorScheme.onPrimary,
+        color: isFriend ? Colors.black : Colors.white, // تحسين اللون
       ),
     );
   }
 
-  /// ويدجت لعرض الرسائل الصوتية
+  // داخل ChatWidget.dart
+
   Widget _buildAudioMessage(BuildContext context) {
     final String audioUrl = message['audioUrl'] ?? '';
     final int duration = message['duration'] ?? 0;
 
     if (audioUrl.isEmpty) {
-      return const Text(
-        'لا يمكن تشغيل الرسالة الصوتية',
-        style: TextStyle(color: Colors.white),
+      return Text(
+        'لا يمكن تشغيل الرسالة',
+        style: TextStyle(color: isFriend ? Colors.black : Colors.white),
       );
     }
 
-    return AudioPlayerWidget(audioUrl: audioUrl, durationInMillis: duration);
+    return AudioPlayerWidget(
+      audioUrl: audioUrl,
+      durationInMillis: duration,
+      // تمرير اللون: أسود إذا كان صديق (خلفية فاتحة)، أبيض إذا كنت أنا (خلفية زرقاء)
+      contentColor: isFriend ? Colors.black87 : Colors.white,
+    );
   }
 
   Widget _buildVideoMessage(BuildContext context) {
@@ -40,7 +59,6 @@ class ChatWidget extends StatelessWidget {
     return VideoPlayerWidget(videoUrl: videoUrl);
   }
 
-  // ويدجت لعرض الصور مع الشرح
   Widget _buildImageMessage(BuildContext context) {
     final List<dynamic> imageUrls = message['imageUrls'] ?? [];
     final String caption = message['caption'] ?? '';
@@ -48,15 +66,12 @@ class ChatWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // استخدام GridView لعرض الصور بشكل أنيق
         GridView.builder(
           itemCount: imageUrls.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: imageUrls.length > 1
-                ? 2
-                : 1, // عمود واحد إذا كانت صورة، عمودان لأكثر
+            crossAxisCount: imageUrls.length > 1 ? 2 : 1,
             crossAxisSpacing: 4,
             mainAxisSpacing: 4,
           ),
@@ -66,46 +81,27 @@ class ChatWidget extends StatelessWidget {
               child: Image.network(
                 imageUrls[index],
                 fit: BoxFit.cover,
-                // إظهار مؤشر تحميل أثناء جلب الصورة
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return const Center(child: CircularProgressIndicator());
                 },
-                // إظهار أيقونة خطأ في حال فشل التحميل
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade300,
-                    child: const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.cloud_off, color: Colors.grey),
-                          SizedBox(height: 4),
-                          Text(
-                            'انتهت صلاحية الصورة',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
                   );
                 },
               ),
             );
           },
         ),
-        // عرض الشرح فقط إذا لم يكن فارغاً
         if (caption.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 5, left: 5),
+            padding: const EdgeInsets.only(top: 8.0),
             child: Text(
               caption,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
+                color: isFriend ? Colors.black : Colors.white,
               ),
             ),
           ),
@@ -121,150 +117,227 @@ class ChatWidget extends StatelessWidget {
       onTap: () async {
         if (await canLaunchUrl(Uri.parse(fileUrl))) {
           await launchUrl(Uri.parse(fileUrl));
-        } else {
-          // عرض رسالة خطأ
         }
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black12,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.insert_drive_file, color: Colors.white),
-            SizedBox(width: 8),
+            const Icon(Icons.insert_drive_file, color: Colors.white),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 fileName,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   decoration: TextDecoration.underline,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.download_for_offline, color: Colors.white),
+            const Icon(Icons.download, color: Colors.white),
           ],
         ),
       ),
     );
   }
 
-  // دالة مساعدة لاختيار الأيقونة واللون
-  Widget _buildStatusIcon(Map<String, dynamic> message, bool isGroup) {
+  // تعديل مهم: إظهار الأيقونة فقط لرسائلي أنا
+  Widget _buildStatusIcon(Map<String, dynamic> message) {
+    // إذا كانت الرسالة من صديق (isFriend == true)، لا نعرض حالة القراءة
+    if (isFriend) return const SizedBox.shrink();
+
     final status = message['status'];
     final List<dynamic> seenBy = message['seenBy'] ?? [];
 
-    if (isGroup) {
-      // في المجموعات: نعتبرها مقروءة إذا رآها شخص واحد على الأقل (أو يمكنك جعلها تتطلب الجميع)
+    if (isGroupChat) {
       if (seenBy.isNotEmpty) {
-        // يمكنك هنا إضافة منطق: لو عدد seenBy == عدد أعضاء الجروب - 1، اجعلها زرقاء
-        // للتبسيط، سنعتبرها "مقروءة" إذا رآها أي شخص
-        return Icon(Icons.done_all, size: 16, color: Colors.blue);
+        return const Icon(Icons.done_all, size: 16, color: Colors.blue);
       } else {
-        return Icon(Icons.check, size: 16, color: Colors.grey);
+        return const Icon(Icons.check, size: 16, color: Colors.grey);
       }
     } else {
-      // في الفردي: نعتمد على الـ status
       switch (status) {
         case 'sent':
-          return Icon(Icons.check, size: 16, color: Colors.grey);
+          return const Icon(Icons.check, size: 16, color: Colors.grey);
         case 'delivered':
-          return Icon(Icons.done_all, size: 16, color: Colors.grey);
+          return const Icon(Icons.done_all, size: 16, color: Colors.grey);
         case 'seen':
-          return Icon(Icons.done_all, size: 16, color: Colors.blue);
+          return const Icon(Icons.done_all, size: 16, color: Colors.blue);
         default:
-          return Icon(Icons.access_time, size: 16, color: Colors.grey);
+          return const Icon(Icons.access_time, size: 16, color: Colors.grey);
       }
     }
+  }
+
+  // قائمة الخيارات (تعديل/حذف) ربطاً بالـ Cubit
+  void _showMessageOptions(BuildContext context) {
+    // لا نسمح بحذف أو تعديل رسائل الآخرين
+    if (isFriend) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              // خيار التعديل (فقط للنصوص)
+              if (message['type'] == 'text')
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('تعديل الرسالة'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showEditDialog(context);
+                  },
+                ),
+              // خيار الحذف
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text(
+                  'حذف الرسالة',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  // استدعاء الـ Cubit للحذف
+                  context.read<ChatCubit>().deleteMessage(
+                    messageId: message['messageId'],
+                    uId: isGroupChat
+                        ? chatId
+                        : message['receiverId'], // انتبه هنا لمنطق الـ ID
+                    // ملاحظة: دالة deleteMessage في الـ Cubit الحالي تعتمد على chatRoomId(uid)
+                    // إذا كانت مجموعة، قد تحتاج لتعديل بسيط في استدعاء الدالة لتقبل chatId مباشرة
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy),
+                title: const Text('نسخ'),
+                onTap: () {
+                  Clipboard.setData(
+                    ClipboardData(text: message['message'] ?? ''),
+                  );
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final TextEditingController editController = TextEditingController(
+      text: message['message'],
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("تعديل الرسالة"),
+        content: TextField(
+          controller: editController,
+          decoration: const InputDecoration(hintText: "أدخل التعديل"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("إلغاء"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (editController.text.trim().isNotEmpty) {
+                // استدعاء الـ Cubit للتعديل
+                context.read<ChatCubit>().editMessageText(
+                  newText: editController.text,
+                  messageId: message['messageId'],
+                  uId: isGroupChat ? chatId : message['receiverId'],
+                );
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text("حفظ"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     ConfigApp.initConfig(context);
     final bool isEdited = message['isEdited'] ?? false;
-
-    final bool isVideoMessage = message['type'] == 'video';
-
-    final bool isFileMessage = message['type'] == 'file';
-
-    bool isGroupMessage =
-        message.containsKey('isGroup') ||
-        message['receiverId'] == null; // طريقة تخمين
-
-    // التحقق من نوع الرسالة
-    final bool isImageMessage =
-        message.containsKey('type') && message['type'] == 'image';
-
-    final bool isAudioMessage =
-        message.containsKey('type') && message['type'] == 'audio';
+    final String type = message['type'] ?? 'text';
 
     return Align(
-      alignment: isFriend
-          ? Alignment.topLeft
-          : Alignment.topRight, // يمكنك تعديل هذا بناءً على المُرسِل
+      alignment: isFriend ? Alignment.centerLeft : Alignment.centerRight,
       child: InkWell(
+        onLongPress: () => _showMessageOptions(context), // تفعيل القائمة
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: isFriend
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.end,
             children: [
               Container(
-                constraints: BoxConstraints(
-                  maxWidth: ConfigApp.width * 0.7,
-                ), // تحديد عرض أقصى للرسالة
-                padding: const EdgeInsets.all(10),
+                constraints: BoxConstraints(maxWidth: ConfigApp.width * 0.75),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  // تغيير الألوان لتمييز المرسل (أزرق) عن المستقبل (رمادي/أبيض)
+                  color: isFriend ? Colors.grey[300] : Colors.blue,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                    bottomRight: isFriend ? Radius.circular(12) : Radius.zero,
-                    bottomLeft: isFriend ? Radius.zero : Radius.circular(12),
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: isFriend
+                        ? Radius.zero
+                        : const Radius.circular(16),
+                    bottomRight: isFriend
+                        ? const Radius.circular(16)
+                        : Radius.zero,
                   ),
                 ),
-                // عرض الويدجت المناسبة بناءً على نوع الرسالة
-                child: isFileMessage
-                    ? _buildFileMessage(context)
-                    : isVideoMessage
-                    ? _buildVideoMessage(context)
-                    : isAudioMessage
-                    ? _buildAudioMessage(context)
-                    : (isImageMessage
-                          ? _buildImageMessage(context)
-                          : _buildTextMessage(context)),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(top: 2, right: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      DateFormat.jm().format(message['date'].toDate()),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    _buildStatusIcon(
-                      message,
-                      isGroupMessage,
-                    ), // تمرير الرسالة كاملة
-                    if (isEdited)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          '(تم التعديل)',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
+                    if (type == 'file') _buildFileMessage(context),
+                    if (type == 'video') _buildVideoMessage(context),
+                    if (type == 'audio') _buildAudioMessage(context),
+                    if (type == 'image') _buildImageMessage(context),
+                    if (type == 'text') _buildTextMessage(context),
                   ],
                 ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: isFriend
+                    ? MainAxisAlignment.start
+                    : MainAxisAlignment.end,
+                children: [
+                  Text(
+                    DateFormat.jm().format(message['date'].toDate()),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  if (isEdited)
+                    const Text(
+                      ' (معدل)',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  const SizedBox(width: 4),
+                  // عرض الأيقونة فقط إذا لم تكن رسالة صديق
+                  _buildStatusIcon(message),
+                ],
               ),
             ],
           ),
