@@ -3,6 +3,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/data/model/post_model.dart';
 import 'package:lammah/domian/post/post_cubit.dart';
+import 'package:lammah/presentation/views/story/widget/post_comments.dart';
+import 'package:lammah/presentation/views/story/widget/video_player_widget.dart';
 
 class PostItemWidget extends StatelessWidget {
   final PostModel post;
@@ -59,10 +61,35 @@ class PostItemWidget extends StatelessWidget {
                       ],
                     ),
                     const Spacer(),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.more_horiz),
-                    ),
+                    if (post.uId ==
+                        currentUserId) // تحقق أن المستخدم هو صاحب المنشور
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            // استدعاء دالة الحذف
+                            PostCubit.get(context).deletePost(post.postId!);
+                          }
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text('حذف المنشور'),
+                                ],
+                              ),
+                            ),
+                          ];
+                        },
+                        child: const Icon(Icons.more_horiz),
+                      ),
                   ],
                 ),
               ),
@@ -76,15 +103,16 @@ class PostItemWidget extends StatelessWidget {
                   ),
                   child: Text(post.text!, style: const TextStyle(fontSize: 14)),
                 ),
-
-              // 3. الصورة/الميديا
               if (post.postImage != null && post.postImage!.isNotEmpty)
                 CachedNetworkImage(
                   imageUrl: post.postImage!,
                   height: 250,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                ),
+                )
+              else if (post.postVideo != null && post.postVideo!.isNotEmpty)
+                // استدعاء ويدجت الفيديو الجديد
+                VideoPostWidget(videoUrl: post.postVideo!),
 
               // 4. الإحصائيات (Likes/Comments Count)
               Padding(
@@ -138,7 +166,14 @@ class PostItemWidget extends StatelessWidget {
                   Expanded(
                     child: InkWell(
                       onTap: () {
-                        // فتح التعليقات (يمكنك استخدام نفس BottomSheet السابق)
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => PostCommentsSheet(
+                            postId: post.postId!,
+                            currentUserId: currentUserId,
+                          ),
+                        );
                       },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 10),

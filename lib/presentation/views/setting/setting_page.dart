@@ -35,7 +35,7 @@ class _SettingPageState extends State<SettingPage> {
               SwitchListTile.adaptive(
                 inactiveThumbColor: Theme.of(context).colorScheme.primary,
                 activeTrackColor: Theme.of(context).colorScheme.error,
-                activeColor: Theme.of(context).colorScheme.primary,
+
                 title: Text(
                   'تفعيل التنبيهات',
                   style: TextStyle(
@@ -49,7 +49,6 @@ class _SettingPageState extends State<SettingPage> {
               SwitchListTile.adaptive(
                 inactiveThumbColor: Theme.of(context).colorScheme.primary,
                 activeTrackColor: Theme.of(context).colorScheme.error,
-                activeColor: Theme.of(context).colorScheme.primary,
 
                 title: Text(
                   context.read<ThemeCubit>().themeModeSwitch ? 'Dark' : 'Light',

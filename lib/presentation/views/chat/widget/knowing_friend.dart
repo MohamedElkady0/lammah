@@ -286,46 +286,40 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
             // 1. إذا كان الموقع لم يحدد بعد، اعرض التحميل
             if (locationState is LocationLoading) {
-              return const Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 10),
-                      Text("جاري تحديد الموقع..."),
-                    ],
-                  ),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 10),
+                    Text("جاري تحديد الموقع..."),
+                  ],
                 ),
               );
             }
 
             // 2. إذا فشل تحديد الموقع
             if (locationState is LocationFailure) {
-              return Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error, color: Colors.red, size: 50),
-                      Text(locationState.message),
-                      ElevatedButton(
-                        onPressed: () {
-                          locationCubit.getCurrentLocation();
-                        },
-                        child: const Text("حاول مرة أخرى"),
-                      ),
-                    ],
-                  ),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, color: Colors.red, size: 50),
+                    Text(locationState.message),
+                    ElevatedButton(
+                      onPressed: () {
+                        locationCubit.getCurrentLocation();
+                      },
+                      child: const Text("حاول مرة أخرى"),
+                    ),
+                  ],
                 ),
               );
             }
 
             // 3. إذا الموقع موجود لكن بيانات المستخدم تتأخر (لا توقف التطبيق، اعرض الخريطة)
             if (positionForMap == null) {
-              return const Scaffold(
-                body: Center(child: Text("في انتظار إحداثيات الموقع...")),
-              );
+              return const Center(child: Text("في انتظار إحداثيات الموقع..."));
             }
             // === هنا يبدأ عرض الخريطة ===
             // ملاحظة: قمنا بإزالة شرط (userInfoData == null) من الإيقاف

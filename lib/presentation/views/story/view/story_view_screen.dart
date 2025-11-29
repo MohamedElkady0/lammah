@@ -5,7 +5,7 @@ import 'package:lammah/domian/story/story_cubit.dart';
 import 'package:story_view/controller/story_controller.dart';
 import 'package:story_view/widgets/story_view.dart';
 
-import '../widget/comments_bottom_sheet .dart';
+import '../widget/comments_bottom .dart';
 
 class StoryViewScreen extends StatefulWidget {
   final List<StoryModel> stories;
@@ -53,6 +53,7 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primary,
       body: BlocConsumer<StoryCubit, StoryStates>(
         listener: (context, state) {
           // 1. حالة حذف القصة

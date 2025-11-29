@@ -118,6 +118,9 @@ class ChatCubit extends Cubit<ChatState> {
       Map<String, dynamic> updateData = {
         'lastMessage': textMessage,
         'date': Timestamp.now(),
+        'lastMessageStatus': 'sent', // <--- أضف هذا
+        'lastMessageSenderId':
+            user.currentUserInfo?.userId ?? '', // <--- أضف هذا
       };
 
       if (isGroupChat) {
@@ -387,6 +390,9 @@ class ChatCubit extends Cubit<ChatState> {
       Map<String, dynamic> updateData = {
         'lastMessage': '📷 صورة',
         'date': Timestamp.now(),
+        'lastMessageStatus': 'sent', // <--- أضف هذا
+        'lastMessageSenderId':
+            user.currentUserInfo?.userId ?? '', // <--- أضف هذا
       };
 
       if (isGroupChat) {
@@ -495,6 +501,9 @@ class ChatCubit extends Cubit<ChatState> {
       Map<String, dynamic> updateData = {
         'lastMessage': '🎥 فيديو',
         'date': Timestamp.now(),
+        'lastMessageStatus': 'sent', // <--- أضف هذا
+        'lastMessageSenderId':
+            user.currentUserInfo?.userId ?? '', // <--- أضف هذا
       };
 
       if (isGroupChat) {
@@ -599,6 +608,9 @@ class ChatCubit extends Cubit<ChatState> {
       Map<String, dynamic> updateData = {
         'lastMessage': '📄 ملف: $fileName',
         'date': Timestamp.now(),
+        'lastMessageStatus': 'sent', // <--- أضف هذا
+        'lastMessageSenderId':
+            user.currentUserInfo?.userId ?? '', // <--- أضف هذا
       };
 
       if (isGroupChat) {
@@ -1034,6 +1046,9 @@ class ChatCubit extends Cubit<ChatState> {
           'lastMessage': '🎤 تسجيل صوتي',
           'date': Timestamp.now(),
           'unreadCount.$receiverId': FieldValue.increment(1),
+          'lastMessageStatus': 'sent', // <--- أضف هذا
+          'lastMessageSenderId':
+              user.currentUserInfo?.userId ?? '', // <--- أضف هذا
         });
 
         // 6. إرسال إشعار

@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
       Shop(scaffoldKey: _scaffoldKeys[1]),
       NewsView(scaffoldKey: _scaffoldKeys[2]),
       Enjoyment(scaffoldKey: _scaffoldKeys[3]),
-      ProfilePage(scaffoldKey: _scaffoldKeys[4]),
+      ProfileScreen(scaffoldKey: _scaffoldKeys[4]),
     ];
   }
 

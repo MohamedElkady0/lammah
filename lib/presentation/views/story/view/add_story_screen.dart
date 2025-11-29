@@ -44,6 +44,7 @@ class AddStoryScreen extends StatelessWidget {
         var mediaFile = cubit.storyMediaFile;
 
         return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.primary,
           appBar: AppBar(
             title: Text('إنشاء قصة'),
             actions: [

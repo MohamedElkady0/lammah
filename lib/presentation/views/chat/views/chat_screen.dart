@@ -97,210 +97,238 @@ class _ChatViewState extends State<ChatView> {
         .orderBy('lastMessageTimestamp', descending: true)
         .snapshots();
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      appBar: AppBar(
-        title: Text('المحادثات', style: Theme.of(context).textTheme.titleLarge),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.people),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const FriendsScreen()),
-              );
-            },
+    return Container(
+      color: Theme.of(context).colorScheme.primary,
+
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 40), // Spacing
+                Text(
+                  'المحادثات',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.people),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FriendsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-      body: StreamBuilder<List<QuerySnapshot>>(
-        stream: StreamZip([chatsStream, groupsStream]),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData ||
-              (snapshot.data![0].docs.isEmpty &&
-                  snapshot.data![1].docs.isEmpty)) {
-            return const Center(child: Text('لا توجد محادثات بعد.'));
-          }
+          Expanded(
+            child: StreamBuilder<List<QuerySnapshot>>(
+              stream: StreamZip([chatsStream, groupsStream]),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('حدث خطأ: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData ||
+                    (snapshot.data![0].docs.isEmpty &&
+                        snapshot.data![1].docs.isEmpty)) {
+                  return const Center(child: Text('لا توجد محادثات بعد.'));
+                }
 
-          // 4. دمج وتصفية القائمتين
-          final chatDocs = snapshot.data![0].docs;
-          final groupDocs = snapshot.data![1].docs;
-          final allConversations = [...chatDocs, ...groupDocs];
+                // 4. دمج وتصفية القائمتين
+                final chatDocs = snapshot.data![0].docs;
+                final groupDocs = snapshot.data![1].docs;
+                final allConversations = [...chatDocs, ...groupDocs];
 
-          // تصفية المحادثات المحذوفة من قبلي
-          final visibleConversations = allConversations.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final deletedBy = data['deletedBy'] as Map<String, dynamic>?;
-            return deletedBy == null || deletedBy[currentUserUid] != true;
-          }).toList();
+                // تصفية المحادثات المحذوفة من قبلي
+                final visibleConversations = allConversations.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final deletedBy = data['deletedBy'] as Map<String, dynamic>?;
+                  return deletedBy == null || deletedBy[currentUserUid] != true;
+                }).toList();
 
-          if (visibleConversations.isEmpty) {
-            return const Center(child: Text('لا توجد محادثات.'));
-          }
+                if (visibleConversations.isEmpty) {
+                  return const Center(child: Text('لا توجد محادثات.'));
+                }
 
-          // 5. الترتيب اليدوي
-          visibleConversations.sort((a, b) {
-            final dataA = a.data() as Map<String, dynamic>;
-            final dataB = b.data() as Map<String, dynamic>;
+                // 5. الترتيب اليدوي
+                visibleConversations.sort((a, b) {
+                  final dataA = a.data() as Map<String, dynamic>;
+                  final dataB = b.data() as Map<String, dynamic>;
 
-            Timestamp timeA =
-                dataA['date'] ??
-                dataA['lastMessageTimestamp'] ??
-                Timestamp.now();
-            Timestamp timeB =
-                dataB['date'] ??
-                dataB['lastMessageTimestamp'] ??
-                Timestamp.now();
+                  Timestamp timeA =
+                      dataA['date'] ??
+                      dataA['lastMessageTimestamp'] ??
+                      Timestamp.now();
+                  Timestamp timeB =
+                      dataB['date'] ??
+                      dataB['lastMessageTimestamp'] ??
+                      Timestamp.now();
 
-            return timeB.compareTo(timeA);
-          });
+                  return timeB.compareTo(timeA);
+                });
 
-          return ListView.builder(
-            itemCount: visibleConversations.length,
-            itemBuilder: (context, index) {
-              final doc = visibleConversations[index];
-              final chatMap = doc.data() as Map<String, dynamic>;
+                return ListView.builder(
+                  itemCount: visibleConversations.length,
+                  itemBuilder: (context, index) {
+                    final doc = visibleConversations[index];
+                    final chatMap = doc.data() as Map<String, dynamic>;
+                    // استخراج بيانات آخر رسالة للتحقق قبل استدعاء الدالة
+                    String lastStatus = chatMap['lastMessageStatus'] ?? '';
+                    // في بعض الأحيان يكون senderId هو مرسل آخر رسالة في مستند المحادثة الرئيسي
+                    // تأكد من أنك تقوم بتحديث هذا الحقل عند إرسال رسالة جديدة
+                    String lastSenderId =
+                        chatMap['lastMessageSenderId'] ??
+                        chatMap['senderId'] ??
+                        '';
 
-              // متغيرات العرض
-              String name = '';
-              String image = '';
-              String targetUid = '';
-              bool isGroup = false;
-              String lastMessage = '';
+                    // متغيرات العرض
+                    String name = '';
+                    String image = '';
+                    String targetUid = '';
+                    bool isGroup = false;
+                    String lastMessage = '';
 
-              // تحديد النوع (جروب أم فردي)
-              if (chatMap.containsKey('groupName')) {
-                isGroup = true;
-                name = chatMap['groupName'] ?? 'مجموعة';
-                image = chatMap['groupImage'] ?? '';
-                lastMessage = chatMap['lastMessage'] ?? '';
-              } else {
-                isGroup = false;
-                final bool isMeSender = currentUserUid == chatMap['senderId'];
-                name = isMeSender
-                    ? (chatMap['receiverName'] ?? 'مستخدم')
-                    : (chatMap['senderName'] ?? 'مستخدم');
-                image = isMeSender
-                    ? (chatMap['receiverImage'] ?? '')
-                    : (chatMap['senderImage'] ?? '');
-                targetUid = isMeSender
-                    ? (chatMap['receiverId'] ?? '')
-                    : (chatMap['senderId'] ?? '');
-                lastMessage =
-                    chatMap['lastMessage'] ?? chatMap['message'] ?? '';
-              }
+                    // تحديد النوع (جروب أم فردي)
+                    if (chatMap.containsKey('groupName')) {
+                      isGroup = true;
+                      name = chatMap['groupName'] ?? 'مجموعة';
+                      image = chatMap['groupImage'] ?? '';
+                      lastMessage = chatMap['lastMessage'] ?? '';
+                    } else {
+                      isGroup = false;
+                      final bool isMeSender =
+                          currentUserUid == chatMap['senderId'];
+                      name = isMeSender
+                          ? (chatMap['receiverName'] ?? 'مستخدم')
+                          : (chatMap['senderName'] ?? 'مستخدم');
+                      image = isMeSender
+                          ? (chatMap['receiverImage'] ?? '')
+                          : (chatMap['senderImage'] ?? '');
+                      targetUid = isMeSender
+                          ? (chatMap['receiverId'] ?? '')
+                          : (chatMap['senderId'] ?? '');
+                      lastMessage =
+                          chatMap['lastMessage'] ?? chatMap['message'] ?? '';
+                    }
 
-              // منطق "تم التسليم" (Delivered)
-              // يتم استدعاؤه هنا لضمان تحديث الحالة بمجرد ظهور المحادثة في القائمة
-              if (!isGroup) {
-                // عادةً Delivered للمحادثات الفردية أهم
-                // يمكنك وضع شرط إضافي لعدم استدعاء الدالة بشكل متكرر جداً إذا أردت
-                chatCubit.markMessagesAsDelivered(
-                  chatId: doc.id,
-                  isGroupChat: isGroup,
-                );
-              }
+                    // منطق "تم التسليم" (Delivered)
+                    // يتم استدعاؤه هنا لضمان تحديث الحالة بمجرد ظهور المحادثة في القائمة
+                    if (!isGroup &&
+                        lastSenderId != currentUserUid &&
+                        lastStatus == 'sent') {
+                      chatCubit.markMessagesAsDelivered(
+                        chatId: doc.id,
+                        isGroupChat: isGroup,
+                      );
+                    }
 
-              // الرسائل غير المقروءة
-              final unreadCountData =
-                  chatMap['unreadCount'] as Map<String, dynamic>?;
-              final int myUnreadCount = unreadCountData?[currentUserUid] ?? 0;
-              final bool hasUnreadMessages = myUnreadCount > 0;
+                    // الرسائل غير المقروءة
+                    final unreadCountData =
+                        chatMap['unreadCount'] as Map<String, dynamic>?;
+                    final int myUnreadCount =
+                        unreadCountData?[currentUserUid] ?? 0;
+                    final bool hasUnreadMessages = myUnreadCount > 0;
 
-              return ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return SendResChat(
-                          userName: name,
-                          userImage: image,
-                          uid: isGroup ? '' : targetUid,
-                          isGroupChat: isGroup,
-                          chatId: doc.id,
+                    return ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return SendResChat(
+                                userName: name,
+                                userImage: image,
+                                uid: isGroup ? '' : targetUid,
+                                isGroupChat: isGroup,
+                                chatId: doc.id,
+                              );
+                            },
+                          ),
                         );
                       },
-                    ),
-                  );
-                },
-                leading: CircleAvatar(
-                  radius: 28,
-                  backgroundImage: image.isNotEmpty
-                      ? NetworkImage(image)
-                      : null,
-                  backgroundColor: Colors.grey.shade300,
-                  child: image.isEmpty
-                      ? Icon(
-                          isGroup ? Icons.groups : Icons.person,
-                          color: Colors.grey.shade700,
-                        )
-                      : null,
-                ),
-                title: Text(
-                  name,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontWeight: hasUnreadMessages
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    fontSize: 16,
-                  ),
-                ),
-                subtitle: Text(
-                  lastMessage,
-                  style: TextStyle(
-                    color: hasUnreadMessages ? Colors.white : Colors.white70,
-                    fontWeight: hasUnreadMessages
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (hasUnreadMessages)
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.blueAccent,
-                        child: Text(
-                          myUnreadCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                          ),
+                      leading: CircleAvatar(
+                        radius: 28,
+                        backgroundImage: image.isNotEmpty
+                            ? NetworkImage(image)
+                            : null,
+                        backgroundColor: Colors.grey.shade300,
+                        child: image.isEmpty
+                            ? Icon(
+                                isGroup ? Icons.groups : Icons.person,
+                                color: Colors.grey.shade700,
+                              )
+                            : null,
+                      ),
+                      title: Text(
+                        name,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: hasUnreadMessages
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 16,
                         ),
                       ),
-                    // زر الخيارات (PopUp)
-                    SizedBox(
-                      height: 30,
-                      width: 30,
-                      child: popButton(
-                        context,
-                        doc.id,
-                        isGroup ? 'groups' : 'chat',
-                        currentUserUid,
-                        isGroup
-                            ? null
-                            : targetUid, // <--- تمرير معرف الطرف الآخر
+                      subtitle: Text(
+                        lastMessage,
+                        style: TextStyle(
+                          color: hasUnreadMessages
+                              ? Colors.white
+                              : Colors.white70,
+                          fontWeight: hasUnreadMessages
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (hasUnreadMessages)
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: Colors.blueAccent,
+                              child: Text(
+                                myUnreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          // زر الخيارات (PopUp)
+                          SizedBox(
+                            height: 30,
+                            width: 30,
+                            child: popButton(
+                              context,
+                              doc.id,
+                              isGroup ? 'groups' : 'chat',
+                              currentUserUid,
+                              isGroup
+                                  ? null
+                                  : targetUid, // <--- تمرير معرف الطرف الآخر
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

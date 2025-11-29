@@ -21,6 +21,8 @@ class UserInfoData extends Equatable {
   final List<String>? blockedUsers;
   final String? latitude;
   final String? longitude;
+  final List<String>? following;
+  final List<String>? followers;
 
   const UserInfoData({
     this.latitude,
@@ -41,6 +43,8 @@ class UserInfoData extends Equatable {
     this.points,
     this.adsCount,
     this.language,
+    this.following,
+    this.followers,
   });
   factory UserInfoData.fromJson(Map<String, dynamic> json) => UserInfoData(
     userId: json['userId'],
@@ -63,6 +67,8 @@ class UserInfoData extends Equatable {
     blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
     latitude: json['latitude'],
     longitude: json['longitude'],
+    following: List<String>.from(json['following'] ?? []),
+    followers: List<String>.from(json['followers'] ?? []),
   );
 
   Map<String, dynamic> toJson() => {
@@ -84,6 +90,8 @@ class UserInfoData extends Equatable {
     'blockedUsers': blockedUsers,
     'latitude': latitude,
     'longitude': longitude,
+    'following': following,
+    'followers': followers,
   };
 
   @override
@@ -112,7 +120,9 @@ class UserInfoData extends Equatable {
         other.friendRequestsReceived == friendRequestsReceived &&
         other.blockedUsers == blockedUsers &&
         other.latitude == latitude &&
-        other.longitude == longitude;
+        other.longitude == longitude &&
+        other.following == following &&
+        other.followers == followers;
   }
 
   @override
@@ -134,7 +144,9 @@ class UserInfoData extends Equatable {
         friendRequestsReceived.hashCode ^
         blockedUsers.hashCode ^
         latitude.hashCode ^
-        longitude.hashCode;
+        longitude.hashCode ^
+        following.hashCode ^
+        followers.hashCode;
   }
 
   UserInfoData copyWith({
@@ -156,6 +168,8 @@ class UserInfoData extends Equatable {
     List<String>? blockedUsers,
     String? latitude,
     String? longitude,
+    List<String>? following,
+    List<String>? followers,
   }) {
     return UserInfoData(
       userId: userId ?? this.userId,
@@ -177,6 +191,8 @@ class UserInfoData extends Equatable {
       blockedUsers: blockedUsers ?? this.blockedUsers,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      following: following ?? this.following,
+      followers: followers ?? this.followers,
     );
   }
 
@@ -204,7 +220,9 @@ class UserInfoData extends Equatable {
 
       blockedUsers = List<String>.from(userInfoData.blockedUsers ?? []),
       latitude = userInfoData.latitude,
-      longitude = userInfoData.longitude;
+      longitude = userInfoData.longitude,
+      following = List<String>.from(userInfoData.following ?? []),
+      followers = List<String>.from(userInfoData.followers ?? []);
 
   @override
   List<Object?> get props => [userId, name];
