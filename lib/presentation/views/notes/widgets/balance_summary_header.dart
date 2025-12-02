@@ -38,7 +38,7 @@ class BalanceSummaryHeader extends StatelessWidget {
         children: [
           Text(
             'الرصيد الحالي',
-            style: GoogleFonts.cairo(color: Colors.white70, fontSize: 16),
+            style: GoogleFonts.rokkitt(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(

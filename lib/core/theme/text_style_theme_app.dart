@@ -107,7 +107,7 @@ class ThemeText {
   }
 
   static TextTheme getTextTheme(ColorScheme colorScheme) {
-    final baseTextTheme = GoogleFonts.cairoTextTheme();
+    final baseTextTheme = GoogleFonts.rokkittTextTheme();
 
     return baseTextTheme.copyWith(
       // Headline

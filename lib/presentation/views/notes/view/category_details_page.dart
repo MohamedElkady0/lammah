@@ -21,7 +21,7 @@ class CategoryDetailsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(category.name, style: GoogleFonts.cairo()),
+        title: Text(category.name, style: GoogleFonts.rokkitt()),
         backgroundColor: category.color,
       ),
       body: ListView.builder(

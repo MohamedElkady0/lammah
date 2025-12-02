@@ -38,7 +38,7 @@ class ExpenseAnalysisItem extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   category.name,
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.rokkitt(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -46,7 +46,7 @@ class ExpenseAnalysisItem extends StatelessWidget {
                 const Spacer(),
                 Text(
                   NumberFormat.currency(symbol: '\$').format(amount),
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.rokkitt(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

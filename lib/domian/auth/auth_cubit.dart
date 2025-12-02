@@ -24,7 +24,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   //----------------------------------------------------------------------------
   bool isRegister = true;
-  File? img;
+
   String _otp = AuthString.empty;
   String get otp => _otp;
   void setOtp(String value) => _otp = value;
@@ -82,8 +82,9 @@ class AuthCubit extends Cubit<AuthState> {
     required String name,
     required String email,
     required String password,
+    required File? imageFile,
   }) async {
-    if (img == null) {
+    if (imageFile == null) {
       emit(AuthFailure(message: AuthString.choseImg));
       return;
     }
@@ -97,11 +98,11 @@ class AuthCubit extends Cubit<AuthState> {
     UserCredential? userCredential;
 
     try {
-      final String imgUrl = await uploadCubit.uploadImageAndGetUrl(img!);
       userCredential = await _credential.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      final String imgUrl = await uploadCubit.uploadImageAndGetUrl(imageFile);
 
       String? fcmToken = await messaging.getToken();
       final userInfo = UserInfoData(
@@ -121,6 +122,10 @@ class AuthCubit extends Cubit<AuthState> {
         points: 0,
         adsCount: 0,
         language: '',
+        followers: [],
+        following: [],
+        latitude: '',
+        longitude: '',
       );
 
       await FirebaseFirestore.instance
@@ -134,6 +139,10 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException catch (e) {
+      // في حال فشل أي خطوة بعد إنشاء الحساب، نقوم بحذفه لتجنب حسابات معلقة
+      if (userCredential?.user != null) {
+        await userCredential?.user?.delete();
+      }
       String message = AuthString.errAuth1;
       if (e.code == AuthString.emailAlready) {
         message = AuthString.errAuth2;
@@ -246,6 +255,10 @@ class AuthCubit extends Cubit<AuthState> {
           points: 0,
           adsCount: 0,
           language: '',
+          followers: [],
+          following: [],
+          latitude: '',
+          longitude: '',
         );
 
         // حفظ المستخدم الجديد في Firestore
@@ -362,6 +375,10 @@ class AuthCubit extends Cubit<AuthState> {
           points: 0,
           adsCount: 0,
           language: '',
+          followers: [],
+          following: [],
+          latitude: '',
+          longitude: '',
         );
 
         await FirebaseFirestore.instance

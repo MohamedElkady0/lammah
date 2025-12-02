@@ -16,7 +16,7 @@ class NoteCard extends StatelessWidget {
         leading: Icon(Icons.note_alt_rounded, color: Colors.orange),
         title: Text(
           note.title,
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
         ),
         subtitle: note.content != null ? Text(note.content!) : null,
         trailing: IconButton(

@@ -20,11 +20,11 @@ class TransactionCard extends StatelessWidget {
         ),
         title: Text(
           transaction.title,
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           '${isIncome ? '+' : '-'} ${transaction.amount}\$',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.rokkitt(
             color: isIncome ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
             fontSize: 16,

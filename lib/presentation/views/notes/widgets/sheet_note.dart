@@ -40,11 +40,11 @@ void showAddActionSheet(BuildContext context, DateTime date) {
             const SizedBox(height: 20),
             Text(
               'إضافة ليوم:',
-              style: GoogleFonts.cairo(fontSize: 14, color: Colors.grey),
+              style: GoogleFonts.rokkitt(fontSize: 14, color: Colors.grey),
             ),
             Text(
               formattedDate,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.rokkitt(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.primary,
@@ -123,10 +123,13 @@ Widget _buildActionOption(
         ),
         child: Icon(icon, color: color),
       ),
-      title: Text(title, style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+      title: Text(
+        title,
+        style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
+      ),
       subtitle: Text(
         subtitle,
-        style: GoogleFonts.cairo(fontSize: 12, color: Colors.grey),
+        style: GoogleFonts.rokkitt(fontSize: 12, color: Colors.grey),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios_rounded,

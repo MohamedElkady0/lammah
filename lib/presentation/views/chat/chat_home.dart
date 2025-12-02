@@ -5,7 +5,7 @@ import 'package:lammah/presentation/views/chat/views/chat_screen.dart';
 import 'package:lammah/presentation/views/chat/views/new_journey.dart';
 import 'package:lammah/presentation/views/notes/view/note_page.dart';
 import 'package:lammah/presentation/views/story/view/home_feed_screen.dart';
-import 'package:lammah/presentation/widgets/side_bar_chat.dart';
+import 'package:lammah/presentation/widgets/side_bar.dart';
 
 class ChatW extends StatefulWidget {
   const ChatW({super.key});

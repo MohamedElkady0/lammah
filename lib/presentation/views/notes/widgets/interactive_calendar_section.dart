@@ -103,7 +103,7 @@ class _InteractiveCalendarSectionState
                 headerStyle: HeaderStyle(
                   titleCentered: true,
                   formatButtonVisible: false,
-                  titleTextStyle: GoogleFonts.cairo(
+                  titleTextStyle: GoogleFonts.rokkitt(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: colorScheme.onSurface,
@@ -125,7 +125,7 @@ class _InteractiveCalendarSectionState
                     color: colorScheme.primary.withAlpha(300),
                     shape: BoxShape.circle,
                   ),
-                  todayTextStyle: GoogleFonts.cairo(
+                  todayTextStyle: GoogleFonts.rokkitt(
                     color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
@@ -142,22 +142,24 @@ class _InteractiveCalendarSectionState
                       ),
                     ],
                   ),
-                  selectedTextStyle: GoogleFonts.cairo(
+                  selectedTextStyle: GoogleFonts.rokkitt(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
 
                   // التنسيق العام
-                  defaultTextStyle: GoogleFonts.cairo(
+                  defaultTextStyle: GoogleFonts.rokkitt(
                     color: colorScheme.onSurface,
                   ),
-                  weekendTextStyle: GoogleFonts.cairo(color: Colors.redAccent),
+                  weekendTextStyle: GoogleFonts.rokkitt(
+                    color: Colors.redAccent,
+                  ),
                   outsideDaysVisible: false,
                 ),
 
                 // تنسيق أيام الأسبوع (سبت، أحد...)
                 daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: GoogleFonts.cairo(
+                  weekdayStyle: GoogleFonts.rokkitt(
                     color: colorScheme.onSurface.withAlpha(600),
                     fontSize: 12,
                   ),
@@ -194,7 +196,7 @@ class _InteractiveCalendarSectionState
                 padding: const EdgeInsets.symmetric(vertical: 20.0),
                 child: Text(
                   "لا توجد أحداث لهذا اليوم.",
-                  style: GoogleFonts.cairo(color: Colors.grey),
+                  style: GoogleFonts.rokkitt(color: Colors.grey),
                 ),
               ),
           ],

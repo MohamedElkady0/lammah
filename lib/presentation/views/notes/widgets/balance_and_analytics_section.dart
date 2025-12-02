@@ -56,7 +56,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                     children: [
                       Text(
                         'الرصيد الحالي',
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.rokkitt(
                           color: Colors.white70,
                           fontSize: 16,
                         ),
@@ -82,7 +82,10 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'مصاريف هذا الشهر',
-                  style: GoogleFonts.cairo(color: Colors.white70, fontSize: 16),
+                  style: GoogleFonts.rokkitt(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 // لوحة تحليل المصروفات
@@ -90,7 +93,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                   Center(
                     child: Text(
                       'لا توجد مصروفات مسجلة هذا الشهر',
-                      style: GoogleFonts.cairo(color: Colors.white),
+                      style: GoogleFonts.rokkitt(color: Colors.white),
                     ),
                   )
                 else

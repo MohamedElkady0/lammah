@@ -5,6 +5,7 @@ import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/config/fixed_sizes_app.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/upload/upload_cubit.dart';
 import 'package:lammah/presentation/views/auth/widget/fun_service.dart';
 import 'package:lammah/presentation/views/auth/widget/image_auth.dart';
 import 'package:lammah/presentation/views/home/home.dart';
@@ -156,6 +157,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   final authCubit = BlocProvider.of<AuthCubit>(
                                     context,
                                   );
+                                  final image = context.read<UploadCubit>().img;
                                   final scaffoldMessenger =
                                       ScaffoldMessenger.of(context);
 
@@ -174,6 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       name: nameController.text,
                                       email: emailController.text,
                                       password: passwordController.text,
+                                      imageFile: image,
                                     );
                                   } else {
                                     scaffoldMessenger.clearSnackBars();
