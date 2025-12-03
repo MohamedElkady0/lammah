@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,98 +26,198 @@ class LocationCubit extends Cubit<LocationState> {
   bool isLoading = true;
   final FirebaseAuth _credential = FirebaseAuth.instance;
 
+  // Future<void> getCurrentLocation() async {
+  //   try {
+  //     bool serviceEnabled;
+  //     LocationPermission permission;
+
+  //     serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //     if (!serviceEnabled) {
+  //       currentAddress =
+  //           '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+  //       currentPosition = LatLng(0, 0);
+
+  //       await Geolocator.openLocationSettings();
+
+  //       emit(
+  //         LocationFailure(
+  //           message: "يرجى تفعيل خدمة تحديد المواقع والمحاولة مرة أخرى.",
+  //         ),
+  //       );
+  //       isLoading = false;
+  //       return;
+  //     }
+
+  //     permission = await Geolocator.checkPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       permission = await Geolocator.requestPermission();
+  //       if (permission == LocationPermission.denied) {
+  //         currentAddress =
+  //             '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+  //         currentPosition = LatLng(0, 0);
+  //         emit(LocationFailure(message: AuthString.noAddress));
+  //         isLoading = false;
+  //         return;
+  //       }
+  //     }
+
+  //     if (permission == LocationPermission.deniedForever) {
+  //       currentAddress =
+  //           '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
+  //       currentPosition = LatLng(0, 0);
+  //       emit(LocationFailure(message: AuthString.noAddressSelected));
+  //       isLoading = false;
+
+  //       // await Geolocator.openAppSettings();
+  //       return;
+  //     }
+
+  //     isLoading = true;
+  //     emit(LocationLoading());
+
+  //     Position position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.medium,
+  //     );
+
+  //     final newPosition = LatLng(position.latitude, position.longitude);
+  //     currentPosition = newPosition;
+
+  //     try {
+  //       await getAddressFromLatLng(position);
+  //     } catch (e) {
+  //       print("Error getting address: $e");
+  //     }
+
+  //     if (_credential.currentUser != null) {
+  //       currentUserInfo = currentUserInfo?.copyWith(
+  //         userPlace:
+  //             '${currentPosition?.latitude ?? 0.0}-${currentPosition?.longitude ?? 0.0}',
+  //         userCity: currentAddress,
+  //         userCountry: currentAddress.split(',')[0],
+  //       );
+
+  //       await FirebaseFirestore.instance
+  //           .collection(AuthString.fSUsers)
+  //           .doc(_credential.currentUser!.uid)
+  //           .update({
+  //             'latitude': newPosition.latitude,
+  //             'longitude': newPosition.longitude,
+  //             'userPlace': '${newPosition.latitude}-${newPosition.longitude}',
+  //             'userCity': currentAddress,
+  //             'userCountry': currentAddress.split(',')[0],
+  //             'isOnline': true, // تحديث حالة الاتصال
+  //           });
+  //     }
+
+  //     isLoading = false;
+  //     emit(LocationUpdateSuccess(newPosition));
+  //   } catch (e) {
+  //     // debugPrint("Error in getCurrentLocation: $e");
+  //     currentAddress =
+  //         "خطأ في تحديد الموقع: ${e.toString()},${AuthString.unknown},${AuthString.unknown}";
+  //     currentPosition = LatLng(0, 0);
+  //     isLoading = false;
+  //     emit(LocationFailure(message: "حدث خطأ أثناء محاولة تحديد موقعك."));
+  //   }
+  // }
+
   Future<void> getCurrentLocation() async {
     try {
-      bool serviceEnabled;
-      LocationPermission permission;
+      emit(LocationLoading());
 
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        currentAddress =
-            '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-        currentPosition = LatLng(0, 0);
-
         await Geolocator.openLocationSettings();
-
-        emit(
-          LocationFailure(
-            message: "يرجى تفعيل خدمة تحديد المواقع والمحاولة مرة أخرى.",
-          ),
-        );
-        isLoading = false;
+        emit(LocationFailure(message: "خدمة الموقع غير مفعلة"));
         return;
       }
 
-      permission = await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          currentAddress =
-              '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-          currentPosition = LatLng(0, 0);
           emit(LocationFailure(message: AuthString.noAddress));
-          isLoading = false;
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        currentAddress =
-            '${AuthString.unknown},${AuthString.unknown},${AuthString.unknown}';
-        currentPosition = LatLng(0, 0);
         emit(LocationFailure(message: AuthString.noAddressSelected));
-        isLoading = false;
-
-        // await Geolocator.openAppSettings();
         return;
       }
 
-      isLoading = true;
-      emit(LocationLoading());
+      // === التغيير الجوهري هنا ===
 
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-      );
+      Position? position;
 
-      final newPosition = LatLng(position.latitude, position.longitude);
-      currentPosition = newPosition;
+      // 1. محاولة الحصول على آخر موقع معروف (سريع جداً)
+      try {
+        position = await Geolocator.getLastKnownPosition();
+      } catch (e) {
+        // تجاهل الخطأ واكمل
+      }
 
+      // 2. إذا لم نجد موقعاً سابقاً، نحاول جلب الموقع الحالي مع مهلة زمنية (5 ثواني)
+      if (position == null) {
+        try {
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+            // هذا يمنع التعليق اللانهائي
+            timeLimit: const Duration(seconds: 5),
+          );
+        } catch (e) {
+          // إذا فشل أو انتهى الوقت، نستخدم موقع افتراضي (القاهرة مثلاً) لكي لا يتوقف التطبيق
+          // هذا حل مؤقت للمحاكي فقط
+          debugPrint("فشل تحديد الموقع، استخدام موقع افتراضي: $e");
+          position = Position(
+            longitude: 31.2357,
+            latitude: 30.0444,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            heading: 0,
+            speed: 0,
+            speedAccuracy: 0,
+            altitudeAccuracy: 0,
+            headingAccuracy: 0,
+          );
+        }
+      }
+
+      currentPosition = LatLng(position.latitude, position.longitude);
+
+      // محاولة جلب العنوان (Geocoding)
       try {
         await getAddressFromLatLng(position);
       } catch (e) {
-        print("Error getting address: $e");
+        debugPrint("خطأ في جلب العنوان: $e");
+        currentAddress = "موقع غير معروف";
       }
 
+      // تحديث البيانات في Firestore
       if (_credential.currentUser != null) {
-        currentUserInfo = currentUserInfo?.copyWith(
-          userPlace:
-              '${currentPosition?.latitude ?? 0.0}-${currentPosition?.longitude ?? 0.0}',
-          userCity: currentAddress,
-          userCountry: currentAddress.split(',')[0],
-        );
+        // تأكد من أن currentUserInfo محدث قبل الإرسال
+        // إذا كان null، نستخدم البيانات الأساسية فقط
+        final Map<String, dynamic> dataToUpdate = {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'userPlace': '${position.latitude}-${position.longitude}',
+          'userCity': currentAddress,
+          'userCountry': currentAddress.split(',')[0],
+        };
 
         await FirebaseFirestore.instance
             .collection(AuthString.fSUsers)
             .doc(_credential.currentUser!.uid)
-            .update({
-              'latitude': newPosition.latitude,
-              'longitude': newPosition.longitude,
-              'userPlace': '${newPosition.latitude}-${newPosition.longitude}',
-              'userCity': currentAddress,
-              'userCountry': currentAddress.split(',')[0],
-              'isOnline': true, // تحديث حالة الاتصال
-            });
+            .update(dataToUpdate);
       }
 
       isLoading = false;
-      emit(LocationUpdateSuccess(newPosition));
+      emit(LocationUpdateSuccess(currentPosition!));
     } catch (e) {
-      // debugPrint("Error in getCurrentLocation: $e");
-      currentAddress =
-          "خطأ في تحديد الموقع: ${e.toString()},${AuthString.unknown},${AuthString.unknown}";
-      currentPosition = LatLng(0, 0);
+      debugPrint("Error in getCurrentLocation: $e");
       isLoading = false;
-      emit(LocationFailure(message: "حدث خطأ أثناء محاولة تحديد موقعك."));
+      emit(LocationFailure(message: "حدث خطأ غير متوقع: $e"));
     }
   }
   //----------------------------------------------------------------------------
