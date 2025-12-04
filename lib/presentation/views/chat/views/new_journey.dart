@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lammah/core/config/config_app.dart';
-import 'package:lammah/core/utils/chat_string.dart';
 import 'package:lammah/presentation/views/chat/widget/knowing_friend.dart';
 import 'package:lammah/presentation/views/chat/widget/search_app.dart';
 
@@ -32,23 +31,6 @@ class NewJourney extends StatelessWidget {
           left: w * 0.05 + 60,
           right: w * 0.05,
           child: const SearchApp(),
-        ),
-
-        // زر بدء المحادثة
-        Positioned(
-          bottom: w * 0.1,
-          left: w * 0.05,
-          right: w * 0.05,
-          child: ElevatedButton.icon(
-            style: Theme.of(context).elevatedButtonTheme.style!.copyWith(
-              backgroundColor: WidgetStatePropertyAll(
-                Theme.of(context).colorScheme.primary.withAlpha(100),
-              ),
-            ),
-            onPressed: () {},
-            icon: const Icon(Icons.airplanemode_on),
-            label: const Text(ChatString.startChat),
-          ),
         ),
       ],
     );

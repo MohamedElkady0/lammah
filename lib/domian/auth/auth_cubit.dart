@@ -124,8 +124,8 @@ class AuthCubit extends Cubit<AuthState> {
         language: '',
         followers: [],
         following: [],
-        latitude: '',
-        longitude: '',
+        latitude: 0.0,
+        longitude: 0.0,
       );
 
       await FirebaseFirestore.instance
@@ -257,8 +257,8 @@ class AuthCubit extends Cubit<AuthState> {
           language: '',
           followers: [],
           following: [],
-          latitude: '',
-          longitude: '',
+          latitude: 0.0,
+          longitude: 0.0,
         );
 
         // حفظ المستخدم الجديد في Firestore
@@ -377,8 +377,8 @@ class AuthCubit extends Cubit<AuthState> {
           language: '',
           followers: [],
           following: [],
-          latitude: '',
-          longitude: '',
+          latitude: 0.0,
+          longitude: 0.0,
         );
 
         await FirebaseFirestore.instance

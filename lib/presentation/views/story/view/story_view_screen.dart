@@ -86,21 +86,28 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
               StoryView(
                 storyItems: storyItems,
                 controller: controller,
-                onStoryShow: (storyItem, index) {
-                  setState(() {
-                    currentIndex = index;
-                  });
 
-                  // تسجيل المشاهدة + تفعيل الخوارزمية
-                  // نتأكد أن المستخدم لم يشاهدها من قبل لتوفير الكتابة في الداتابيز
-                  List views = currentStory.views ?? [];
-                  if (!views.contains(widget.currentUserId)) {
-                    cubit.markStoryAsViewed(
-                      currentStory.storyId!,
-                      currentStory.uId!,
-                      widget.currentUserId,
-                    );
-                  }
+                onStoryShow: (storyItem, index) {
+                  // الحل السحري: نؤجل التنفيذ حتى تنتهي الشاشة من الرسم
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    // نتأكد أن الصفحة لا تزال موجودة
+                    if (mounted) {
+                      setState(() {
+                        currentIndex = index;
+                      });
+
+                      // منطق تسجيل المشاهدات (نضعه هنا أيضاً)
+                      var currentStory = widget.stories[index];
+                      List views = currentStory.views ?? [];
+                      if (!views.contains(widget.currentUserId)) {
+                        StoryCubit.get(context).markStoryAsViewed(
+                          currentStory.storyId!,
+                          currentStory.uId!,
+                          widget.currentUserId,
+                        );
+                      }
+                    }
+                  });
                 },
                 onComplete: () => Navigator.pop(context),
               ),

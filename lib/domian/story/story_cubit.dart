@@ -102,6 +102,8 @@ class StoryCubit extends Cubit<StoryStates> {
           // تحديث الوثيقة لإضافة الـ ID بداخلها (اختياري ولكنه مفيد)
           value.update({'storyId': value.id});
           emit(CreateStorySuccessState());
+          getStories(); // <--- استدعاء هذه الدالة لجلب البيانات الجديدة فوراً
+
           // إعادة تعيين المتغيرات
           storyMediaFile = null;
           mediaType = '';

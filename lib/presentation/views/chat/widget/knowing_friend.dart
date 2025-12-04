@@ -507,18 +507,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           )
                         : const Icon(Icons.flight_takeoff),
                     label: const Text('رحلة جديدة'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: const StadiumBorder(),
-                    ),
+                    style: Theme.of(context).elevatedButtonTheme.style!
+                        .copyWith(
+                          backgroundColor: WidgetStatePropertyAll(
+                            Theme.of(
+                              context,
+                            ).colorScheme.primary.withAlpha(100),
+                          ),
+                        ),
                   ),
                 ),
                 Positioned(
                   right: 10,
-                  top: 80,
+                  top: 100,
                   child: IconButton(
                     //           IconButton(
                     onPressed: () {
@@ -526,7 +527,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     },
                     icon: Icon(
                       Icons.gps_fixed,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),

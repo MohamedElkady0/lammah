@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/story/story_cubit.dart';
 
 class AddStoryScreen extends StatelessWidget {
@@ -14,6 +15,7 @@ class AddStoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var user = context.read<AuthCubit>().currentUserInfo;
     return BlocConsumer<StoryCubit, StoryStates>(
       listener: (context, state) {
         // 1. حالة النجاح: إغلاق الشاشة وإعلام المستخدم
@@ -61,9 +63,9 @@ class AddStoryScreen extends StatelessWidget {
                   onPressed: () {
                     if (mediaFile != null) {
                       cubit.uploadStory(
-                        uId: currentUserId,
-                        name: currentUserName,
-                        userImage: currentUserImage,
+                        uId: user?.userId ?? '', // البيانات من AuthCubit
+                        name: user?.name ?? 'Unknown', // البيانات من AuthCubit
+                        userImage: user?.image ?? '', // البيانات من AuthCubit
                         caption: captionController.text,
                       );
                     }

@@ -1,5 +1,3 @@
-//import 'package:lammah/fetcher/data/model/user_message.dart';
-
 import 'package:equatable/equatable.dart';
 
 class UserInfoData extends Equatable {
@@ -19,8 +17,8 @@ class UserInfoData extends Equatable {
   final List<String>? friendRequestsSent;
   final List<String>? friendRequestsReceived;
   final List<String>? blockedUsers;
-  final String? latitude;
-  final String? longitude;
+  final double? latitude;
+  final double? longitude;
   final List<String>? following;
   final List<String>? followers;
 
@@ -166,8 +164,8 @@ class UserInfoData extends Equatable {
     List<String>? friendRequestsSent,
     List<String>? friendRequestsReceived,
     List<String>? blockedUsers,
-    String? latitude,
-    String? longitude,
+    double? latitude,
+    double? longitude,
     List<String>? following,
     List<String>? followers,
   }) {

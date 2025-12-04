@@ -180,14 +180,31 @@ class UploadCubit extends Cubit<UploadState> {
   }
 
   //----------------------------------------------------------------------------
+  // متغير على مستوى الكلاس
+  bool _isPickingImage = false;
+
   void pickImage({required String title}) async {
+    // إذا كانت العملية جارية، أوقف الدالة
+    if (_isPickingImage) return;
+
+    _isPickingImage = true; // ابدأ العملية
+
     final ImagePicker picker = ImagePicker();
     XFile? pickedFile;
-    if (title == AuthString.gallery) {
-      pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    } else {
-      pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    try {
+      if (title == AuthString.gallery) {
+        pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      } else {
+        pickedFile = await picker.pickImage(source: ImageSource.camera);
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      _isPickingImage =
+          false; // اسمح بالضغط مرة أخرى بعد الانتهاء سواء نجح أو فشل
     }
+
     if (pickedFile == null) {
       return;
     }

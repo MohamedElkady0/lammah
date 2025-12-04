@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/story/story_cubit.dart'; // تأكد من المسار
 
 class PostCommentsSheet extends StatefulWidget {
@@ -80,6 +82,7 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                   return ListView.builder(
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
+                      var user = context.read<AuthCubit>().currentUserInfo;
                       var data = docs[index].data() as Map<String, dynamic>;
                       return ListTile(
                         leading: const CircleAvatar(
@@ -88,7 +91,7 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                           // يمكنك هنا وضع صورة المعلق data['userImage']
                         ),
                         title: Text(
-                          data['uId'] ?? 'User',
+                          user?.name ?? 'User',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
