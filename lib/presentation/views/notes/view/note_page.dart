@@ -7,16 +7,20 @@ class NotePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: const [
-          // دمجنا الواجهتين في واحدة لتكون أكثر تفاعلية
-          BalanceAndAnalyticsSection(),
-          SizedBox(height: 20),
-          InteractiveCalendarSection(),
-          SizedBox(height: 80),
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      color: Theme.of(context).colorScheme.primary,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: const [
+            // دمجنا الواجهتين في واحدة لتكون أكثر تفاعلية
+            BalanceAndAnalyticsSection(),
+            SizedBox(height: 20),
+            InteractiveCalendarSection(),
+            SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }

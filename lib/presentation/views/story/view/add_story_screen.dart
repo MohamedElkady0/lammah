@@ -6,11 +6,6 @@ import 'package:lammah/domian/story/story_cubit.dart';
 class AddStoryScreen extends StatelessWidget {
   final TextEditingController captionController = TextEditingController();
 
-  // هذه البيانات يفترض أن تأتي من UserInfoData لديك
-  final String currentUserId = 'USER_ID_FROM_AUTH';
-  final String currentUserName = 'USER_NAME';
-  final String currentUserImage = 'USER_IMAGE_URL';
-
   AddStoryScreen({super.key});
 
   @override

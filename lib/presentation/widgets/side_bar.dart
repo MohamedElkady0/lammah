@@ -29,61 +29,71 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // عرض الشريط الجانبي يعتمد على المحتوى، لكن يمكنك تحديده بـ width ثابت إن أردت
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-      color: Theme.of(
-        context,
-      ).colorScheme.primary.withAlpha(100), // خلفية الشريط الجانبي نفسه
-      child: Column(
-        mainAxisSize:
-            MainAxisSize.min, // يأخذ أقل مساحة عمودية ممكنة (أو Max لملء الطول)
-        children: items.asMap().entries.map((entry) {
-          int index = entry.key;
-          SidebarItem item = entry.value;
-          bool isSelected = selectedIndex == index;
+    return Stack(
+      clipBehavior: Clip.hardEdge,
+      children: [
+        Container(
+          // عرض الشريط الجانبي يعتمد على المحتوى، لكن يمكنك تحديده بـ width ثابت إن أردت
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 2),
+          color: Theme.of(
+            context,
+          ).colorScheme.primary.withAlpha(100), // خلفية الشريط الجانبي نفسه
+          child: Column(
+            mainAxisSize: MainAxisSize
+                .min, // يأخذ أقل مساحة عمودية ممكنة (أو Max لملء الطول)
+            children: items.asMap().entries.map((entry) {
+              int index = entry.key;
+              SidebarItem item = entry.value;
+              bool isSelected = selectedIndex == index;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-            ), // مسافة بين كل زر والآخر
-            child: GestureDetector(
-              onTap: () => onTabChange(index),
-              child: AnimatedContainer(
-                duration: animationDuration,
-                padding: padding,
-                decoration: BoxDecoration(
-                  color: isSelected ? tabBackgroundColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(
-                    30,
-                  ), // حواف دائرية (Pill Shape)
-                ),
-                child: Row(
-                  mainAxisSize:
-                      MainAxisSize.min, // العرض يتقلص ليتناسب مع المحتوى
-                  children: [
-                    Icon(item.icon, color: isSelected ? activeColor : color),
-                    // نستخدم AnimatedSize أو شرط بسيط لإظهار النص
-                    if (isSelected)
-                      Row(
-                        children: [
-                          SizedBox(width: gap),
-                          Text(
-                            item.text,
-                            style: TextStyle(
-                              color: activeColor,
-                              fontWeight: FontWeight.w600,
-                            ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                ), // مسافة بين كل زر والآخر
+                child: GestureDetector(
+                  onTap: () => onTabChange(index),
+                  child: AnimatedContainer(
+                    duration: animationDuration,
+                    padding: padding,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? tabBackgroundColor
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(
+                        30,
+                      ), // حواف دائرية (Pill Shape)
+                    ),
+                    child: Row(
+                      mainAxisSize:
+                          MainAxisSize.min, // العرض يتقلص ليتناسب مع المحتوى
+                      children: [
+                        Icon(
+                          item.icon,
+                          color: isSelected ? activeColor : color,
+                        ),
+                        // نستخدم AnimatedSize أو شرط بسيط لإظهار النص
+                        if (isSelected)
+                          Row(
+                            children: [
+                              SizedBox(width: gap),
+                              Text(
+                                item.text,
+                                style: TextStyle(
+                                  color: activeColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 }

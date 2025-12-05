@@ -113,7 +113,10 @@ class _ChatViewState extends State<ChatView> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.people),
+                  icon: Icon(
+                    Icons.people,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -139,7 +142,14 @@ class _ChatViewState extends State<ChatView> {
                 if (!snapshot.hasData ||
                     (snapshot.data![0].docs.isEmpty &&
                         snapshot.data![1].docs.isEmpty)) {
-                  return const Center(child: Text('لا توجد محادثات بعد.'));
+                  return Center(
+                    child: Text(
+                      'لا توجد محادثات بعد.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  );
                 }
 
                 // 4. دمج وتصفية القائمتين
@@ -155,7 +165,14 @@ class _ChatViewState extends State<ChatView> {
                 }).toList();
 
                 if (visibleConversations.isEmpty) {
-                  return const Center(child: Text('لا توجد محادثات.'));
+                  return Center(
+                    child: Text(
+                      'لا توجد محادثات.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  );
                 }
 
                 // 5. الترتيب اليدوي

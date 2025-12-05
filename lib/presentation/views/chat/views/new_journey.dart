@@ -11,28 +11,31 @@ class NewJourney extends StatelessWidget {
     ConfigApp.initConfig(context);
     double w = ConfigApp.width;
     double h = ConfigApp.height;
-    return Stack(
-      children: [
-        // الخلفية
-        const MapScreen(),
+    return Container(
+      color: Theme.of(context).colorScheme.primary,
+      child: Stack(
+        children: [
+          // الخلفية
+          const MapScreen(),
 
-        // طبقة شفافة
-        Container(
-          height: h,
-          width: w,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary.withAlpha(30),
+          // طبقة شفافة
+          Container(
+            height: h,
+            width: w,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiary.withAlpha(30),
+            ),
           ),
-        ),
 
-        // شريط البحث
-        Positioned(
-          top: w * 0.1,
-          left: w * 0.05 + 60,
-          right: w * 0.05,
-          child: const SearchApp(),
-        ),
-      ],
+          // شريط البحث
+          Positioned(
+            top: w * 0.01,
+            left: w * 0.05,
+            right: w * 0.05,
+            child: const SearchApp(),
+          ),
+        ],
+      ),
     );
   }
 }

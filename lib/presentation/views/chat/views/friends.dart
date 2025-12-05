@@ -73,10 +73,12 @@ class _FriendsScreenState extends State<FriendsScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         appBar: AppBar(
           title: const Text('الأصدقاء'),
           bottom: TabBar(
+            labelColor: Theme.of(context).colorScheme.onPrimary,
+            unselectedLabelColor: Theme.of(context).colorScheme.onPrimary,
             controller: _tabController,
             tabs: const [
               Tab(text: 'أصدقائي'),
@@ -113,7 +115,12 @@ class _FriendsScreenState extends State<FriendsScreen>
         final List<dynamic> friendIds = userData['friends'] ?? [];
 
         if (friendIds.isEmpty) {
-          return const Center(child: Text('ليس لديك أصدقاء بعد.'));
+          return Center(
+            child: Text(
+              'ليس لديك أصدقاء بعد.',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          );
         }
 
         return _buildUserListFromIds(friendIds);
@@ -138,7 +145,12 @@ class _FriendsScreenState extends State<FriendsScreen>
             userData['friendRequestsReceived'] ?? [];
 
         if (requestIds.isEmpty) {
-          return const Center(child: Text('لا توجد طلبات صداقة حالية.'));
+          return Center(
+            child: Text(
+              'لا توجد طلبات صداقة حالية.',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          );
         }
 
         return _buildUserListFromIds(requestIds, isRequestList: true);
@@ -149,7 +161,7 @@ class _FriendsScreenState extends State<FriendsScreen>
   // --- 3. قائمة الاقتراحات ---
   Widget _buildSuggestionsList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('users').limit(50).snapshots(),
+      stream: _firestore.collection(AuthString.fSUsers).limit(50).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) return const Text('حدث خطأ');
         if (!snapshot.hasData) {
@@ -157,14 +169,26 @@ class _FriendsScreenState extends State<FriendsScreen>
         }
 
         return FutureBuilder<DocumentSnapshot>(
-          future: _firestore.collection('users').doc(_currentUserUid).get(),
+          future: _firestore
+              .collection(AuthString.fSUsers)
+              .doc(_currentUserUid)
+              .get(),
           builder: (context, currentUserDoc) {
             if (!currentUserDoc.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
             final myData = currentUserDoc.data!.data() as Map<String, dynamic>?;
-            if (myData == null) return const Text("بياناتك غير موجودة");
+            if (myData == null) {
+              return Center(
+                child: Text(
+                  "بياناتك غير موجودة",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+              );
+            }
 
             final List<dynamic> myFriends = myData['friends'] ?? [];
             final List<dynamic> mySentRequests =
@@ -186,8 +210,13 @@ class _FriendsScreenState extends State<FriendsScreen>
                 .toList();
 
             if (suggestions.isEmpty) {
-              return const Center(
-                child: Text('لا توجد اقتراحات جديدة حالياً.'),
+              return Center(
+                child: Text(
+                  'لا توجد اقتراحات جديدة حالياً.',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
               );
             }
 

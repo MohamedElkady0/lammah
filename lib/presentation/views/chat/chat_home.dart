@@ -35,8 +35,8 @@ class _ChatWState extends State<ChatW> {
       children: [
         // الشريط الجانبي
         Positioned(
-          left: w * 0.05,
-          top: w * 0.1,
+          left: w * 0.001,
+          top: w * 0.01,
           child: Sidebar(
             selectedIndex: _selectedIndex,
             onTabChange: (index) {
@@ -60,18 +60,11 @@ class _ChatWState extends State<ChatW> {
         // المحتوى الرئيسي (الصفحات المتغيرة)
         // تم استخدام Positioned بدلاً من Expanded لأننا داخل Stack
         Positioned(
-          top: w * 0.1 + 80, // مسافة أسفل البحث
-          left: w * 0.05 + 80, // مسافة يمين السايد بار
-          right: w * 0.05,
-          bottom: w * 0.1 + 60, // مسافة فوق الزر السفلي
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(90), // شفافية بسيطة لرؤية الخلفية
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: _pages[_selectedIndex],
-          ),
+          top: w * 0.03, // مسافة أسفل البحث
+          left: w * 0.05 + 40, // مسافة يمين السايد بار
+          right: w * 0.01,
+          bottom: w * 0.03, // مسافة فوق الزر السفلي
+          child: _pages[_selectedIndex],
         ),
       ],
     );

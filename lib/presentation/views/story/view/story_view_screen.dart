@@ -173,10 +173,17 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
                     if (isMe)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.white),
-                        onPressed: () => cubit.deleteStory(
-                          currentStory.storyId!,
-                          currentStory.mediaUrl!,
-                        ),
+                        onPressed: () {
+                          controller
+                              .pause(); // <--- مهم جداً: إيقاف القصة أولاً
+
+                          // إظهار ديالوج تأكيد (اختياري لكن مفضل)
+                          // ثم الحذف:
+                          cubit.deleteStory(
+                            currentStory.storyId!,
+                            currentStory.mediaUrl!,
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -251,9 +258,11 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
 
                         // زر اللايك مع العداد
                         Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: Icon(
+                                // تحقق من القائمة المحلية المحدثة
                                 (currentStory.likes?.contains(
                                           widget.currentUserId,
                                         ) ??
@@ -267,21 +276,40 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
                                         false)
                                     ? Colors.red
                                     : Colors.white,
-                                size: 28,
+                                size: 30,
                               ),
                               onPressed: () {
+                                // 1. استدعاء الكيوبت لتحديث السيرفر
                                 cubit.likeStory(
                                   currentStory.storyId!,
                                   widget.currentUserId,
                                 );
+
+                                // 2. تحديث الواجهة فوراً (Optimistic UI Update)
+                                setState(() {
+                                  List<String> likes = currentStory.likes ?? [];
+
+                                  if (likes.contains(widget.currentUserId)) {
+                                    // إذا كان معجب -> احذف الإعجاب محلياً
+                                    likes.remove(widget.currentUserId);
+                                  } else {
+                                    // إذا لم يكن معجب -> أضف الإعجاب محلياً
+                                    likes.add(widget.currentUserId);
+                                  }
+
+                                  // تحديث القائمة في الموديل الحالي
+                                  currentStory.likes = likes;
+                                });
                               },
                             ),
+
+                            // عداد اللايكات
                             if ((currentStory.likes?.length ?? 0) > 0)
                               Text(
                                 "${currentStory.likes?.length}",
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 10,
+                                  fontSize: 12,
                                 ),
                               ),
                           ],

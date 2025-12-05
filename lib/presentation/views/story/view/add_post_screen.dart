@@ -47,7 +47,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.primary,
           appBar: AppBar(
-            title: const Text('إنشاء منشور'),
+            title: Text(
+              'إنشاء منشور',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -61,7 +64,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     );
                   }
                 },
-                child: const Text('نشر', style: TextStyle(fontSize: 16)),
+                child: Text(
+                  'نشر',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
               ),
             ],
           ),

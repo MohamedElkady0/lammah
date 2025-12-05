@@ -224,27 +224,42 @@ class StoryCubit extends Cubit<StoryStates> {
   }
 
   // 1. تسجيل المشاهدة + الخوارزمية الذكية (Monitoring logic)
+
   void markStoryAsViewed(
     String storyId,
     String storyOwnerId,
     String currentUserId,
   ) {
-    // تحديث القصة لإضافة المستخدم الحالي لقائمة المشاهدين
-    FirebaseFirestore.instance.collection('stories').doc(storyId).update({
-      'views': FieldValue.arrayUnion([currentUserId]),
-    });
-
-    // --- الخوارزمية الذكية (Monitoring) ---
-    // إذا شاهدت قصة لشخص ما، نضيفه لقائمة "اهتماماتي" (interestedIn)
-    // هذا سيجعل قصصه تظهر لي لاحقاً حتى لو لم أكن أتابعه
-    if (storyOwnerId != currentUserId) {
-      FirebaseFirestore.instance
-          .collection(AuthString.fSUsers)
-          .doc(currentUserId)
-          .update({
-            'interestedIn': FieldValue.arrayUnion([storyOwnerId]),
-          });
-    }
+    FirebaseFirestore.instance
+        .collection('stories')
+        .doc(storyId)
+        .update({
+          'views': FieldValue.arrayUnion([currentUserId]),
+        })
+        .then((value) {
+          // منطق الاهتمام (فقط إذا نجح تحديث المشاهدة)
+          if (storyOwnerId != currentUserId) {
+            FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUserId)
+                .update({
+                  'interestedIn': FieldValue.arrayUnion([storyOwnerId]),
+                })
+                .catchError((e) {}); // تجاهل أخطاء اليوزر الفرعية
+          }
+        })
+        .catchError((error) {
+          // الحل السحري لخطأ الحذف:
+          // إذا كان الخطأ "not-found"، فهذا يعني أن القصة حذفت أثناء المشاهدة
+          // نتجاهل الخطأ تماماً
+          if (error.toString().contains('not-found') ||
+              error.toString().contains('NOT_FOUND')) {
+            print("Story was deleted before view could be registered.");
+            return;
+          }
+          // أي خطأ آخر يمكن طباعته
+          print("Error marking story as viewed: $error");
+        });
   }
 
   // 2. نظام المتابعة (Follow/Unfollow)

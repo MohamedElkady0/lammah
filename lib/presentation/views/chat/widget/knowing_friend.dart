@@ -454,7 +454,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 ),
 
                 Positioned(
-                  bottom: 100,
+                  top: 60,
+                  right: 8,
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

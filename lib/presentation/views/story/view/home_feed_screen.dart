@@ -17,6 +17,7 @@ class HomeFeedScreen extends StatelessWidget {
     final currentUserId = user?.userId ?? '';
 
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       color: Theme.of(context).colorScheme.primary,
       child: RefreshIndicator(
         onRefresh: () async {
@@ -34,12 +35,15 @@ class HomeFeedScreen extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    SizedBox(width: 8),
                     Text(
-                      "اكتشف",
+                      "اكتشف كل جديد",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                     IconButton(
@@ -56,7 +60,10 @@ class HomeFeedScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: Icon(Icons.add),
+                      icon: Icon(
+                        Icons.add,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -82,8 +89,15 @@ class HomeFeedScreen extends StatelessWidget {
                 }
 
                 if (cubit.posts.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text("لا توجد منشورات")),
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        "لا توجد منشورات",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
                   );
                 }
 
