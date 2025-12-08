@@ -26,7 +26,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends State<MapScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   final MapController mapController = MapController();
 
   // متغيرات للرحلة
@@ -40,10 +41,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Tween<double>? _lngTween;
 
   @override
+  bool get wantKeepAlive => true; // هذا يخبر فلاتر: "أبقِ هذه الصفحة حية"
+
+  @override
   void initState() {
     super.initState();
-    // التأكد من أن البيانات موجودة، وإلا طلبها مرة أخرى
-    context.read<LocationCubit>().getCurrentLocation();
+    // نتحقق أولاً: هل الموقع فارغ؟
+    final locationCubit = context.read<LocationCubit>();
+
+    // إذا كان الموقع (null) أو لم يتم جلبه بعد -> اطلب الموقع
+    if (locationCubit.currentPosition == null) {
+      locationCubit.getCurrentLocation();
+    }
+    // else: لا تفعل شيئاً، البيانات موجودة بالفعل وستظهر فوراً
     final authCubit = context.read<AuthCubit>();
     if (authCubit.currentUserInfo == null) {
       authCubit.getUserData();
@@ -265,6 +275,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     // 1. التغليف بـ BlocBuilder لـ AuthCubit للاستماع لتغيرات بيانات المستخدم
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -292,7 +303,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 10),
-                    Text("جاري تحديد الموقع..."),
+                    Text(
+                      "جاري تحديد الموقع...",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -343,8 +360,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       markers: [
                         // --- ماركر المستخدم الحالي ---
                         Marker(
-                          width: 60.0,
-                          height: 60.0,
+                          width: 40.0,
+                          height: 40.0,
                           point: positionForMap,
                           child: Stack(
                             alignment: Alignment.center,
@@ -463,6 +480,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         vertical: 8.0,
                       ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (locationCubit.currentCountryCode != null)
@@ -474,17 +493,43 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                           if (locationCubit.currentCountryCode != null)
                             const SizedBox(width: 8),
-
                           Text(
-                            userInfoData?.userCountry ??
-                                locationCubit.currentAddress.split(',')[0],
+                            // الشرط: هل يوجد دولة في بيانات المستخدم وليست فارغة؟
+                            (userInfoData?.userCountry != null &&
+                                    userInfoData!.userCountry!.isNotEmpty)
+                                ? userInfoData.userCountry! // نعم: اعرضها
+                                : (locationCubit.currentAddress != null &&
+                                      locationCubit.currentAddress!.isNotEmpty)
+                                ? locationCubit.currentAddress!.split(
+                                    ',',
+                                  )[0] // لا: اعرض العنوان من الـ Cubit مباشرة
+                                : 'جاري التحديث...', // لا يوجد عنوان بعد
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyLarge!
-                                .copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
-                                ),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                          if (locationCubit.currentCountryCode != null)
+                            const SizedBox(width: 8),
+
+                          SizedBox(
+                            height: 20,
+                            child: GestureDetector(
+                              //           IconButton(
+                              onTap: () {
+                                // نمرر الـ AuthCubit للدالة
+                                context.read<UpdateUserCubit>().updateLocation(
+                                  context.read<AuthCubit>(),
+                                );
+                              },
+                              child: Icon(
+                                size: 18,
+                                Icons.gps_fixed,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -516,20 +561,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             ).colorScheme.primary.withAlpha(100),
                           ),
                         ),
-                  ),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 100,
-                  child: IconButton(
-                    //           IconButton(
-                    onPressed: () {
-                      context.read<UpdateUserCubit>().updateLocation();
-                    },
-                    icon: Icon(
-                      Icons.gps_fixed,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
                   ),
                 ),
               ],

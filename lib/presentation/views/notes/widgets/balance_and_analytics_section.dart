@@ -26,22 +26,23 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
             margin: const EdgeInsets.all(16.0),
             padding: const EdgeInsets.all(24.0),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.tertiary,
-                ],
-              ),
+              // gradient: LinearGradient(
+              //   begin: Alignment.topLeft,
+              //   end: Alignment.bottomRight,
+              //   colors: [
+              //     Theme.of(context).colorScheme.primary,
+              //     Theme.of(context).colorScheme.tertiary,
+              //   ],
+              // ),
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withAlpha(300),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Theme.of(context).colorScheme.primary.withAlpha(300),
+              //     blurRadius: 15,
+              //     offset: const Offset(0, 8),
+              //   ),
+              // ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,12 +58,16 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                       Text(
                         'الرصيد الحالي',
                         style: GoogleFonts.rokkitt(
-                          color: Colors.white70,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 16,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.edit, color: Colors.white70, size: 16),
+                      Icon(
+                        Icons.edit,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 16,
+                      ),
                     ],
                   ),
                 ),
@@ -74,16 +79,16 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                   style: GoogleFonts.ptSansNarrow(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Divider(color: Colors.white24),
+                Divider(color: Theme.of(context).colorScheme.onPrimary),
                 const SizedBox(height: 16),
                 Text(
                   'مصاريف هذا الشهر',
                   style: GoogleFonts.rokkitt(
-                    color: Colors.white70,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontSize: 16,
                   ),
                 ),
@@ -93,7 +98,9 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                   Center(
                     child: Text(
                       'لا توجد مصروفات مسجلة هذا الشهر',
-                      style: GoogleFonts.rokkitt(color: Colors.white),
+                      style: GoogleFonts.rokkitt(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   )
                 else

@@ -121,6 +121,8 @@ class StoryCubit extends Cubit<StoryStates> {
   Map<String, List<StoryModel>> groupedStories = {};
 
   void getStories() {
+    if (isClosed) return; // حماية إضافية
+
     emit(GetStoriesLoadingState());
 
     FirebaseFirestore.instance
@@ -156,16 +158,23 @@ class StoryCubit extends Cubit<StoryStates> {
 
   // 4. حذف القصة (للمستخدم نفسه)
   void deleteStory(String storyId, String url) {
-    // حذف من Firestore
     FirebaseFirestore.instance.collection('stories').doc(storyId).delete().then(
       (_) {
-        // حذف من Storage
-        firebase_storage.FirebaseStorage.instance.refFromURL(url).delete().then(
-          (_) {
-            getStories(); // تحديث القائمة
-            emit(DeleteStorySuccessState());
-          },
-        );
+        firebase_storage.FirebaseStorage.instance
+            .refFromURL(url)
+            .delete()
+            .then((_) {
+              // نتحقق أولاً هل الكيوبت لا يزال يعمل أم تم إغلاقه؟
+              if (!isClosed) {
+                getStories(); // تحديث القائمة الخلفية
+                emit(DeleteStorySuccessState());
+              }
+            })
+            .catchError((error) {
+              if (!isClosed) {
+                emit(DeleteStoryErrorState(error.toString())); // مثال لحالة خطأ
+              }
+            });
       },
     );
   }
@@ -191,15 +200,22 @@ class StoryCubit extends Cubit<StoryStates> {
     });
   }
 
-  // 6. إضافة تعليق
-  void commentOnStory(String storyId, String uId, String commentText) {
+  void commentOnStory({
+    required String storyId,
+    required String uId,
+    required String text,
+    required String name,
+    required String userImage,
+  }) {
     FirebaseFirestore.instance
         .collection('stories')
         .doc(storyId)
         .collection('comments')
         .add({
           'uId': uId,
-          'text': commentText,
+          'name': name,
+          'userImage': userImage,
+          'text': text,
           'dateTime': DateTime.now().toIso8601String(),
         })
         .then((value) {

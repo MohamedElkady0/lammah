@@ -17,10 +17,9 @@ class ChatW extends StatefulWidget {
 class _ChatWState extends State<ChatW> {
   int _selectedIndex = 0;
 
-  // قائمة الصفحات
+  // قائمة الصفحات (يجب أن تظل كما هي)
   final List<Widget> _pages = [
     const HomeFeedScreen(),
-
     const NewJourney(),
     const ChatView(),
     const NotePage(),
@@ -31,9 +30,27 @@ class _ChatWState extends State<ChatW> {
     ConfigApp.initConfig(context);
     double w = ConfigApp.width;
 
+    // استخدم Scaffold لتجنب مشاكل الخلفية السوداء الافتراضية
     return Stack(
       children: [
-        // الشريط الجانبي
+        // 1. المحتوى الرئيسي (هنا نضع IndexedStack)
+        // نضعه أولاً ليكون في الطبقة الخلفية
+        Positioned(
+          top: 0,
+          left: w * 0.05 + 40, // نفس المسافة التي حددتها أنت للسايد بار
+          right: 0,
+          bottom: 0,
+
+          // === هنا الحل ===
+          // IndexedStack يأخذ كل الصفحات مرة واحدة ويخفي/يظهر المطلوب
+          child: IndexedStack(
+            index: _selectedIndex, // يحدد الصفحة المعروضة حالياً
+            children: _pages, // نعطيه القائمة الكاملة للصفحات
+          ),
+        ),
+
+        // 2. الشريط الجانبي (Sidebar)
+        // نضعه ثانياً ليكون في الطبقة العلوية (فوق المحتوى)
         Positioned(
           left: w * 0.001,
           top: w * 0.01,
@@ -44,8 +61,9 @@ class _ChatWState extends State<ChatW> {
                 _selectedIndex = index;
               });
             },
-            activeColor: Colors.white,
-            tabBackgroundColor: Colors.black87,
+            color: Theme.of(context).colorScheme.onPrimary,
+            activeColor: Theme.of(context).colorScheme.primary,
+            tabBackgroundColor: Theme.of(context).colorScheme.onPrimary,
             gap: 12,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             items: [
@@ -55,16 +73,6 @@ class _ChatWState extends State<ChatW> {
               SidebarItem(icon: Icons.event_note, text: ''),
             ],
           ),
-        ),
-
-        // المحتوى الرئيسي (الصفحات المتغيرة)
-        // تم استخدام Positioned بدلاً من Expanded لأننا داخل Stack
-        Positioned(
-          top: w * 0.03, // مسافة أسفل البحث
-          left: w * 0.05 + 40, // مسافة يمين السايد بار
-          right: w * 0.01,
-          bottom: w * 0.03, // مسافة فوق الزر السفلي
-          child: _pages[_selectedIndex],
         ),
       ],
     );

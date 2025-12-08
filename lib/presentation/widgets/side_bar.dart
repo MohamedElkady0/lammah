@@ -35,9 +35,7 @@ class Sidebar extends StatelessWidget {
         Container(
           // عرض الشريط الجانبي يعتمد على المحتوى، لكن يمكنك تحديده بـ width ثابت إن أردت
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 2),
-          color: Theme.of(
-            context,
-          ).colorScheme.primary.withAlpha(100), // خلفية الشريط الجانبي نفسه
+          color: Colors.transparent, // خلفية الشريط الجانبي نفسه
           child: Column(
             mainAxisSize: MainAxisSize
                 .min, // يأخذ أقل مساحة عمودية ممكنة (أو Max لملء الطول)

@@ -21,7 +21,7 @@ class LocationCubit extends Cubit<LocationState> {
 
   LatLng? currentPosition;
   LatLng? countryPosition;
-  String currentAddress = AuthString.noPlace;
+  String? currentAddress;
   String? currentCountryCode;
   bool isLoading = true;
   final FirebaseAuth _credential = FirebaseAuth.instance;
@@ -203,7 +203,7 @@ class LocationCubit extends Cubit<LocationState> {
           'longitude': position.longitude,
           'userPlace': '${position.latitude}-${position.longitude}',
           'userCity': currentAddress,
-          'userCountry': currentAddress.split(',')[0],
+          'userCountry': currentAddress?.split(',')[0] ?? 'موقع غير معروف',
         };
 
         await FirebaseFirestore.instance
@@ -211,6 +211,15 @@ class LocationCubit extends Cubit<LocationState> {
             .doc(_credential.currentUser!.uid)
             .update(dataToUpdate);
       }
+
+      currentUserInfo = currentUserInfo?.copyWith(
+        userPlace:
+            '${currentPosition?.latitude ?? 0.0}-${currentPosition?.longitude ?? 0.0}',
+        userCity: currentAddress,
+        userCountry: currentAddress?.split(',')[0] ?? 'موقع غير معروف',
+        latitude: currentPosition?.latitude ?? 0.0,
+        longitude: currentPosition?.longitude ?? 0.0,
+      );
 
       isLoading = false;
       emit(LocationUpdateSuccess(currentPosition!));

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/data/model/user_info.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/location/location_cubit.dart';
 
 part 'updateuser_state.dart';
@@ -71,33 +72,56 @@ class UpdateUserCubit extends Cubit<UpdateUserState> {
   }
 
   //----------------------------------------------------------------------------
-  void updateLocation() async {
+  // أضف معامل AuthCubit للدالة لكي نتمكن من تحديثه
+  void updateLocation(AuthCubit authCubit) async {
     emit(UpdateLoading());
     try {
-      // ننتظر حتى ينتهي الـ LocationCubit من جلب الموقع
       await locationCubit.getCurrentLocation();
 
-      // نتحقق من الحالة الحالية للـ LocationCubit
       if (locationCubit.state is LocationFailure) {
         emit(UpdateFailure(message: "فشل تحديد الموقع"));
         return;
       }
 
-      // نستخدم البيانات المخزنة داخل LocationCubit
       final pos = locationCubit.currentPosition;
+      // نستخدم العنوان الجديد الذي جلبه LocationCubit
       final address = locationCubit.currentAddress;
 
+      // التأكد أن العنوان ليس فارغاً أو غير معروف
+      final city = (address != null && address.contains(','))
+          ? address.split(',')[0]
+          : address ?? 'غير معروف';
+
       if (pos != null) {
-        currentUserInfo = currentUserInfo?.copyWith(
-          userPlace: '${pos.latitude}-${pos.longitude}',
-          userCity: address,
-          userCountry: address.split(',')[0],
-        );
+        // 1. تحديث Firestore
+        final updatedData = {
+          'latitude': pos.latitude,
+          'longitude': pos.longitude,
+          'userPlace': '${pos.latitude}-${pos.longitude}',
+          'userCity': address,
+          'userCountry': city, // تخزين اسم الدولة/المدينة
+        };
 
         await FirebaseFirestore.instance
             .collection(AuthString.fSUsers)
             .doc(_credential.currentUser!.uid)
-            .update(currentUserInfo!.toJson());
+            .update(updatedData);
+
+        // 2. تحديث AuthCubit لكي تتغير الواجهة فوراً (مهم جداً)
+        // نقوم بتحديث الكائن الموجود في الذاكرة
+        if (authCubit.currentUserInfo != null) {
+          final updatedUser = authCubit.currentUserInfo!.copyWith(
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+            userPlace: '${pos.latitude}-${pos.longitude}',
+            userCity: address,
+            userCountry: city,
+          );
+
+          // نفترض أن لديك دالة في AuthCubit لتحديث المستخدم محلياً updateLocalUser
+          // أو يمكنك عمل emit لحالة جديدة إذا كان مسموحاً
+          authCubit.updateLocalUser(updatedUser);
+        }
 
         emit(UpdateSuccess());
       }

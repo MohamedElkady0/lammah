@@ -24,6 +24,7 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
   @override
   Widget build(BuildContext context) {
     // نستخدم Padding لرفع الشاشة فوق الكيبورد
+    var user = context.read<AuthCubit>().currentUserInfo;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -82,20 +83,31 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                   return ListView.builder(
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
-                      var user = context.read<AuthCubit>().currentUserInfo;
+                      // ... داخل ListView.builder ...
                       var data = docs[index].data() as Map<String, dynamic>;
+
                       return ListTile(
-                        leading: const CircleAvatar(
+                        leading: CircleAvatar(
                           backgroundColor: Colors.grey,
-                          child: Icon(Icons.person, color: Colors.white),
-                          // يمكنك هنا وضع صورة المعلق data['userImage']
+                          // 3. عرض صورة المعلق
+                          backgroundImage:
+                              (data['userImage'] != null &&
+                                  data['userImage'] != '')
+                              ? NetworkImage(data['userImage'])
+                              : null,
+                          child:
+                              (data['userImage'] == null ||
+                                  data['userImage'] == '')
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                         ),
+                        // 4. عرض اسم المعلق
                         title: Text(
-                          user?.name ?? 'User',
+                          data['name'] ?? 'User',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                         ),
                         subtitle: Text(
@@ -138,9 +150,11 @@ class _PostCommentsSheetState extends State<PostCommentsSheet> {
                     onPressed: () {
                       if (_controller.text.isNotEmpty) {
                         StoryCubit.get(context).commentOnStory(
-                          widget.postId,
-                          widget.currentUserId,
-                          _controller.text,
+                          storyId: widget.postId,
+                          uId: widget.currentUserId,
+                          text: _controller.text,
+                          name: user?.name ?? 'User',
+                          userImage: user?.image ?? '',
                         );
                         _controller.clear();
                       }

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/story/story_cubit.dart'; // تأكد من المسار
 
 class CommentsBottomSheet extends StatefulWidget {
@@ -21,6 +23,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    var user = context.read<AuthCubit>().currentUserInfo;
     // نستخدم Padding لرفع الشاشة فوق الكيبورد
     return Padding(
       padding: EdgeInsets.only(
@@ -80,19 +83,31 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                   return ListView.builder(
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
+                      // ... داخل ListView.builder ...
                       var data = docs[index].data() as Map<String, dynamic>;
+
                       return ListTile(
-                        leading: const CircleAvatar(
+                        leading: CircleAvatar(
                           backgroundColor: Colors.grey,
-                          child: Icon(Icons.person, color: Colors.white),
-                          // يمكنك هنا وضع صورة المعلق data['userImage']
+                          // 3. عرض صورة المعلق
+                          backgroundImage:
+                              (data['userImage'] != null &&
+                                  data['userImage'] != '')
+                              ? NetworkImage(data['userImage'])
+                              : null,
+                          child:
+                              (data['userImage'] == null ||
+                                  data['userImage'] == '')
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                         ),
+                        // 4. عرض اسم المعلق
                         title: Text(
-                          data['uId'] ?? 'User',
+                          data['name'] ?? 'User',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                         ),
                         subtitle: Text(
@@ -135,9 +150,11 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     onPressed: () {
                       if (_controller.text.isNotEmpty) {
                         StoryCubit.get(context).commentOnStory(
-                          widget.storyId,
-                          widget.currentUserId,
-                          _controller.text,
+                          storyId: widget.storyId,
+                          uId: widget.currentUserId,
+                          text: _controller.text,
+                          name: user?.name ?? 'User',
+                          userImage: user?.image ?? '',
                         );
                         _controller.clear();
                       }

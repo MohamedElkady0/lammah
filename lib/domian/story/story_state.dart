@@ -41,3 +41,8 @@ class LikeStorySuccessState extends StoryStates {}
 class CommentStorySuccessState extends StoryStates {}
 
 class FollowUserSuccessState extends StoryStates {}
+
+class DeleteStoryErrorState extends StoryStates {
+  final String error;
+  DeleteStoryErrorState(this.error);
+}

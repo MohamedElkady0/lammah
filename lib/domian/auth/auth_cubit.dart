@@ -576,4 +576,12 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: e.toString()));
     }
   }
+
+  // داخل AuthCubit
+  void updateLocalUser(UserInfoData newUser) {
+    currentUserInfo = newUser;
+    emit(
+      AuthSuccess(userInfo: newUser),
+    ); // هذا السطر سيجعل الواجهة تعيد بناء نفسها بالبيانات الجديدة
+  }
 }
