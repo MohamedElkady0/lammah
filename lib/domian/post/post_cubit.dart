@@ -239,10 +239,28 @@ class PostCubit extends Cubit<PostStates> {
           'dateTime': DateTime.now().toIso8601String(),
         })
         .then((value) {
-          // اختياري: تحديث عداد التعليقات في وثيقة المنشور الأصلية
-          FirebaseFirestore.instance.collection('posts').doc(postId).update({
-            'commentsCount': FieldValue.increment(1),
-          });
-        });
+          // 2. تحديث العداد في الوثيقة الرئيسية للمنشور (Increment)
+          FirebaseFirestore.instance
+              .collection('posts')
+              .doc(postId)
+              .update({
+                // هذه الدالة من فايربيس تقوم بزيادة الرقم الحالي بـ 1 بأمان
+                'commentsCount': FieldValue.increment(1),
+              })
+              .then((_) {
+                // تحديث محلي سريع للعداد في القائمة (لتحسين تجربة المستخدم)
+                // نبحث عن المنشور ونزيد العداد محلياً
+                int index = posts.indexWhere(
+                  (element) => element.postId == postId,
+                );
+                if (index != -1) {
+                  posts[index].commentsCount =
+                      (posts[index].commentsCount ?? 0) + 1;
+                  emit(GetPostsSuccessState()); // إعادة بناء الواجهة
+                }
+              })
+              .catchError((error) {});
+        })
+        .catchError((error) {});
   }
 }

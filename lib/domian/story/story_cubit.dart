@@ -40,32 +40,63 @@ class StoryCubit extends Cubit<StoryStates> {
   }
 
   // 2. رفع الوسائط وإنشاء القصة
+
   void uploadStory({
     required String uId,
     required String name,
     required String userImage,
     required String caption,
   }) {
+    // حماية: إذا لم يكن هناك ملف، لا تفعل شيئاً
+    if (storyMediaFile == null) return;
+
     emit(CreateStoryLoadingState());
 
+    // 1. إنشاء اسم للملف
     String fileName = Uri.file(storyMediaFile!.path).pathSegments.last;
 
+    // 2. رفع الملف للستوريج
     firebase_storage.FirebaseStorage.instance
         .ref()
         .child('stories/$uId/$fileName')
         .putFile(storyMediaFile!)
-        .then((value) {
-          value.ref
+        .then((snapshot) {
+          // 3. الحصول على الرابط
+          snapshot.ref
               .getDownloadURL()
-              .then((value) {
-                // بعد رفع الملف بنجاح، نقوم بإنشاء القصة في Firestore
-                createStoryDoc(
+              .then((url) {
+                // 4. إنشاء الـ ID يدوياً لضمان عدم إنشاء وثيقة فارغة بالخطأ
+                var newStoryRef = FirebaseFirestore.instance
+                    .collection('stories')
+                    .doc();
+
+                StoryModel model = StoryModel(
+                  storyId: newStoryRef.id, // نستخدم الـ ID الذي أنشأناه للتو
                   uId: uId,
                   name: name,
                   userImage: userImage,
+                  mediaUrl: url,
+                  mediaType: mediaType, // 'image' or 'video'
                   caption: caption,
-                  mediaUrl: value,
+                  dateTime: DateTime.now().toIso8601String(),
+                  likes: [],
+                  views: [],
                 );
+
+                // 5. حفظ البيانات باستخدام set (أضمن من add في هذه الحالة)
+                newStoryRef
+                    .set(model.toMap())
+                    .then((value) {
+                      emit(CreateStorySuccessState());
+                      getStories(); // تحديث القائمة
+
+                      // تنظيف المتغيرات
+                      storyMediaFile = null;
+                      mediaType = '';
+                    })
+                    .catchError((error) {
+                      emit(CreateStoryErrorState(error.toString()));
+                    });
               })
               .catchError((error) {
                 emit(CreateStoryErrorState(error.toString()));
@@ -76,42 +107,44 @@ class StoryCubit extends Cubit<StoryStates> {
         });
   }
 
-  void createStoryDoc({
-    required String uId,
-    required String name,
-    required String userImage,
-    required String caption,
-    required String mediaUrl,
-  }) {
-    // إنشاء كائن المودل
-    StoryModel model = StoryModel(
-      uId: uId,
-      name: name,
-      userImage: userImage,
-      mediaUrl: mediaUrl,
-      mediaType: mediaType,
-      caption: caption,
-      dateTime: DateTime.now().toIso8601String(),
-      likes: [],
-    );
+  // قم بحذف دالة createStoryDoc القديمة تماماً لكي لا تستدعيها بالخطأ
 
-    FirebaseFirestore.instance
-        .collection('stories')
-        .add(model.toMap()) // إضافة والحصول على ID تلقائي
-        .then((value) {
-          // تحديث الوثيقة لإضافة الـ ID بداخلها (اختياري ولكنه مفيد)
-          value.update({'storyId': value.id});
-          emit(CreateStorySuccessState());
-          getStories(); // <--- استدعاء هذه الدالة لجلب البيانات الجديدة فوراً
+  // void createStoryDoc({
+  //   required String uId,
+  //   required String name,
+  //   required String userImage,
+  //   required String caption,
+  //   required String mediaUrl,
+  // }) {
+  //   // إنشاء كائن المودل
+  //   StoryModel model = StoryModel(
+  //     uId: uId,
+  //     name: name,
+  //     userImage: userImage,
+  //     mediaUrl: mediaUrl,
+  //     mediaType: mediaType,
+  //     caption: caption,
+  //     dateTime: DateTime.now().toIso8601String(),
+  //     likes: [],
+  //   );
 
-          // إعادة تعيين المتغيرات
-          storyMediaFile = null;
-          mediaType = '';
-        })
-        .catchError((error) {
-          emit(CreateStoryErrorState(error.toString()));
-        });
-  }
+  //   FirebaseFirestore.instance
+  //       .collection('stories')
+  //       .add(model.toMap()) // إضافة والحصول على ID تلقائي
+  //       .then((value) {
+  //         // تحديث الوثيقة لإضافة الـ ID بداخلها (اختياري ولكنه مفيد)
+  //         value.update({'storyId': value.id});
+  //         emit(CreateStorySuccessState());
+  //         getStories(); // <--- استدعاء هذه الدالة لجلب البيانات الجديدة فوراً
+
+  //         // إعادة تعيين المتغيرات
+  //         storyMediaFile = null;
+  //         mediaType = '';
+  //       })
+  //       .catchError((error) {
+  //         emit(CreateStoryErrorState(error.toString()));
+  //       });
+  // }
 
   // 3. جلب القصص (عرض القصص)
   List<StoryModel> stories = [];

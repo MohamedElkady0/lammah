@@ -26,6 +26,7 @@ import 'package:lammah/presentation/views/splach/splash_view.dart';
 import 'package:lammah/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -43,6 +44,7 @@ void main() async {
 
   final notificationService = NotificationService();
   await notificationService.init();
+  timeago.setLocaleMessages('ar', timeago.ArMessages());
 
   runApp(Lammah(notificationService: notificationService));
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/core/function/date_helper.dart';
 import 'package:lammah/data/model/post_model.dart';
 import 'package:lammah/domian/post/post_cubit.dart';
 import 'package:lammah/presentation/views/story/widget/post_comments.dart';
@@ -52,11 +53,18 @@ class PostItemWidget extends StatelessWidget {
                       children: [
                         Text(
                           post.name ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
                         ),
+                        // في PostItemWidget أو StoryViewScreen
                         Text(
-                          "منذ قليل",
-                          style: Theme.of(context).textTheme.bodySmall,
+                          formatTimeAgo(post.dateTime), // أو story.dateTime
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -124,9 +132,19 @@ class PostItemWidget extends StatelessWidget {
                   children: [
                     const Icon(Icons.favorite, size: 16, color: Colors.red),
                     const SizedBox(width: 5),
-                    Text('${post.likes?.length ?? 0}'),
+                    Text(
+                      '${post.likes?.length ?? 0}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                     const Spacer(),
-                    Text('${post.commentsCount ?? 0} تعليق'),
+                    Text(
+                      '${post.commentsCount ?? 0} تعليق',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -148,14 +166,18 @@ class PostItemWidget extends StatelessWidget {
                           children: [
                             Icon(
                               isLiked ? Icons.favorite : Icons.favorite_border,
-                              color: isLiked ? Colors.red : Colors.grey,
+                              color: isLiked
+                                  ? Colors.red
+                                  : Theme.of(context).colorScheme.onPrimary,
                               size: 20,
                             ),
                             const SizedBox(width: 5),
                             Text(
                               isLiked ? 'أعجبني' : 'إعجاب',
                               style: TextStyle(
-                                color: isLiked ? Colors.red : Colors.grey,
+                                color: isLiked
+                                    ? Colors.red
+                                    : Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
                           ],
@@ -175,7 +197,7 @@ class PostItemWidget extends StatelessWidget {
                           ),
                         );
                       },
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -186,7 +208,12 @@ class PostItemWidget extends StatelessWidget {
                               color: Colors.grey,
                             ),
                             SizedBox(width: 5),
-                            Text('تعليق', style: TextStyle(color: Colors.grey)),
+                            Text(
+                              'تعليق',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
