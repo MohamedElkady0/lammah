@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/data/service/backup_service.dart';
+import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/theme/theme_cubit.dart';
 
 class SettingPage extends StatefulWidget {
@@ -59,6 +61,32 @@ class _SettingPageState extends State<SettingPage> {
 
                 value: context.read<ThemeCubit>().themeModeSwitch,
                 onChanged: onTheme,
+              ),
+
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Icon(Icons.cloud_upload),
+                title: Text("نسخ احتياطي للبيانات"),
+                onTap: () async {
+                  var message = ScaffoldMessenger.of(context);
+                  final userId =
+                      context.read<AuthCubit>().currentUserInfo?.userId ?? '';
+                  await BackupService().backupDatabase(userId);
+                  message.showSnackBar(
+                    SnackBar(content: Text("تم النسخ بنجاح")),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.cloud_download),
+                title: Text("استعادة البيانات"),
+                onTap: () async {
+                  // تحذير المستخدم بأن البيانات الحالية ستحذف
+                  final userId =
+                      context.read<AuthCubit>().currentUserInfo?.userId ?? '';
+                  await BackupService().restoreDatabase(userId);
+                  // اطلب من المستخدم إعادة تشغيل التطبيق
+                },
               ),
             ],
           ),

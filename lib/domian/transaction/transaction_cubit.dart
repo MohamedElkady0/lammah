@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/data/model/category.dart';
 import 'package:lammah/data/model/note.dart';
+import 'package:lammah/data/model/private_task%20.dart';
 import 'package:lammah/data/model/transaction.dart';
 import 'package:lammah/data/service/database_helper.dart';
-
 import 'package:uuid/uuid.dart';
 
 part 'transaction_state.dart';
@@ -13,60 +13,87 @@ part 'transaction_state.dart';
 class TransactionCubit extends Cubit<TransactionState> {
   final dbHelper = DatabaseHelper.instance;
 
-  // في تطبيق حقيقي، هذه ستُقرأ من جدول "categories" في قاعدة البيانات
+  // الرصيد المبدئي (يفضل حفظه في SharedPreferences لاحقاً ليبقى محفوظاً)
+  double _initialBalance = 10000.0;
+
   final List<Category> _availableCategories = defaultCategories;
 
   TransactionCubit() : super(TransactionInitial()) {
-    // استدعاء تحميل البيانات فورًا عند إنشاء الـ Cubit
     loadInitialData();
   }
 
-  // دالة واحدة لتحميل كل شيء في البداية
+  // --- دوال التحميل والتحديث ---
+
   Future<void> loadInitialData() async {
     emit(TransactionLoading());
     try {
-      // ١. جلب كل المعاملات
       final allTransactions = await dbHelper.getAllTransactions(
         _availableCategories,
       );
-
-      // ٢. جلب كل الملاحظات (هذا هو الجزء الذي كان يُتجاهل)
       final allNotes = await dbHelper.getAllNotes();
 
-      // ٣. تمرير كلتا القائمتين للدالة التالية (هذا هو الإصلاح الحاسم)
-      _recalculateAndEmitState(allTransactions, allNotes);
+      // 1. جلب المهام الخاصة (الإصلاح هنا)
+      final allPrivateTasks = await dbHelper.getAllPrivateTasks();
+
+      // 2. تمرير القوائم الثلاثة للدالة
+      _recalculateAndEmitState(allTransactions, allNotes, allPrivateTasks);
+      await _processRecurringTransactions();
     } catch (e) {
       emit(TransactionError("فشل في تحميل البيانات: ${e.toString()}"));
     }
   }
 
+  // دالة لتغيير الرصيد المبدئي
+  Future<void> setInitialBalance(double newBalance) async {
+    _initialBalance = newBalance;
+    // هنا يجب حفظ الرصيد الجديد في SharedPreferences إذا كنت تريد استمراره
+    // await prefs.setDouble('initial_balance', newBalance);
+
+    // إعادة تحميل البيانات لتحديث الحسابات
+    await loadInitialData();
+  }
+
   Future<void> deleteTransaction(String transactionId) async {
     await dbHelper.deleteTransaction(transactionId);
-    // أعد تحميل كل شيء لتحديث الواجهة (الرصيد، القائمة، نقاط التقويم)
+    await loadInitialData();
+  }
+
+  Future<void> addNote(Note note) async {
+    await dbHelper.insertNote(note);
     await loadInitialData();
   }
 
   Future<void> deleteNote(String noteId) async {
     await dbHelper.deleteNote(noteId);
-    // أعد تحميل كل شيء لتحديث الواجهة
     await loadInitialData();
   }
 
-  // هذه الدالة ستصبح مركزية. أي تغيير في البيانات سيستدعيها
+  // --- دوال مساعدة ---
+
+  Future<List<dynamic>> getEventsForDay(DateTime day) async {
+    return await dbHelper.getEventsForDay(day, _availableCategories);
+  }
+
+  // --- المنطق المركزي للحسابات ---
+
   void _recalculateAndEmitState(
     List<Transaction> transactions,
     List<Note> notes,
+    List<PrivateTask> allPrivateTasks,
   ) {
-    double currentBalance =
-        10000.0; // يمكنك حفظ الرصيد المبدئي في SharedPreferences
+    // 1. حساب الرصيد بناءً على الرصيد المبدئي للمكعب
+    double currentBalance = _initialBalance;
+
     for (var t in transactions) {
       currentBalance += (t.type == TransactionType.income
           ? t.amount
           : -t.amount);
     }
-    Map<DateTime, List<dynamic>> events = {};
+
+    // 2. حساب مصاريف الشهر الحالي
     final now = DateTime.now();
     final monthlyExpenses = <Category, double>{};
+
     transactions
         .where(
           (t) =>
@@ -82,7 +109,12 @@ class TransactionCubit extends Cubit<TransactionState> {
           );
         });
 
+    // 3. تجهيز أحداث التقويم (Transactions + Notes)
+    Map<DateTime, List<dynamic>> events = {};
+
+    // إضافة المعاملات
     for (var transaction in transactions) {
+      // استخدام DateUtils أو تطبيع التاريخ لإزالة الوقت (الساعات والدقائق) مهم جداً لمفاتيح الـ Map
       final dayKey = DateTime.utc(
         transaction.date.year,
         transaction.date.month,
@@ -91,7 +123,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       events.putIfAbsent(dayKey, () => []).add(transaction);
     }
 
-    // أضف الملاحظات إلى نفس الخريطة
+    // إضافة الملاحظات
     for (var note in notes) {
       final dayKey = DateTime.utc(
         note.date.year,
@@ -100,102 +132,124 @@ class TransactionCubit extends Cubit<TransactionState> {
       );
       events.putIfAbsent(dayKey, () => []).add(note);
     }
+    // 3. إضافة المهام الخاصة
+    for (var task in allPrivateTasks) {
+      final dayKey = DateTime.utc(
+        task.deadline.year,
+        task.deadline.month,
+        task.deadline.day,
+      );
+      events.putIfAbsent(dayKey, () => []).add(task);
+    }
 
     emit(
       TransactionLoaded(
         transactions: transactions,
-        totalBalance: currentBalance, // تأكد من أن متغير الرصيد موجود
-        monthlyExpensesByCategory:
-            monthlyExpenses, // تأكد من أن متغير المصاريف موجود
+        totalBalance: currentBalance,
+        monthlyExpensesByCategory: monthlyExpenses,
         events: events,
       ),
     );
   }
 
-  Future<void> addTransaction(Transaction transaction) async {
-    await dbHelper.insertTransaction(transaction);
-    await loadInitialData(); // أعد تحميل كل شيء لتحديث الواجهة
-  }
+  // دالة مساعدة لفحص الميزانية
+  Future<void> _checkBudgetAlert(Transaction newTransaction) async {
+    if (newTransaction.type == TransactionType.income) return;
 
-  Future<void> addNote(Note note) async {
-    await dbHelper.insertNote(note);
-    await loadInitialData(); // أعد تحميل كل شيء لتحديث الواجهة
-  }
+    // 1. جلب حد الميزانية لهذه الفئة
+    final budgets = await dbHelper.getAllBudgets();
+    final limit = budgets[newTransaction.category.id];
 
-  // دالة لجلب تفاصيل يوم واحد عند الضغط عليه في التقويم
-  Future<List<dynamic>> getEventsForDay(DateTime day) async {
-    return await dbHelper.getEventsForDay(day, _availableCategories);
-  }
+    if (limit == null) return; // لا توجد ميزانية محددة لهذه الفئة
 
-  // ...
+    // 2. حساب إجمالي المصاريف الحالية لهذه الفئة في هذا الشهر
+    final now = DateTime.now();
+    final allTransactions = await dbHelper.getAllTransactions(
+      _availableCategories,
+    );
 
-  Future<void> loadTransactions() async {
-    emit(TransactionLoading());
-    // الآن ستحمل البيانات من قاعدة البيانات
-    // final allTransactions = await dbHelper.getAllTransactions();
-    // ثم تحسب الرصيد والتحليلات...
-    _emitCurrentState(); // ستحتاج لتحديث هذه الدالة لتستخدم DB
-  }
-
-  // في تطبيق حقيقي، هذه البيانات ستكون من قاعدة بيانات
-  final List<Transaction> _transactions = [];
-  double _initialBalance = 10000.0; // الرصيد المبدئي القابل للتعديل
-
-  void _emitCurrentState() {
-    // حساب الرصيد الإجمالي
-    double currentBalance = _initialBalance;
-    for (var transaction in _transactions) {
-      if (transaction.type == TransactionType.income) {
-        currentBalance += transaction.amount;
-      } else {
-        currentBalance -= transaction.amount;
+    double currentSpent = 0.0;
+    for (var t in allTransactions) {
+      // لاحظ التغيير هنا 👇
+      if (t.category.id == newTransaction.category.id &&
+          t.type == TransactionType.expense &&
+          t.date.month == now.month &&
+          t.date.year == now.year) {
+        currentSpent += t.amount;
       }
     }
 
-    // حساب مصاريف الشهر الحالي حسب الفئة
-    final now = DateTime.now();
-    final monthlyExpenses = <Category, double>{};
-    final monthlyTransactions = _transactions.where(
-      (t) =>
-          t.type == TransactionType.expense &&
-          t.date.month == now.month &&
-          t.date.year == now.year,
-    );
+    // 3. التحقق من النسبة (80%)
+    // نضيف المصروف الجديد للمجموع الحالي
+    double totalAfterAdd = currentSpent + newTransaction.amount;
+    double percentage = (totalAfterAdd / limit);
 
-    for (var transaction in monthlyTransactions) {
-      monthlyExpenses.update(
-        transaction.category,
-        (value) => value + transaction.amount,
-        ifAbsent: () => transaction.amount,
+    if (percentage >= 0.8 && percentage < 1.0) {
+      // إرسال تنبيه محلي (تحتاج لاستدعاء NotificationCubit هنا أو استخدام خدمة التنبيهات مباشرة)
+      print(
+        "تنبيه: لقد استهلكت ${percentage * 100}% من ميزانية ${newTransaction.category.name}",
       );
+      // context.read<NotificationCubit>().showLocalNotification(...)
+    } else if (percentage >= 1.0) {
+      print("تنبيه: لقد تجاوزت ميزانية ${newTransaction.category.name}!");
     }
-
-    emit(
-      TransactionLoaded(
-        transactions: List.from(_transactions),
-        totalBalance: currentBalance,
-        monthlyExpensesByCategory: monthlyExpenses,
-        events: {},
-      ),
-    );
   }
 
-  Future<void> loadTransactionsLocal() async {
-    emit(TransactionLoading());
-    // هنا يمكنك تحميل البيانات من قاعدة بيانات (مثل SharedPreferences, sqflite)
-    // الآن سنستخدم بيانات وهمية للتوضيح
-    _transactions.addAll(_getMockTransactions());
-    _emitCurrentState();
+  // عدل دالة addTransaction لتشمل الفحص
+  Future<void> addTransaction(Transaction transaction) async {
+    await dbHelper.insertTransaction(transaction);
+
+    // تحقق من الميزانية بعد الإضافة
+    await _checkBudgetAlert(transaction);
+
+    await loadInitialData();
   }
 
-  Future<void> addTransactionLocal(Transaction transaction) async {
-    _transactions.add(transaction);
-    _emitCurrentState();
-  }
+  Future<void> _processRecurringTransactions() async {
+    final recurringItems = await dbHelper.getRecurringTransactions();
+    final now = DateTime.now();
 
-  Future<void> setInitialBalance(double newBalance) async {
-    _initialBalance = newBalance;
-    _emitCurrentState();
+    for (var item in recurringItems) {
+      final dayOfMonth = item['dayOfMonth'] as int;
+      final lastProcessedStr = item['lastProcessedDate'] as String?;
+
+      // هل جاء يوم الدفع لهذا الشهر؟
+      if (now.day >= dayOfMonth) {
+        bool shouldAdd = false;
+
+        if (lastProcessedStr == null) {
+          shouldAdd = true;
+        } else {
+          final lastProcessed = DateTime.parse(lastProcessedStr);
+          // إذا كان آخر تحديث في شهر سابق، يعني يجب الإضافة لهذا الشهر
+          if (lastProcessed.month != now.month ||
+              lastProcessed.year != now.year) {
+            shouldAdd = true;
+          }
+        }
+
+        if (shouldAdd) {
+          // إنشاء المعاملة تلقائياً
+          final newTx = Transaction(
+            id: const Uuid().v4(),
+            title: "${item['title']} (تلقائي)",
+            amount: item['amount'] as double,
+            date: DateTime.now(),
+            type: TransactionType.expense,
+            category: _availableCategories.firstWhere(
+              (c) => c.id == item['categoryId'],
+            ),
+          );
+
+          await dbHelper.insertTransaction(newTx);
+          // تحديث تاريخ آخر معالجة لتجنب التكرار في نفس الشهر
+          await dbHelper.updateRecurringLastProcessed(
+            item['id'],
+            DateTime.now(),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -242,7 +296,7 @@ final List<Category> defaultCategories = [
 ];
 
 // بيانات وهمية للبدء
-List<Transaction> _getMockTransactions() {
+List<Transaction> getMockTransactions() {
   const uuid = Uuid();
   return [
     Transaction(

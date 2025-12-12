@@ -15,6 +15,7 @@ import 'package:lammah/domian/notification/notification_cubit.dart';
 import 'package:lammah/domian/post/post_cubit.dart';
 import 'package:lammah/domian/search/search_cubit.dart';
 import 'package:lammah/domian/story/story_cubit.dart';
+import 'package:lammah/domian/tasks/tasks_cubit.dart';
 import 'package:lammah/domian/theme/theme_cubit.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
 import 'package:lammah/domian/updateuser/updateuser_cubit.dart';
@@ -98,6 +99,7 @@ class Lammah extends StatelessWidget {
         ),
         BlocProvider(create: (context) => StoryCubit()..getStories()),
         BlocProvider(create: (context) => PostCubit()..getPosts()),
+        BlocProvider(create: (context) => TasksCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
