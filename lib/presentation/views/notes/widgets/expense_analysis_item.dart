@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/data/model/category.dart';
 import 'package:lammah/presentation/views/notes/view/category_details_page.dart';
@@ -38,7 +37,7 @@ class ExpenseAnalysisItem extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   category.name,
-                  style: GoogleFonts.rokkitt(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -46,7 +45,7 @@ class ExpenseAnalysisItem extends StatelessWidget {
                 const Spacer(),
                 Text(
                   NumberFormat.currency(symbol: '\$').format(amount),
-                  style: GoogleFonts.rokkitt(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

@@ -121,9 +121,8 @@ class UpdateUserCubit extends Cubit<UpdateUserState> {
           // نفترض أن لديك دالة في AuthCubit لتحديث المستخدم محلياً updateLocalUser
           // أو يمكنك عمل emit لحالة جديدة إذا كان مسموحاً
           authCubit.updateLocalUser(updatedUser);
+          emit(UpdateSuccess(updatedUserInfo: updatedUser));
         }
-
-        emit(UpdateSuccess());
       }
     } catch (e) {
       emit(UpdateFailure(message: e.toString()));

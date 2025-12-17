@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:lammah/presentation/views/notes/widgets/add_reminder_sheet.dart';
 import 'package:lammah/presentation/views/notes/widgets/add_transaction_sheet.dart';
@@ -40,11 +39,11 @@ void showAddActionSheet(BuildContext context, DateTime date) {
             const SizedBox(height: 20),
             Text(
               'إضافة ليوم:',
-              style: GoogleFonts.rokkitt(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             Text(
               formattedDate,
-              style: GoogleFonts.rokkitt(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.primary,
@@ -123,13 +122,10 @@ Widget _buildActionOption(
         ),
         child: Icon(icon, color: color),
       ),
-      title: Text(
-        title,
-        style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
-      ),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(
         subtitle,
-        style: GoogleFonts.rokkitt(fontSize: 12, color: Colors.grey),
+        style: TextStyle(fontSize: 12, color: Colors.grey),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios_rounded,

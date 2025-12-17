@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
 import 'package:lammah/presentation/views/notes/widgets/expense_analysis_item.dart';
@@ -57,7 +56,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                     children: [
                       Text(
                         'الرصيد الحالي',
-                        style: GoogleFonts.rokkitt(
+                        style: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 16,
                         ),
@@ -76,7 +75,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                   NumberFormat.currency(
                     symbol: '\$',
                   ).format(state.totalBalance),
-                  style: GoogleFonts.ptSansNarrow(
+                  style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: Theme.of(context).colorScheme.onPrimary,
@@ -87,7 +86,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'مصاريف هذا الشهر',
-                  style: GoogleFonts.rokkitt(
+                  style: TextStyle(
                     color: Theme.of(context).colorScheme.onPrimary,
                     fontSize: 16,
                   ),
@@ -98,7 +97,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                   Center(
                     child: Text(
                       'لا توجد مصروفات مسجلة هذا الشهر',
-                      style: GoogleFonts.rokkitt(
+                      style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),

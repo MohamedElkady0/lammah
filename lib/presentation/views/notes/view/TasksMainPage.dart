@@ -11,12 +11,32 @@ class TasksMainPage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.primary,
         appBar: AppBar(
-          title: const Text("المهام"),
-          bottom: const TabBar(
+          title: Text(
+            "المهام",
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          bottom: TabBar(
+            labelColor: Theme.of(context).colorScheme.onPrimary,
+            unselectedLabelColor: Theme.of(
+              context,
+            ).colorScheme.primaryContainer,
             tabs: [
-              Tab(text: "مهامي الخاصة", icon: Icon(Icons.lock_outline)),
-              Tab(text: "سوق المهام", icon: Icon(Icons.public)),
+              Tab(
+                text: "مهامي الخاصة",
+                icon: Icon(
+                  Icons.lock_outline,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+              Tab(
+                text: "سوق المهام",
+                icon: Icon(
+                  Icons.public,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ],
           ),
         ),

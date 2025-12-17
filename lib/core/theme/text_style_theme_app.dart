@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ThemeText {
   // Define your text styles here
@@ -11,7 +10,6 @@ class ThemeText {
   FontWeight? fontWeight;
   Color? color;
   String? fontFamily;
-  GoogleFonts? googleFont;
   TextOverflow? overflow;
   List<Shadow>? shadows;
   TextDecoration? decoration;
@@ -31,7 +29,7 @@ class ThemeText {
       fontSize: fontSizeHead1 ?? 32,
       fontWeight: fontWeight ?? FontWeight.bold,
       color: color ?? Colors.black,
-      fontFamily: fontFamily ?? GoogleFonts.lato().fontFamily,
+      fontFamily: fontFamily ?? '',
       overflow: overflow ?? TextOverflow.ellipsis,
       shadows: shadows,
       decoration: decoration ?? TextDecoration.none,
@@ -51,7 +49,7 @@ class ThemeText {
       fontSize: fontSizeHead2 ?? 25,
       fontWeight: fontWeight ?? FontWeight.bold,
       color: color ?? Colors.black,
-      fontFamily: fontFamily ?? GoogleFonts.lato().fontFamily,
+      fontFamily: fontFamily ?? '',
       overflow: overflow ?? TextOverflow.ellipsis,
       shadows: shadows,
       decoration: decoration ?? TextDecoration.none,
@@ -71,7 +69,7 @@ class ThemeText {
       fontSize: fontSizeHead3 ?? 18,
       fontWeight: fontWeight ?? FontWeight.bold,
       color: color ?? Colors.black,
-      fontFamily: fontFamily ?? GoogleFonts.lato().fontFamily,
+      fontFamily: fontFamily ?? '',
       overflow: overflow ?? TextOverflow.ellipsis,
       shadows: shadows,
       decoration: decoration ?? TextDecoration.none,
@@ -91,7 +89,7 @@ class ThemeText {
       fontSize: fontSizeBody ?? 16,
       fontWeight: fontWeight ?? FontWeight.w400,
       color: color ?? Colors.black,
-      fontFamily: fontFamily ?? GoogleFonts.lato().fontFamily,
+      fontFamily: fontFamily ?? '',
       overflow: overflow ?? TextOverflow.ellipsis,
       shadows: shadows,
       decoration: decoration ?? TextDecoration.none,
@@ -107,68 +105,51 @@ class ThemeText {
   }
 
   static TextTheme getTextTheme(ColorScheme colorScheme) {
-    final baseTextTheme = GoogleFonts.rokkittTextTheme();
-
-    return baseTextTheme.copyWith(
+    return TextTheme(
       // Headline
-      displayLarge: baseTextTheme.displayLarge?.copyWith(
+      displayLarge: TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
-      displayMedium: baseTextTheme.displayMedium?.copyWith(
+      displayMedium: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
-      displaySmall: baseTextTheme.displaySmall?.copyWith(
+      displaySmall: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
       // Title
-      titleLarge: baseTextTheme.titleLarge?.copyWith(
+      titleLarge: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
-      titleMedium: baseTextTheme.titleMedium?.copyWith(
+      titleMedium: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w500,
         color: colorScheme.onSurface,
       ),
-      titleSmall: baseTextTheme.titleSmall?.copyWith(
+      titleSmall: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: colorScheme.onSurface,
       ),
       // Body
-      bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-        fontSize: 16,
-        color: colorScheme.onSurface,
-      ),
-      bodyMedium: baseTextTheme.bodyMedium?.copyWith(
-        fontSize: 14,
-        color: colorScheme.onSurfaceVariant,
-      ),
-      bodySmall: baseTextTheme.bodySmall?.copyWith(
-        fontSize: 12,
-        color: colorScheme.onSurfaceVariant,
-      ),
+      bodyLarge: TextStyle(fontSize: 16, color: colorScheme.onSurface),
+      bodyMedium: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+      bodySmall: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
       // Label
-      labelLarge: baseTextTheme.labelLarge?.copyWith(
+      labelLarge: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
-      labelMedium: baseTextTheme.labelMedium?.copyWith(
-        fontSize: 12,
-        color: colorScheme.onSurfaceVariant,
-      ),
-      labelSmall: baseTextTheme.labelSmall?.copyWith(
-        fontSize: 10,
-        color: colorScheme.onSurfaceVariant,
-      ),
+      labelMedium: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+      labelSmall: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
     );
   }
 }

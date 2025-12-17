@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/data/model/category.dart';
 import 'package:lammah/data/model/transaction.dart';
 import 'package:lammah/presentation/views/notes/widgets/cart/transaction_card.dart';
@@ -21,7 +20,7 @@ class CategoryDetailsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(category.name, style: GoogleFonts.rokkitt()),
+        title: Text(category.name),
         backgroundColor: category.color,
       ),
       body: ListView.builder(

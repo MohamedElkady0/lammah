@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/data/model/post_model.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/post/post_cubit.dart';
+import 'package:lammah/presentation/views/setting/setting_page.dart';
 import 'package:lammah/presentation/views/story/widget/post_item_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -36,6 +37,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
+                TextButton.icon(
+                  onPressed: () {
+                    context.read<AuthCubit>().signOut();
+                  },
+                  label: Text(
+                    'تسجيل خروج',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                  icon: Icon(Icons.logout),
+                ),
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SettingPage(),
+                      ),
+                    );
+                  },
+                  label: Text(
+                    'الاعدادات',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                  icon: Icon(Icons.settings),
+                ),
                 // 1. رأس الملف الشخصي (Header)
                 SizedBox(
                   height: 200,

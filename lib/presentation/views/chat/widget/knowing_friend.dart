@@ -516,20 +516,61 @@ class _MapScreenState extends State<MapScreen>
 
                           SizedBox(
                             height: 20,
-                            child: GestureDetector(
-                              //           IconButton(
-                              onTap: () {
-                                // نمرر الـ AuthCubit للدالة
-                                context.read<UpdateUserCubit>().updateLocation(
-                                  context.read<AuthCubit>(),
-                                );
-                              },
-                              child: Icon(
-                                size: 18,
-                                Icons.gps_fixed,
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
+                            width:
+                                20, // تحديد العرض لضمان عدم تغير حجم الصف عند التحميل
+                            child:
+                                BlocConsumer<UpdateUserCubit, UpdateUserState>(
+                                  listener: (context, state) {
+                                    if (state is UpdateSuccess) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("تم تحديث موقعك بنجاح"),
+                                        ),
+                                      );
+                                    }
+                                    if (state is UpdateFailure) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            "فشل التحديث: ${state.message}",
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  builder: (context, state) {
+                                    // 1. حالة التحميل: اعرض دائرة تدور
+                                    if (state is UpdateLoading) {
+                                      return const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.blue, // أو لون الثيم
+                                      );
+                                    }
+
+                                    // 2. الحالة العادية: اعرض أيقونة الـ GPS
+                                    return GestureDetector(
+                                      onTap: () {
+                                        // استدعاء الدالة كما كنت تفعل
+                                        context
+                                            .read<UpdateUserCubit>()
+                                            .updateLocation(
+                                              context.read<AuthCubit>(),
+                                            );
+                                      },
+                                      child: Icon(
+                                        Icons.gps_fixed,
+                                        size: 18,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
+                                      ),
+                                    );
+                                  },
+                                ),
                           ),
                         ],
                       ),

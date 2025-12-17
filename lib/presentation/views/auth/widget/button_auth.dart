@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/core/config/config_app.dart';
 
 class ButtonAuth extends StatelessWidget {
@@ -40,7 +38,6 @@ class ButtonAuth extends StatelessWidget {
         label: Text(
           title,
           style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-            fontFamily: GoogleFonts.poppins().fontFamily,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onPrimary,
           ),

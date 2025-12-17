@@ -9,7 +9,10 @@ abstract class UpdateUserState extends Equatable {
 
 class UpdateUserInitial extends UpdateUserState {}
 
-class UpdateSuccess extends UpdateUserState {}
+class UpdateSuccess extends UpdateUserState {
+  final UserInfoData? updatedUserInfo;
+  const UpdateSuccess({this.updatedUserInfo});
+}
 
 class UpdateFailure extends UpdateUserState {
   final String message;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/core/config/config_app.dart';
 import 'package:lammah/core/config/fixed_sizes_app.dart';
 import 'package:lammah/core/utils/auth_string.dart';
@@ -131,8 +130,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 AuthString.welcome,
                                 style: Theme.of(context).textTheme.displayLarge!
                                     .copyWith(
-                                      fontFamily:
-                                          GoogleFonts.rokkitt().fontFamily,
                                       fontWeight: FontWeight.w900,
                                       color: Theme.of(
                                         context,

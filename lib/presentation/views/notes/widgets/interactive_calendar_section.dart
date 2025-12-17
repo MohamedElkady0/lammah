@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' as intl; // لتنسيق التاريخ
 import 'package:lammah/data/model/note.dart';
 import 'package:lammah/data/model/transaction.dart';
@@ -125,14 +124,14 @@ class _InteractiveCalendarSectionState
                             children: [
                               Text(
                                 "التقويم",
-                                style: GoogleFonts.rokkitt(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
                                 headerDateText,
-                                style: GoogleFonts.rokkitt(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
                                 ),
@@ -176,7 +175,7 @@ class _InteractiveCalendarSectionState
                     headerStyle: HeaderStyle(
                       formatButtonVisible: false,
                       titleCentered: true,
-                      titleTextStyle: GoogleFonts.rokkitt(
+                      titleTextStyle: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.primary,
@@ -197,7 +196,7 @@ class _InteractiveCalendarSectionState
                         color: colorScheme.primary.withAlpha(100),
                         shape: BoxShape.circle,
                       ),
-                      todayTextStyle: GoogleFonts.rokkitt(
+                      todayTextStyle: TextStyle(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -236,7 +235,7 @@ class _InteractiveCalendarSectionState
                       children: [
                         Text(
                           "أحداث هذا اليوم:",
-                          style: GoogleFonts.rokkitt(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey[700],
@@ -282,7 +281,7 @@ class _InteractiveCalendarSectionState
                               const SizedBox(height: 8),
                               Text(
                                 "لا توجد أحداث.",
-                                style: GoogleFonts.rokkitt(color: Colors.grey),
+                                style: TextStyle(color: Colors.grey),
                               ),
                             ],
                           ),

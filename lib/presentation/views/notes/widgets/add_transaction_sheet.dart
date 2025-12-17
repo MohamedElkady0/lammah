@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/data/model/category.dart';
 import 'package:lammah/data/model/transaction.dart';
-import 'package:lammah/data/service/database_helper.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
+import 'package:lammah/data/service/database_helper.dart';
 import 'package:uuid/uuid.dart';
 
 class AddTransactionSheet extends StatefulWidget {
@@ -18,12 +18,12 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
 
-  bool _isRecurring = false; // هل العملية متكررة؟
-  int _selectedDay = 1; // يوم التكرار (من 1 إلى 28 لضمان الشهور القصيرة)
-
-  // الحالة الافتراضية مصروف
   TransactionType _selectedType = TransactionType.expense;
   Category? _selectedCategory;
+
+  // متغيرات التكرار
+  bool _isRecurring = false;
+  int _selectedDay = 1;
 
   @override
   void initState() {
@@ -31,21 +31,18 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _selectedCategory = defaultCategories[0];
   }
 
-  // دالة مساعدة لتحديث الفئة تلقائياً عند تغيير النوع (اختياري لتحسين التجربة)
   void _updateCategoryBasedOnType(TransactionType type) {
     setState(() {
       _selectedType = type;
       if (type == TransactionType.income) {
-        // محاولة العثور على فئة "دخل" أو "راتب" وتحديدها تلقائياً
         try {
           _selectedCategory = defaultCategories.firstWhere(
             (c) => c.name.contains('دخل') || c.id == '8',
           );
         } catch (e) {
-          // إذا لم توجد، ابق على الفئة الحالية
+          // keep current
         }
       } else {
-        // العودة للفئة الأولى عند التحويل لمصروف
         if (_selectedCategory?.name == 'دخل') {
           _selectedCategory = defaultCategories[0];
         }
@@ -56,17 +53,30 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    var nav = Navigator.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+    // الحصول على ارتفاع الكيبورد
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-        ),
+      // جعلنا الحاوية تأخذ الارتفاع المناسب وتسمح بالسكرول
+      constraints: BoxConstraints(
+        maxHeight:
+            MediaQuery.of(context).size.height *
+            0.85, // أقصى ارتفاع 85% من الشاشة
+      ),
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: bottomPadding + 24, // إضافة مساحة الكيبورد
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,9 +102,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 20),
 
-            // ==========================================
-            // 1. مفتاح التبديل بين الدخل والمصروف (الجديد)
-            // ==========================================
+            // 1. مفتاح التبديل
             Container(
               height: 50,
               decoration: BoxDecoration(
@@ -125,7 +133,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 20),
 
-            // 2. حقل المبلغ
+            // 2. الحقول
             TextField(
               controller: _amountController,
               decoration: InputDecoration(
@@ -143,11 +151,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 15),
 
-            // 3. حقل الوصف
             TextField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: 'الوصف (مثلاً: راتب، إيجار...)',
+                labelText: 'الوصف',
                 prefixIcon: const Icon(Icons.description_outlined),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -158,7 +165,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 15),
 
-            // 4. قائمة الفئات
             DropdownButtonFormField<Category>(
               initialValue: _selectedCategory,
               decoration: InputDecoration(
@@ -188,57 +194,57 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 });
               },
             ),
+
+            // 3. خيار التكرار (يظهر فقط للمصروفات)
+            if (_selectedType == TransactionType.expense) ...[
+              const SizedBox(height: 15),
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withAlpha(50),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text("تكرار شهري"),
+                      subtitle: const Text("خصم تلقائي كل شهر"),
+                      value: _isRecurring,
+                      onChanged: (val) => setState(() => _isRecurring = val),
+                      secondary: const Icon(Icons.repeat),
+                    ),
+                    if (_isRecurring)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Row(
+                          children: [
+                            const Text("في يوم: "),
+                            const SizedBox(width: 10),
+                            DropdownButton<int>(
+                              value: _selectedDay,
+                              menuMaxHeight: 200,
+                              items: List.generate(28, (index) => index + 1)
+                                  .map((day) {
+                                    return DropdownMenuItem(
+                                      value: day,
+                                      child: Text("$day"),
+                                    );
+                                  })
+                                  .toList(),
+                              onChanged: (val) =>
+                                  setState(() => _selectedDay = val!),
+                            ),
+                            const Text(" من الشهر"),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 25),
 
-            // يظهر الخيار فقط للمصروفات
-            if (_selectedType == TransactionType.expense) ...[
-              const SizedBox(height: 10),
-              SwitchListTile(
-                title: const Text("تكرار هذه العملية شهرياً"),
-                subtitle: const Text("سيتم خصمها تلقائياً كل شهر"),
-                value: _isRecurring,
-                onChanged: (val) {
-                  setState(() {
-                    _isRecurring = val;
-                  });
-                },
-                activeThumbColor: colorScheme.primary,
-              ),
-
-              // إذا تم التفعيل، أظهر قائمة لاختيار اليوم
-              if (_isRecurring)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      const Text("كرر يوم: "),
-                      const SizedBox(width: 10),
-                      DropdownButton<int>(
-                        value: _selectedDay,
-                        items: List.generate(28, (index) => index + 1).map((
-                          day,
-                        ) {
-                          return DropdownMenuItem(
-                            value: day,
-                            child: Text(day.toString()),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectedDay = val!;
-                          });
-                        },
-                      ),
-                      const Text(" من كل شهر"),
-                    ],
-                  ),
-                ),
-            ],
-            const SizedBox(height: 20),
-
-            // ... زر الحفظ
-
-            // 5. زر الحفظ
+            // 4. زر الحفظ
             SizedBox(
               height: 55,
               child: ElevatedButton(
@@ -250,48 +256,41 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  elevation: 2,
                 ),
                 onPressed: () async {
-                  var message = ScaffoldMessenger.of(context);
-                  var nav = Navigator.of(context);
                   final amount = double.tryParse(_amountController.text) ?? 0.0;
                   if (amount > 0 && _selectedCategory != null) {
-                    // 1. إضافة المعاملة الحالية (لليوم)
+                    // إضافة المعاملة الحالية
                     final newTransaction = Transaction(
                       id: const Uuid().v4(),
-                      title: _titleController.text,
+                      title: _titleController.text.isEmpty
+                          ? (_selectedType == TransactionType.income
+                                ? 'دخل'
+                                : 'مصروف')
+                          : _titleController.text,
                       amount: amount,
                       date: widget.selectedDate,
                       type: _selectedType,
                       category: _selectedCategory!,
                     );
+
                     context.read<TransactionCubit>().addTransaction(
                       newTransaction,
                     );
 
-                    // 2. إذا كانت متكررة، احفظها في جدول التكرار
+                    // إضافة التكرار إذا تم تفعيله
                     if (_isRecurring &&
                         _selectedType == TransactionType.expense) {
                       await DatabaseHelper.instance.insertRecurringTransaction({
                         'id': const Uuid().v4(),
-                        'title': _titleController.text,
+                        'title': _titleController.text.isEmpty
+                            ? 'مصروف متكرر'
+                            : _titleController.text,
                         'amount': amount,
                         'categoryId': _selectedCategory!.id,
                         'dayOfMonth': _selectedDay,
-                        'lastProcessedDate': DateTime.now()
-                            .toIso8601String(), // نعتبر أنها تمت اليوم
+                        'lastProcessedDate': DateTime.now().toIso8601String(),
                       });
-
-                      if (mounted) {
-                        message.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "تم جدولة الدفع ليوم $_selectedDay من كل شهر",
-                            ),
-                          ),
-                        );
-                      }
                     }
 
                     nav.pop();
@@ -309,7 +308,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     );
   }
 
-  // ويدجت زر الاختيار (تصميم خاص)
   Widget _buildTypeSelector({
     required String title,
     required TransactionType type,

@@ -24,6 +24,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   //----------------------------------------------------------------------------
   bool isRegister = true;
+  bool _isManualAuthProcess = false;
 
   String _otp = AuthString.empty;
   String get otp => _otp;
@@ -55,11 +56,23 @@ class AuthCubit extends Cubit<AuthState> {
     _authSubscription = _credential.authStateChanges().listen((
       User? user,
     ) async {
+      // 2. إذا كنا نقوم بعملية تسجيل يدوية، لا تفعل شيئاً واترك الدالة الأصلية تكمل العمل
+      if (_isManualAuthProcess) return;
+
       if (user != null) {
-        emit(AuthLoading());
+        // نغير الحالة لـ Loading فقط إذا لم تكن الحالة الحالية كذلك لتجنب التكرار
+        if (state is! AuthSuccess) emit(AuthLoading());
         try {
+          // محاولة جلب البيانات (يتم تنفيذها عند فتح التطبيق والمستخدم مسجل دخول مسبقاً)
           _currentUserInfo ??= await _cacheService.loadUserData();
-          emit(AuthSuccess(userInfo: _currentUserInfo!));
+
+          // تأكد مرة أخرى أن البيانات ليست فارغة
+          if (_currentUserInfo != null) {
+            emit(AuthSuccess(userInfo: _currentUserInfo!));
+          } else {
+            // محاولة أخيرة من الفايربيس إذا الكاش فارغ
+            await getUserData();
+          }
         } catch (e) {
           emit(AuthFailure(message: 'فشل تحميل بيانات المستخدم: $e'));
         }
@@ -93,7 +106,9 @@ class AuthCubit extends Cubit<AuthState> {
       return;
     }
 
-    emit(AuthLoading());
+    // 3. تفعيل وضع المعالجة اليدوية لمنع المراقب من التدخل
+    _isManualAuthProcess = true;
+    emit(AuthLoading()); // يظهر الـ Splash
 
     UserCredential? userCredential;
 
@@ -102,9 +117,10 @@ class AuthCubit extends Cubit<AuthState> {
         email: email,
         password: password,
       );
-      final String imgUrl = await uploadCubit.uploadImageAndGetUrl(imageFile);
 
+      final String imgUrl = await uploadCubit.uploadImageAndGetUrl(imageFile);
       String? fcmToken = await messaging.getToken();
+
       final userInfo = UserInfoData(
         image: imgUrl,
         email: email,
@@ -128,18 +144,19 @@ class AuthCubit extends Cubit<AuthState> {
         longitude: 0.0,
       );
 
+      // حفظ البيانات في قاعدة البيانات
       await FirebaseFirestore.instance
           .collection(AuthString.fSUsers)
           .doc(_credential.currentUser!.uid)
           .set(userInfo.toJson());
-      if (_currentUserInfo == null) {
-        _currentUserInfo = userInfo;
-        await _cacheService.saveUserData(_currentUserInfo!);
-      }
 
+      // حفظ في الكاش وتحديث المتغير
+      _currentUserInfo = userInfo;
+      await _cacheService.saveUserData(_currentUserInfo!);
+
+      // إرسال النجاح
       emit(AuthSuccess(userInfo: _currentUserInfo!));
     } on FirebaseAuthException catch (e) {
-      // في حال فشل أي خطوة بعد إنشاء الحساب، نقوم بحذفه لتجنب حسابات معلقة
       if (userCredential?.user != null) {
         await userCredential?.user?.delete();
       }
@@ -154,8 +171,10 @@ class AuthCubit extends Cubit<AuthState> {
       if (userCredential != null) {
         await userCredential.user?.delete();
       }
-
       emit(AuthFailure(message: 'فشل إكمال التسجيل: ${e.toString()}'));
+    } finally {
+      // 4. إعادة المتغير لوضعه الطبيعي في كل الأحوال (نجاح أو فشل)
+      _isManualAuthProcess = false;
     }
   }
 
@@ -189,6 +208,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   //----------------------------------------------------------------------------
   signInWithGoogle() async {
+    _isManualAuthProcess = true;
     emit(AuthLoading());
     try {
       // 1. بدء عملية تسجيل الدخول بجوجل
@@ -283,6 +303,8 @@ class AuthCubit extends Cubit<AuthState> {
       } else {
         emit(AuthFailure(message: 'فشل تسجيل الدخول: ${e.toString()}'));
       }
+    } finally {
+      _isManualAuthProcess = false; // إعادة المتغير
     }
   }
   //----------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/data/model/note.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
 
@@ -14,10 +13,7 @@ class NoteCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: Icon(Icons.note_alt_rounded, color: Colors.orange),
-        title: Text(
-          note.title,
-          style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
-        ),
+        title: Text(note.title, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: note.content != null ? Text(note.content!) : null,
         trailing: IconButton(
           icon: Icon(Icons.delete_outline, color: Colors.red[300]),

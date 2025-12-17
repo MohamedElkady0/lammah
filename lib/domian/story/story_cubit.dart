@@ -154,27 +154,29 @@ class StoryCubit extends Cubit<StoryStates> {
   Map<String, List<StoryModel>> groupedStories = {};
 
   void getStories() {
-    if (isClosed) return; // حماية إضافية
+    // حماية أولية
+    if (isClosed) return;
 
     emit(GetStoriesLoadingState());
 
     FirebaseFirestore.instance
         .collection('stories')
-        .orderBy(
-          'dateTime',
-          descending: false,
-        ) // ترتيب زمني من الأقدم للأحدث (داخل قصة المستخدم)
+        .orderBy('dateTime', descending: false)
         .get()
         .then((value) {
-          groupedStories = {}; // تصفير القائمة
+          // حماية ثانية: إذا تم إغلاق الكيوبت أثناء جلب البيانات، نوقف التنفيذ
+          if (isClosed) return;
 
-          for (var element in value.docs) {
-            // التحقق من مرور 24 ساعة
-            DateTime storyTime = DateTime.parse(element.data()['dateTime']);
+          groupedStories = {};
+
+          for (var doc in value.docs) {
+            var data = doc.data();
+            DateTime storyTime = DateTime.parse(data['dateTime']);
+
             if (DateTime.now().difference(storyTime).inHours < 24) {
-              StoryModel model = StoryModel.fromJson(element.data());
+              // ... منطق التجميع ...
 
-              // منطق التجميع
+              StoryModel model = StoryModel.fromJson(data);
               if (groupedStories.containsKey(model.uId)) {
                 groupedStories[model.uId]!.add(model);
               } else {
@@ -182,17 +184,29 @@ class StoryCubit extends Cubit<StoryStates> {
               }
             }
           }
-          emit(GetStoriesSuccessState());
+
+          // حماية ثالثة وأخيرة قبل الـ emit
+          if (!isClosed) {
+            emit(GetStoriesSuccessState());
+          }
         })
         .catchError((error) {
-          emit(GetStoriesErrorState(error.toString()));
+          if (!isClosed) {
+            emit(GetStoriesErrorState(error.toString()));
+          }
         });
   }
 
   // 4. حذف القصة (للمستخدم نفسه)
   void deleteStory(String storyId, String url) {
+    // حماية أولية
+    if (isClosed) return;
+    emit(GetStoriesLoadingState());
     FirebaseFirestore.instance.collection('stories').doc(storyId).delete().then(
       (_) {
+        // حماية ثانية: إذا تم إغلاق الكيوبت أثناء جلب البيانات، نوقف التنفيذ
+        if (isClosed) return;
+
         firebase_storage.FirebaseStorage.instance
             .refFromURL(url)
             .delete()
@@ -202,10 +216,15 @@ class StoryCubit extends Cubit<StoryStates> {
                 getStories(); // تحديث القائمة الخلفية
                 emit(DeleteStorySuccessState());
               }
+
+              // حماية ثالثة وأخيرة قبل الـ emit
+              if (!isClosed) {
+                emit(GetStoriesSuccessState());
+              }
             })
             .catchError((error) {
               if (!isClosed) {
-                emit(DeleteStoryErrorState(error.toString())); // مثال لحالة خطأ
+                emit(GetStoriesErrorState(error.toString()));
               }
             });
       },

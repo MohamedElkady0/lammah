@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/data/model/transaction.dart';
 import 'package:lammah/domian/transaction/transaction_cubit.dart';
 
@@ -20,11 +19,11 @@ class TransactionCard extends StatelessWidget {
         ),
         title: Text(
           transaction.title,
-          style: GoogleFonts.rokkitt(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           '${isIncome ? '+' : '-'} ${transaction.amount}\$',
-          style: GoogleFonts.rokkitt(
+          style: TextStyle(
             color: isIncome ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
             fontSize: 16,

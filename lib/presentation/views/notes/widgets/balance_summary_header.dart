@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lammah/presentation/views/notes/widgets/mini_chartItem.dart';
 
 class BalanceSummaryHeader extends StatelessWidget {
@@ -38,12 +37,12 @@ class BalanceSummaryHeader extends StatelessWidget {
         children: [
           Text(
             'الرصيد الحالي',
-            style: GoogleFonts.rokkitt(color: Colors.white70, fontSize: 16),
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
             totalAmount,
-            style: GoogleFonts.ptSansNarrow(
+            style: TextStyle(
               fontSize: 48,
               fontWeight: FontWeight.w900,
               color: Colors.white,

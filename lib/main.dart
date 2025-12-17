@@ -63,10 +63,9 @@ class Lammah extends StatelessWidget {
         BlocProvider<ThemeCubit>(create: (context) => ThemeCubit()),
 
         BlocProvider<LocationCubit>(create: (context) => LocationCubit()),
-        BlocProvider<UpdateUserCubit>(
-          create: (context) => UpdateUserCubit(
-            locationCubit: BlocProvider.of<LocationCubit>(context),
-          ),
+        BlocProvider(
+          create: (context) =>
+              UpdateUserCubit(locationCubit: context.read<LocationCubit>()),
         ),
         BlocProvider<UploadCubit>(
           create: (context) => UploadCubit(

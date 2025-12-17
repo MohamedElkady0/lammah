@@ -723,11 +723,8 @@ class ChatCubit extends Cubit<ChatState> {
   // ---------------------------------------------------------------------------
 
   Future<void> sendFriendRequest(String recipientUid) async {
-    // لا نحتاج لـ Loading هنا عادةً لتجربة مستخدم أسرع، لكن يمكن إضافته
-    // emit(ChatLoading());
-
     try {
-      // أ) التحقق من الحظر
+      // 1. التحقق من الحظر
       final recipientDoc = await _firestore
           .collection(AuthString.fSUsers)
           .doc(recipientUid)
@@ -740,16 +737,14 @@ class ChatCubit extends Cubit<ChatState> {
         return;
       }
 
-      // ب) تحديث قاعدة البيانات
+      // 2. تحديث قاعدة البيانات (هذا هو الجزء الأهم)
       final batch = _firestore.batch();
-
       batch.update(
         _firestore.collection(AuthString.fSUsers).doc(recipientUid),
         {
           'friendRequestsReceived': FieldValue.arrayUnion([_currentUserUid]),
         },
       );
-
       batch.update(
         _firestore.collection(AuthString.fSUsers).doc(_currentUserUid),
         {
@@ -757,31 +752,37 @@ class ChatCubit extends Cubit<ChatState> {
         },
       );
 
-      await batch.commit();
+      await batch.commit(); // <-- تم الحفظ بنجاح هنا
 
-      // ج) إرسال الإشعار
-      // ملاحظة: قمت بنقل منطق الإشعار داخل try لضمان عدم توقف الكود لو فشل الإشعار فقط
-      final myDoc = await _firestore
-          .collection(AuthString.fSUsers)
-          .doc(_currentUserUid)
-          .get();
-      final myName = myDoc.data()?['name'] ?? 'مستخدم';
-      final receiverFcmToken = recipientDoc.data()?['fcmToken'];
-
-      if (receiverFcmToken != null) {
-        final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
-          'sendFriendRequestNotification',
-        );
-        await callable.call(<String, dynamic>{
-          'receiverFcmToken': receiverFcmToken,
-          'senderName': myName,
-        });
-      }
-
+      // 3. نقوم بإصدار نجاح العملية فوراً للمستخدم لأن البيانات حُفظت
       emit(FriendRequestStateChanged(isFriendRequestSent: true));
+
+      // 4. محاولة إرسال الإشعار في الخلفية (داخل try-catch منفصل)
+      // بحيث لو فشل الإشعار لا يؤثر على نجاح العملية في نظر المستخدم
+      try {
+        final myDoc = await _firestore
+            .collection(AuthString.fSUsers)
+            .doc(_currentUserUid)
+            .get();
+        final myName = myDoc.data()?['name'] ?? 'مستخدم';
+        final receiverFcmToken = recipientDoc.data()?['fcmToken'];
+
+        if (receiverFcmToken != null) {
+          final HttpsCallable callable = FirebaseFunctions.instance
+              .httpsCallable('sendFriendRequestNotification');
+          await callable.call(<String, dynamic>{
+            'receiverFcmToken': receiverFcmToken,
+            'senderName': myName,
+          });
+        }
+      } catch (e) {
+        // نطبع الخطأ للمبرمج فقط، لكن لا نزعج المستخدم به
+        print("Warning: Friend request stored, but notification failed: $e");
+      }
     } catch (e) {
-      print("Failed to send friend request: $e");
-      emit(ChatFailure("Failed to send request"));
+      // هذا الـ catch يعمل فقط إذا فشلت الكتابة في قاعدة البيانات
+      print("Failed to store friend request in DB: $e");
+      emit(ChatFailure("فشل إرسال الطلب"));
     }
   }
 
