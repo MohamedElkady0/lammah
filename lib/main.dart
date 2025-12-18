@@ -74,8 +74,7 @@ class Lammah extends StatelessWidget {
         ),
         BlocProvider<AuthCubit>(
           create: (context) =>
-              AuthCubit(uploadCubit: BlocProvider.of<UploadCubit>(context))
-                ..getUserData(),
+              AuthCubit(uploadCubit: BlocProvider.of<UploadCubit>(context)),
         ),
         BlocProvider<NotificationCubit>(
           create: (context) =>
@@ -84,7 +83,9 @@ class Lammah extends StatelessWidget {
         BlocProvider<TransactionCubit>(create: (context) => TransactionCubit()),
         BlocProvider<SearchCubit>(
           create: (context) {
-            final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+            // نتحقق إذا كان المستخدم موجوداً، وإلا نرسل نصاً فارغاً (سيتم تحديثه لاحقاً)
+            final user = FirebaseAuth.instance.currentUser;
+            final String currentUserId = user != null ? user.uid : '';
 
             return SearchCubit(currentUserId: currentUserId);
           },
@@ -157,13 +158,56 @@ class AuthGate extends StatelessWidget {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         if (state is AuthInitial || state is AuthLoading) {
-          return SplashView();
+          return const SplashView();
         } else if (state is AuthSuccess) {
-          return HomePage();
+          return const HomePage();
+        } else if (state is AuthFailure) {
+          // --- هذا الجزء الجديد سيكشف لك سبب المشكلة ---
+          return Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "حدث خطأ أثناء استرجاع بياناتك",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      state.message, // اقرأ رسالة الخطأ التي ستظهر هنا
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: () {
+                        // زر لإعادة المحاولة أو تسجيل الخروج لحل التعليق
+                        context.read<AuthCubit>().signOut();
+                      },
+                      child: const Text("تسجيل الخروج والمحاولة مجدداً"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         } else {
-          return WelcomeScreen();
+          return const WelcomeScreen();
         }
       },
     );
   }
 }
+
+// End of file

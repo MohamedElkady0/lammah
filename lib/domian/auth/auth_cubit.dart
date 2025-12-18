@@ -17,9 +17,18 @@ part 'auth_state.dart';
 class AuthCubit extends Cubit<AuthState> {
   //----------------variables---------------------------------------------------
   UserInfoData? _currentUserInfo;
+
+  // Getter
   UserInfoData? get currentUserInfo => _currentUserInfo;
+
+  // Setter (تم الإصلاح)
   set currentUserInfo(UserInfoData? userInfo) {
-    emit(AuthSuccess(userInfo: userInfo!));
+    _currentUserInfo = userInfo; // <--- هذا هو السطر الناقص الذي سبب المشكلة!
+
+    // نقوم بالتحديث فقط إذا البيانات موجودة
+    if (userInfo != null) {
+      emit(AuthSuccess(userInfo: userInfo));
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -56,21 +65,20 @@ class AuthCubit extends Cubit<AuthState> {
     _authSubscription = _credential.authStateChanges().listen((
       User? user,
     ) async {
-      // 2. إذا كنا نقوم بعملية تسجيل يدوية، لا تفعل شيئاً واترك الدالة الأصلية تكمل العمل
       if (_isManualAuthProcess) return;
 
       if (user != null) {
-        // نغير الحالة لـ Loading فقط إذا لم تكن الحالة الحالية كذلك لتجنب التكرار
-        if (state is! AuthSuccess) emit(AuthLoading());
-        try {
-          // محاولة جلب البيانات (يتم تنفيذها عند فتح التطبيق والمستخدم مسجل دخول مسبقاً)
-          _currentUserInfo ??= await _cacheService.loadUserData();
+        // إذا كانت البيانات محملة بالفعل وناجحة، لا تفعل شيئاً (يمنع الوميض)
+        if (state is AuthSuccess && _currentUserInfo != null) return;
 
-          // تأكد مرة أخرى أن البيانات ليست فارغة
+        emit(AuthLoading());
+        try {
+          _currentUserInfo = await _cacheService.loadUserData();
+
           if (_currentUserInfo != null) {
             emit(AuthSuccess(userInfo: _currentUserInfo!));
           } else {
-            // محاولة أخيرة من الفايربيس إذا الكاش فارغ
+            // الكاش فارغ، نجلب من النت
             await getUserData();
           }
         } catch (e) {
@@ -180,6 +188,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   //----------------------------------------------------------------------------
   void onSignIn({required String email, required String password}) async {
+    // 3. تفعيل وضع المعالجة اليدوية لمنع المراقب من التدخل
+    _isManualAuthProcess = true;
     emit(AuthLoading());
     try {
       await _credential.signInWithEmailAndPassword(
@@ -203,6 +213,9 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: AuthString.errAuth4));
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
+    } finally {
+      // 4. إعادة المتغير لوضعه الطبيعي في كل الأحوال (نجاح أو فشل)
+      _isManualAuthProcess = false;
     }
   }
 
@@ -309,6 +322,8 @@ class AuthCubit extends Cubit<AuthState> {
   }
   //----------------------------------------------------------------------------
   // Future<void> signInWithFacebook() async {
+  //     // 3. تفعيل وضع المعالجة اليدوية لمنع المراقب من التدخل
+  //     _isManualAuthProcess = true;
   //     emit(AuthLoading());
   //     try {
   //       // 1. طلب تسجيل الدخول من فيسبوك
@@ -346,12 +361,17 @@ class AuthCubit extends Cubit<AuthState> {
   //        }
   //     } catch (e) {
   //       emit(AuthFailure(message: 'حدث خطأ غير متوقع: ${e.toString()}'));
-  //     }
+  //     } finally {
+  // 4. إعادة المتغير لوضعه الطبيعي في كل الأحوال (نجاح أو فشل)
+  // _isManualAuthProcess = false;
+  // }
   //   }
   //----------------------------------------------------------------------------
   // 1. دالة مساعدة خاصة لمعالجة البيانات بعد تسجيل الدخول
   // هذه الدالة تضمن عدم تكرار الكود وتستخدم في المكانين
   Future<void> _fetchOrCreateUser(User user) async {
+    // 3. تفعيل وضع المعالجة اليدوية لمنع المراقب من التدخل
+    _isManualAuthProcess = true;
     try {
       String? fcmToken = await messaging.getToken();
 
@@ -418,6 +438,9 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       emit(AuthFailure(message: "فشل جلب بيانات المستخدم: $e"));
+    } finally {
+      // 4. إعادة المتغير لوضعه الطبيعي في كل الأحوال (نجاح أو فشل)
+      _isManualAuthProcess = false;
     }
   }
 
@@ -426,20 +449,22 @@ class AuthCubit extends Cubit<AuthState> {
   void sendOtp() async {
     emit(AuthLoading());
     await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: _phoneNumber, // تأكد أن الرقم يحتوي على كود الدولة (+20...)
-      // الحالة 1: التحقق التلقائي (يحدث غالباً في Android)
+      // داخل sendOtp
       verificationCompleted: (PhoneAuthCredential credential) async {
+        // 1. تفعيل الحماية
+        _isManualAuthProcess = true;
         try {
-          // تسجيل الدخول
           UserCredential userCredential = await FirebaseAuth.instance
               .signInWithCredential(credential);
 
           if (userCredential.user != null) {
-            // هنا كان الخطأ سابقاً، الآن نستدعي الدالة المساعدة
             await _fetchOrCreateUser(userCredential.user!);
           }
         } catch (e) {
           emit(AuthFailure(message: "فشل التحقق التلقائي: $e"));
+        } finally {
+          // 2. إغلاق الحماية
+          _isManualAuthProcess = false;
         }
       },
 
@@ -475,7 +500,8 @@ class AuthCubit extends Cubit<AuthState> {
       ); // رسالة "أدخل الكود"
       return;
     }
-
+    // 3. تفعيل وضع المعالجة اليدوية لمنع المراقب من التدخل
+    _isManualAuthProcess = true;
     emit(AuthLoading());
 
     final credential = PhoneAuthProvider.credential(
@@ -506,6 +532,9 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       emit(AuthFailure(message: "حدث خطأ: ${e.toString()}"));
+    } finally {
+      // 4. إعادة المتغير لوضعه الطبيعي في كل الأحوال (نجاح أو فشل)
+      _isManualAuthProcess = false;
     }
   }
 
@@ -550,6 +579,7 @@ class AuthCubit extends Cubit<AuthState> {
   //----------------------------------------------------------------------------
   void signOut() async {
     emit(AuthLoading());
+
     try {
       await _credential.signOut();
 
@@ -570,28 +600,35 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   //----------------------------------------------------------------------------
-
   Future<void> getUserData() async {
     try {
-      // 1. التأكد من وجود مستخدم مسجل دخول
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // 2. جلب البيانات من Firestore
-      // تأكد أن 'users' هو نفس اسم المجموعة لديك (أو استخدم AuthString.fSUsers)
       final doc = await FirebaseFirestore.instance
           .collection(AuthString.fSUsers)
           .doc(user.uid)
           .get();
 
       if (doc.exists) {
-        // 3. تحويل البيانات إلى موديل وتخزينها في المتغير العام
-        currentUserInfo = UserInfoData.fromJson(
+        // نستخدم المتغير الخاص _currentUserInfo مباشرة ونحفظ فيه البيانات
+        _currentUserInfo = UserInfoData.fromJson(
           doc.data() as Map<String, dynamic>,
         );
 
-        // 4. تحديث الواجهة (مهم جداً ليسمع الـ MapScreen التغيير)
-        emit(AuthSuccess(userInfo: currentUserInfo!));
+        // ثم نقوم بتحديث الـ Cache للأمان
+        await _cacheService.saveUserData(_currentUserInfo!);
+
+        // وأخيراً نحدث الواجهة
+        emit(AuthSuccess(userInfo: _currentUserInfo!));
+      } else {
+        // إذا المستخدم موجود في Auth ولكن ليس له بيانات في Firestore
+        emit(
+          AuthFailure(
+            message:
+                "بيانات المستخدم غير موجودة، يرجى التواصل مع الدعم أو التسجيل مجدداً.",
+          ),
+        );
       }
     } catch (e) {
       print("Error getting user data: $e");
@@ -599,6 +636,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  //----------------------------------------------------------------------------
   // داخل AuthCubit
   void updateLocalUser(UserInfoData newUser) {
     currentUserInfo = newUser;
