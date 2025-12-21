@@ -75,7 +75,7 @@ class PostItemWidget extends StatelessWidget {
                         onSelected: (value) {
                           if (value == 'delete') {
                             // استدعاء دالة الحذف
-                            PostCubit.get(context).deletePost(post.postId!);
+                            PostCubit.get(context).deletePost(post);
                           }
                         },
                         itemBuilder: (BuildContext context) {
@@ -96,7 +96,11 @@ class PostItemWidget extends StatelessWidget {
                             ),
                           ];
                         },
-                        child: const Icon(Icons.more_horiz),
+                        child: Icon(
+                          Icons.more_horiz,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 20,
+                        ),
                       ),
                   ],
                 ),
@@ -109,7 +113,13 @@ class PostItemWidget extends StatelessWidget {
                     horizontal: 10,
                     vertical: 5,
                   ),
-                  child: Text(post.text!, style: const TextStyle(fontSize: 14)),
+                  child: Text(
+                    post.text!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
               if (post.postImage != null && post.postImage!.isNotEmpty)
                 CachedNetworkImage(

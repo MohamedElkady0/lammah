@@ -13,6 +13,7 @@ class PublicTask {
   final String? acceptedOfferId; // ID العرض المقبول
   final DateTime createdAt;
   final DateTime deadline;
+  final String ownerImage;
 
   PublicTask({
     required this.id,
@@ -27,6 +28,7 @@ class PublicTask {
     this.acceptedOfferId,
     required this.createdAt,
     required this.deadline,
+    required this.ownerImage,
   });
 
   // تحويل من Firestore
@@ -44,6 +46,7 @@ class PublicTask {
       acceptedOfferId: data['acceptedOfferId'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       deadline: (data['deadline'] as Timestamp).toDate(),
+      ownerImage: data['ownerImage'] ?? '',
     );
   }
 
@@ -61,6 +64,7 @@ class PublicTask {
       'acceptedOfferId': acceptedOfferId,
       'createdAt': Timestamp.fromDate(createdAt),
       'deadline': Timestamp.fromDate(deadline),
+      'ownerImage': ownerImage,
     };
   }
 }
@@ -73,6 +77,7 @@ class TaskOffer {
   final String bidderLocation;
   final double price; // السعر المقترح
   final DateTime createdAt;
+  final String bidderImage;
 
   TaskOffer({
     required this.id,
@@ -82,6 +87,7 @@ class TaskOffer {
     required this.bidderLocation,
     required this.price,
     required this.createdAt,
+    required this.bidderImage,
   });
 
   factory TaskOffer.fromMap(Map<String, dynamic> data, String docId) {
@@ -93,6 +99,7 @@ class TaskOffer {
       bidderLocation: data['bidderLocation'] ?? '',
       price: (data['price'] ?? 0.0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      bidderImage: data['bidderImage'] ?? '',
     );
   }
 
@@ -104,6 +111,7 @@ class TaskOffer {
       'bidderLocation': bidderLocation,
       'price': price,
       'createdAt': Timestamp.fromDate(createdAt),
+      'bidderImage': bidderImage,
     };
   }
 }

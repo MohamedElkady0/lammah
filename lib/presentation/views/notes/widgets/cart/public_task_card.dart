@@ -22,7 +22,10 @@ class PublicTaskCard extends StatelessWidget {
       child: ListTile(
         title: Text(
           task.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

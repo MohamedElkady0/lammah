@@ -30,10 +30,35 @@ class PublicTasksMarketTab extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.all(8),
               child: ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(task.title),
-                subtitle: Text("الميزانية: ${task.budget}\$"),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                leading: ClipRRect(
+                  clipBehavior: Clip.antiAlias,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    task.ownerImage,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.person);
+                    },
+                  ),
+                ),
+                title: Text(
+                  task.title,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  "الميزانية: ${task.budget}\$",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 onTap: () {
                   // الانتقال لصفحة التفاصيل
                   Navigator.push(

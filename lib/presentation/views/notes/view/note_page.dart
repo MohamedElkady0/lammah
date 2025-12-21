@@ -17,7 +17,7 @@ class NotePage extends StatelessWidget {
           children: [
             SizedBox(height: 40),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 InkWell(
                   onTap: () {
@@ -26,6 +26,7 @@ class NotePage extends StatelessWidget {
                     );
                   },
                   child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 50),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.onPrimary,
                       borderRadius: BorderRadius.circular(12),
@@ -38,15 +39,34 @@ class NotePage extends StatelessWidget {
                       ],
                     ),
 
-                    child: Icon(
-                      Icons.note_add,
-                      color: Theme.of(context).colorScheme.primary,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "المهام",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+
             // دمجنا الواجهتين في واحدة لتكون أكثر تفاعلية
             BalanceAndAnalyticsSection(),
             SizedBox(height: 20),

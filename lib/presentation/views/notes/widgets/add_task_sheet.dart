@@ -22,6 +22,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
 
   @override
   Widget build(BuildContext context) {
+    var user = context.read<AuthCubit>().currentUserInfo;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -34,33 +35,60 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
             children: [
               Text(
                 isPublic ? "نشر مهمة عامة" : "إضافة مهمة خاصة",
-                style: Theme.of(context).textTheme.titleLarge,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
 
               SwitchListTile(
-                title: const Text("نشر للعامة (طلب خدمة)"),
+                title: Text(
+                  "نشر للعامة (طلب خدمة)",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 value: isPublic,
                 onChanged: (val) => setState(() => isPublic = val),
               ),
 
               TextField(
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: "العنوان"),
+                decoration: InputDecoration(
+                  labelText: "العنوان",
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
 
               if (isPublic)
                 TextField(
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   controller: _descController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "الوصف والتفاصيل",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
 
               if (isPublic)
                 TextField(
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   controller: _priceController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "الميزانية المقترحة",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -86,6 +114,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
 
               const SizedBox(height: 20),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 50,
+                    vertical: 10,
+                  ),
+                ),
                 onPressed: () {
                   if (_titleController.text.isNotEmpty &&
                       _selectedDeadline != null) {
@@ -95,10 +130,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                       if (userState is AuthSuccess) {
                         final task = PublicTask(
                           id: '',
-                          ownerId: userState.userInfo.userId ?? '',
-                          ownerName: userState.userInfo.name ?? '',
-                          ownerPhone: userState.userInfo.phoneNumber ?? '',
-                          ownerLocation: userState.userInfo.userCity ?? '',
+                          ownerId: user?.userId ?? '',
+                          ownerName: user?.name ?? '',
+                          ownerPhone: user?.phoneNumber ?? '',
+                          ownerLocation: user?.userCity ?? '',
+                          ownerImage: user?.image ?? '',
                           title: _titleController.text,
                           description: _descController.text,
                           budget: double.tryParse(_priceController.text) ?? 0,
@@ -120,7 +156,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     Navigator.pop(context);
                   }
                 },
-                child: const Text("حفظ"),
+                child: Text(
+                  "حفظ",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
             ],
           ),

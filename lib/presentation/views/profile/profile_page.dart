@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/data/model/post_model.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
 import 'package:lammah/domian/post/post_cubit.dart';
@@ -31,41 +32,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .toList();
 
         return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.primary,
           key: widget.scaffoldKey,
-          appBar: AppBar(title: Text(user?.name ?? 'Profile'), elevation: 0),
+          appBar: AppBar(
+            title: Text(
+              'Profile',
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+            elevation: 0,
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.settings,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SettingPage(),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.logout,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                onPressed: () {
+                  context.read<AuthCubit>().signOut();
+                },
+              ),
+            ],
+            leading: Image.asset(AuthString.logo, height: 40, width: 40),
+          ),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                TextButton.icon(
-                  onPressed: () {
-                    context.read<AuthCubit>().signOut();
-                  },
-                  label: Text(
-                    'تسجيل خروج',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  icon: Icon(Icons.logout),
-                ),
-                const SizedBox(height: 20),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SettingPage(),
-                      ),
-                    );
-                  },
-                  label: Text(
-                    'الاعدادات',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  icon: Icon(Icons.settings),
-                ),
                 // 1. رأس الملف الشخصي (Header)
                 SizedBox(
                   height: 200,
@@ -102,14 +107,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 10),
                 Text(
                   user?.name ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
                 Text(
                   user?.email ?? '', // أو الـ bio
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -137,9 +145,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (state is GetPostsLoadingState)
                   const Center(child: CircularProgressIndicator())
                 else if (myPosts.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.all(40.0),
-                    child: Text("لم تقم بنشر أي شيء بعد."),
+                    child: Text(
+                      "لم تقم بنشر أي شيء بعد.",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   )
                 else
                   ListView.builder(
@@ -166,31 +179,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           count,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
         ),
-        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+        ),
       ],
     );
   }
 }
-//           PopApp(
-//             offset: const Offset(50, 0),
-//             index: 3,
-//             title: [ChatString.settings, ChatString.help, ChatString.logout],
-//             isMenu: true,
-//             onTap: [
-//               () {
-//                 Navigator.of(
-//                   context,
-//                 ).push(MaterialPageRoute(builder: (context) => SettingPage()));
-//               },
-//               () {
-//                 Navigator.of(
-//                   context,
-//                 ).push(MaterialPageRoute(builder: (context) => HelpPage()));
-//               },
-//               () {
-//                 context.read<AuthCubit>().signOut();
-//               },
-//             ],
-//           ),

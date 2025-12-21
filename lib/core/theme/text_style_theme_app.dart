@@ -131,25 +131,25 @@ class ThemeText {
       titleMedium: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w500,
-        color: colorScheme.onSurface,
+        color: colorScheme.onPrimary,
       ),
       titleSmall: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w500,
-        color: colorScheme.onSurface,
+        color: colorScheme.onPrimary,
       ),
       // Body
-      bodyLarge: TextStyle(fontSize: 16, color: colorScheme.onSurface),
-      bodyMedium: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
-      bodySmall: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+      bodyLarge: TextStyle(fontSize: 16, color: colorScheme.onPrimary),
+      bodyMedium: TextStyle(fontSize: 14, color: colorScheme.onPrimary),
+      bodySmall: TextStyle(fontSize: 12, color: colorScheme.onPrimary),
       // Label
       labelLarge: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
         color: colorScheme.onPrimary,
       ),
-      labelMedium: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-      labelSmall: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
+      labelMedium: TextStyle(fontSize: 12, color: colorScheme.onPrimary),
+      labelSmall: TextStyle(fontSize: 10, color: colorScheme.onPrimary),
     );
   }
 }

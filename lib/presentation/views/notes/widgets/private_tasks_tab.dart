@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lammah/domian/tasks/tasks_cubit.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../data/model/private_task .dart';
+
 class PrivateTasksTab extends StatefulWidget {
   const PrivateTasksTab({super.key});
 
@@ -33,23 +35,40 @@ class _PrivateTasksTabState extends State<PrivateTasksTab> {
             itemCount: state.tasks.length,
             itemBuilder: (context, index) {
               final task = state.tasks[index];
-              return CheckboxListTile(
-                title: Text(
-                  task.title,
-                  style: TextStyle(
-                    decoration: task.isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
+              return Dismissible(
+                key: Key(task.id),
+                background: Container(
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                subtitle: Text(
-                  DateFormat('yyyy/MM/dd hh:mm a').format(task.deadline),
-                ),
-                value: task.isCompleted,
-                onChanged: (val) {
-                  // تحديث الحالة
-                  context.read<TasksCubit>().toggleTaskStatus(task.id, val!);
+                onDismissed: (direction) {
+                  context.read<TasksCubit>().deletePrivateTask(task.id);
                 },
+
+                child: ListTile(
+                  title: Text(
+                    task.title,
+                    style: TextStyle(
+                      decoration: task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      _showEditPrivateTaskDialog(context, task);
+                    },
+                  ),
+                  subtitle: Text(
+                    DateFormat('yyyy/MM/dd hh:mm a').format(task.deadline),
+                  ),
+                  // value: task.isCompleted,
+                  onTap: () => (val) {
+                    // تحديث الحالة
+                    context.read<TasksCubit>().toggleTaskStatus(task.id, val!);
+                  },
+                ),
               );
             },
           );
@@ -59,6 +78,36 @@ class _PrivateTasksTabState extends State<PrivateTasksTab> {
         }
         return const Center(child: Text("جاري التحميل..."));
       },
+    );
+  }
+
+  void _showEditPrivateTaskDialog(BuildContext context, PrivateTask task) {
+    final controller = TextEditingController(text: task.title);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("تعديل المهمة"),
+        content: TextField(controller: controller),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("إلغاء"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final updatedTask = PrivateTask(
+                id: task.id,
+                title: controller.text,
+                isCompleted: task.isCompleted,
+                deadline: task.deadline,
+              );
+              context.read<TasksCubit>().editPrivateTask(updatedTask);
+              Navigator.pop(ctx);
+            },
+            child: const Text("حفظ"),
+          ),
+        ],
+      ),
     );
   }
 }

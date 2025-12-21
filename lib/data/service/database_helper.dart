@@ -244,4 +244,23 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+
+  // ==========================================================
+
+  // 1. دالة الحذف
+  Future<int> deletePrivateTask(String id) async {
+    final db = await instance.database;
+    return await db.delete('private_tasks', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // 2. دالة التعديل
+  Future<int> updatePrivateTask(PrivateTask task) async {
+    final db = await instance.database;
+    return await db.update(
+      'private_tasks',
+      task.toMap(), // تأكد أن الموديل يحتوي على toMap
+      where: 'id = ?',
+      whereArgs: [task.id],
+    );
+  }
 }

@@ -74,13 +74,49 @@ class TasksCubit extends Cubit<TasksState> {
     }
   }
 
-  Future<void> rateWorker(String userId, double rating) async {
+  // --- مهام خاصة ---
+  Future<void> deletePrivateTask(String id) async {
+    await _localDb.deletePrivateTask(id);
+    loadPrivateTasks(); // تحديث القائمة
+  }
+
+  Future<void> editPrivateTask(PrivateTask task) async {
+    await _localDb.updatePrivateTask(task);
+    loadPrivateTasks(); // تحديث القائمة
+  }
+
+  // --- مهام عامة ---
+  Future<void> deletePublicTask(String taskId) async {
     try {
-      // استدعاء الخدمة التي أنشأناها
-      await _firestoreService.rateUser(userId, rating);
-      // يمكنك إضافة emit لرسالة نجاح إذا أردت، أو تركها صامتة
+      await _firestoreService.deletePublicTask(taskId);
+      // لا نحتاج emit لأن StreamBuilder سيحدث نفسه
     } catch (e) {
-      emit(TasksError("فشل تقديم التقييم: $e"));
+      emit(TasksError("فشل الحذف: $e"));
+    }
+  }
+
+  Future<void> editPublicTask(
+    String taskId,
+    String title,
+    String desc,
+    double budget,
+  ) async {
+    try {
+      await _firestoreService.updatePublicTask(taskId, {
+        'title': title,
+        'description': desc,
+        'budget': budget,
+      });
+    } catch (e) {
+      emit(TasksError("فشل التعديل: $e"));
+    }
+  }
+
+  Future<void> rateWorker(String workerId, double rating) async {
+    try {
+      await _firestoreService.rateUser(workerId, rating);
+    } catch (e) {
+      emit(TasksError("فشل التقييم: $e"));
     }
   }
 }

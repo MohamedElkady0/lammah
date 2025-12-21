@@ -134,20 +134,6 @@ class PostCubit extends Cubit<PostStates> {
         });
   }
 
-  // 2. حذف المنشور
-  void deletePost(String postId) {
-    FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .delete()
-        .then((value) {
-          // حذف المنشور من القائمة المحلية لتحديث الواجهة فوراً
-          posts.removeWhere((element) => element.postId == postId);
-          emit(GetPostsSuccessState()); // إعادة بناء الواجهة
-        })
-        .catchError((error) {});
-  }
-
   // تحديث دالة createPost لتقبل ملف فيديو
   void createPost({
     required String uId,
@@ -261,5 +247,49 @@ class PostCubit extends Cubit<PostStates> {
         .catchError((error) {
           print(error.toString());
         });
+  }
+
+  void deletePost(PostModel post) {
+    // 1. تحديد ما إذا كان هناك ملف (صورة أو فيديو) لحذفه
+    String? mediaUrl;
+    if (post.postImage != null && post.postImage!.isNotEmpty) {
+      mediaUrl = post.postImage;
+    } else if (post.postVideo != null && post.postVideo!.isNotEmpty) {
+      mediaUrl = post.postVideo;
+    }
+
+    // دالة داخلية للحذف من Firestore (لتجنب تكرار الكود)
+    void deleteFromFirestore() {
+      FirebaseFirestore.instance
+          .collection('posts')
+          .doc(post.postId)
+          .delete()
+          .then((value) {
+            // حذف محلي من القائمة
+            posts.removeWhere((element) => element.postId == post.postId);
+            if (!isClosed) emit(GetPostsSuccessState());
+          })
+          .catchError((error) {});
+    }
+
+    // 2. التنفيذ
+    if (mediaUrl != null) {
+      // أ. إذا كان هناك ميديا، نحذفها من الستوريج أولاً
+      firebase_storage.FirebaseStorage.instance
+          .refFromURL(mediaUrl)
+          .delete()
+          .then((_) {
+            // ب. بعد نجاح حذف الملف، نحذف البيانات
+            deleteFromFirestore();
+          })
+          .catchError((error) {
+            // حتى لو فشل حذف الصورة (مثلاً حذفت يدوياً)، نحذف البيانات
+            deleteFromFirestore();
+            print("Error deleting file: $error");
+          });
+    } else {
+      // ج. إذا كان نصاً فقط، نحذف البيانات مباشرة
+      deleteFromFirestore();
+    }
   }
 }

@@ -80,25 +80,40 @@ class FirestoreTasksService {
     // ما عدا الشخص المقبول.
   }
 
-  // دالة لتقييم المستخدم
-  Future<void> rateUser(String userId, double rating) async {
+  Future<void> deletePublicTask(String taskId) async {
+    await _tasksRef.doc(taskId).delete();
+  }
+
+  Future<void> updatePublicTask(
+    String taskId,
+    Map<String, dynamic> data,
+  ) async {
+    await _tasksRef.doc(taskId).update(data);
+  }
+
+  Future<void> rateUser(String userId, double newRating) async {
     final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
 
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final snapshot = await transaction.get(userRef);
-      if (!snapshot.exists) return;
+
+      if (!snapshot.exists) return; // حماية في حال عدم وجود المستخدم
 
       final data = snapshot.data() as Map<String, dynamic>;
 
-      // المعادلات الحسابية للمتوسط
+      // 1. جلب التقييم الحالي وعدد المقيمين
+      // نستخدم 0 كقيمة افتراضية إذا كان الحقل غير موجود
       double currentRating = (data['rating'] ?? 0.0).toDouble();
       int ratingCount = (data['ratingCount'] ?? 0).toInt();
 
-      double newRating =
-          ((currentRating * ratingCount) + rating) / (ratingCount + 1);
+      // 2. حساب المتوسط الجديد
+      // المعادلة: (التقييم القديم × العدد القديم + التقييم الجديد) / (العدد القديم + 1)
+      double updatedRating =
+          ((currentRating * ratingCount) + newRating) / (ratingCount + 1);
 
+      // 3. تحديث البيانات
       transaction.update(userRef, {
-        'rating': newRating,
+        'rating': updatedRating,
         'ratingCount': ratingCount + 1,
       });
     });
