@@ -66,20 +66,6 @@ class FirestoreTasksService {
         );
   }
 
-  // قبول عرض (المنطق الجوهري)
-  Future<void> acceptOffer(String taskId, String offerId) async {
-    // نقوم بتحديث حالة المهمة وحفظ ID العرض المقبول
-    // هذا سيجعل المهمة تختفي من القائمة العامة (لأن حالتها لم تعد open)
-    await _tasksRef.doc(taskId).update({
-      'status': 'assigned',
-      'acceptedOfferId': offerId,
-    });
-
-    // ملاحظة: لا نحتاج لحذف العروض الأخرى في قاعدة البيانات فعلياً
-    // (من الأفضل الاحتفاظ بالسجلات)، لكن في الواجهة سنخفي كل شيء
-    // ما عدا الشخص المقبول.
-  }
-
   Future<void> deletePublicTask(String taskId) async {
     await _tasksRef.doc(taskId).delete();
   }
@@ -117,5 +103,54 @@ class FirestoreTasksService {
         'ratingCount': ratingCount + 1,
       });
     });
+  }
+
+  Future<void> acceptOffer(
+    String taskId,
+    String offerId,
+    String workerId,
+  ) async {
+    // تحديث حالة المهمة + حفظ معرف العرض + حفظ معرف العامل
+    await _tasksRef.doc(taskId).update({
+      'status': 'assigned',
+      'acceptedOfferId': offerId,
+      'workerId': workerId, // <--- إضافة مهمة جداً
+    });
+  }
+
+  // 1. جلب المهام التي نشرتها أنا (للمالك)
+  Stream<List<PublicTask>> getMyPostedTasks(String myUid) {
+    return _tasksRef
+        .where('ownerId', isEqualTo: myUid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => PublicTask.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                  doc.id,
+                ),
+              )
+              .toList(),
+        );
+  }
+
+  // 2. جلب المهام المسندة لي (للعامل)
+  Stream<List<PublicTask>> getTasksAssignedToMe(String myUid) {
+    return _tasksRef
+        .where('workerId', isEqualTo: myUid) // نستخدم الحقل الجديد الذي أضفناه
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => PublicTask.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                  doc.id,
+                ),
+              )
+              .toList(),
+        );
   }
 }

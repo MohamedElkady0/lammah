@@ -49,8 +49,7 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
                 // الرصيد القابل للتعديل
                 GestureDetector(
                   onTap: () {
-                    // هنا يمكن فتح نافذة لتعديل الرصيد المبدئي
-                    // _showEditBalanceDialog(context, state.totalBalance);
+                    _showEditBalanceDialog(context);
                   },
                   child: Row(
                     children: [
@@ -119,6 +118,64 @@ class BalanceAndAnalyticsSection extends StatelessWidget {
         }
         // إظهار مؤشر تحميل أو حالة أولية
         return const Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  // نافذة إدخال الرصيد
+  void _showEditBalanceDialog(BuildContext context) {
+    final TextEditingController balanceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("تحديد الرصيد المبدئي"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("أدخل المبلغ المتوفر لديك حالياً (كاش + بنك):"),
+              const SizedBox(height: 10),
+              TextField(
+                controller: balanceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "المبلغ",
+                  hintText: "مثلاً: 5000",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("إلغاء"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final double? newBalance = double.tryParse(
+                  balanceController.text,
+                );
+                if (newBalance != null) {
+                  // استدعاء دالة الكيوبت لتحديث الرصيد والحفظ
+                  context.read<TransactionCubit>().updateInitialBalance(
+                    newBalance,
+                  );
+                  Navigator.pop(ctx);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("تم تحديث الرصيد المبدئي إلى $newBalance"),
+                    ),
+                  );
+                }
+              },
+              child: const Text("حفظ"),
+            ),
+          ],
+        );
       },
     );
   }

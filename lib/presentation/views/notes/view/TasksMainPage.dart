@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lammah/presentation/views/notes/view/my_public_tasks_page.dart';
 import 'package:lammah/presentation/views/notes/widgets/add_task_sheet.dart';
 import 'package:lammah/presentation/views/notes/widgets/private_tasks_tab.dart';
 import 'package:lammah/presentation/views/notes/widgets/public_tasks_market_tab.dart';
@@ -17,6 +18,18 @@ class TasksMainPage extends StatelessWidget {
             "المهام",
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: "نشاطي",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyPublicTasksPage()),
+                );
+              },
+            ),
+          ],
           bottom: TabBar(
             labelColor: Theme.of(context).colorScheme.onPrimary,
             unselectedLabelColor: Theme.of(

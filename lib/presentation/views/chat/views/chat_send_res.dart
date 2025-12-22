@@ -323,10 +323,10 @@ class _SendResChatState extends State<SendResChat> {
                       suffixIcon: control.text.trim().isEmpty
                           ? GestureDetector(
                               onLongPress: () {
-                                chatCubit.startRecording();
+                                context.read<ChatCubit>().startRecording();
                               },
                               onLongPressUp: () {
-                                chatCubit.stopRecordingAndSend(
+                                context.read<ChatCubit>().stopRecordingAndSend(
                                   chatRoomId: widget.chatId,
                                   receiverId: widget.uid,
                                 );

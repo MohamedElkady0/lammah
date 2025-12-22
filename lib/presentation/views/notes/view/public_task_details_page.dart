@@ -5,6 +5,7 @@ import 'package:lammah/core/function/firestore_tasks_service.dart';
 import 'package:lammah/core/utils/auth_string.dart';
 import 'package:lammah/data/model/public_task.dart';
 import 'package:lammah/domian/auth/auth_cubit.dart';
+import 'package:lammah/domian/chat/chat_cubit.dart';
 import 'package:lammah/domian/tasks/tasks_cubit.dart';
 import 'package:lammah/presentation/views/chat/views/chat_send_res.dart';
 import 'package:url_launcher/url_launcher.dart'; // للاتصال وفتح الخرائط
@@ -197,33 +198,30 @@ class PublicTaskDetailsPage extends StatelessWidget {
                               backgroundColor: Colors.green,
                             ),
                             onPressed: () async {
-                              // 1. قبول العرض
+                              final otherUserId = offer.bidderId;
+
+                              final String consistentChatId = context
+                                  .read<ChatCubit>()
+                                  .chatRoomId(otherUserId);
+                              // 1. قبول العرض في قاعدة البيانات
                               await context.read<TasksCubit>().acceptTaskOffer(
                                 task.id,
                                 offer.id,
-                              );
-
-                              // 2. إنشاء ChatRoomId موحد
-
-                              String chatRoomId = getChatRoomId(
-                                myId,
                                 offer.bidderId,
                               );
-
                               if (context.mounted) {
-                                // 3. الانتقال لشاشة الدردشة بالبيانات الحقيقية
+                                // 4. الانتقال للدردشة
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => SendResChat(
-                                      userName:
-                                          offer.bidderName, // اسم مقدم العرض
+                                      chatId: consistentChatId,
+                                      uid: otherUserId,
+                                      userName: offer.bidderName,
                                       userImage: offer.bidderImage.isNotEmpty
                                           ? offer.bidderImage
-                                          : "https://cdn-icons-png.flaticon.com/512/149/149071.png", // صورة احتياطية
-                                      uid: offer.bidderId,
+                                          : "https://cdn-icons-png.flaticon.com/512/149/149071.png",
                                       isGroupChat: false,
-                                      chatId: chatRoomId,
                                     ),
                                   ),
                                 );
@@ -351,22 +349,22 @@ class PublicTaskDetailsPage extends StatelessWidget {
                 label: const Text("مراسلة العامل"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 onPressed: () {
-                  String chatRoomId = getChatRoomId(
-                    myId,
-                    acceptedOffer.bidderId,
-                  );
+                  // 1. الطرف الآخر هو المالك
+                  final otherUserId = task.ownerId;
+
+                  final String consistentChatId = context
+                      .read<ChatCubit>()
+                      .chatRoomId(otherUserId);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => SendResChat(
-                        userName: acceptedOffer.bidderName,
-                        // هنا التعديل: استخدام الصورة الحقيقية إذا وجدت
-                        userImage: acceptedOffer.bidderImage.isNotEmpty
-                            ? acceptedOffer.bidderImage
-                            : "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        uid: acceptedOffer.bidderId,
+                        chatId: consistentChatId,
+                        uid: otherUserId,
+                        userName: task.ownerName,
+                        userImage: task.ownerImage,
                         isGroupChat: false,
-                        chatId: chatRoomId,
                       ),
                     ),
                   );

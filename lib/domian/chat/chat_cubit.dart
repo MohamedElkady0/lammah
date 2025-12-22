@@ -59,6 +59,12 @@ class ChatCubit extends Cubit<ChatState> {
     return '${userIds[0]}_${userIds[1]}';
   }
 
+  Future<bool> checkChatExists(String otherUserId) async {
+    final roomId = chatRoomId(otherUserId);
+    final doc = await _firestore.collection('chat').doc(roomId).get();
+    return doc.exists;
+  }
+
   // ---------------------------------------------------------------------------
   // 1. Send Text Message
   // ---------------------------------------------------------------------------
@@ -1117,17 +1123,13 @@ class ChatCubit extends Cubit<ChatState> {
 
     try {
       if (isGroupChat) {
-        // --- منطق المجموعات (Array) ---
-        // نبحث عن الرسائل التي لم أرسلها أنا، ولم يتم إضافة الـ ID الخاص بي لقائمة المشاهدين بعد
+        // --- منطق المجموعات (كما هو لأنه كان سليماً) ---
         final querySnapshot = await _firestore
             .collection(collectionPath)
             .doc(chatId)
             .collection(messageSubCollection)
             .where('senderId', isNotEqualTo: _currentUserUid)
             .get();
-        // ملاحظة: Firestore لا يدعم الاستعلام بـ "لا يحتوي على في مصفوفة" مباشرة بسهولة
-        // لذا سنجلب الرسائل الحديثة ونتحقق يدوياً أو نعتمد على الفلترة في التطبيق،
-        // ولكن للأداء الأفضل سنقوم بتحديث الكل بـ arrayUnion (التي لا تكرر القيم)
 
         final batch = _firestore.batch();
         bool hasUpdates = false;
@@ -1136,42 +1138,57 @@ class ChatCubit extends Cubit<ChatState> {
           final data = doc.data();
           final List<dynamic> seenBy = data['seenBy'] ?? [];
 
-          // إذا لم يكن الـ ID الخاص بي موجوداً في القائمة، قم بتحديث المستند
           if (!seenBy.contains(_currentUserUid)) {
             batch.update(doc.reference, {
               'seenBy': FieldValue.arrayUnion([_currentUserUid]),
-              // خياري: يمكنك تحديث الحالة لـ seen إذا أردت، لكن الاعتماد على القائمة أدق
             });
             hasUpdates = true;
           }
         }
 
-        // تصفير العداد للمجموعات
+        // تصفير العداد
         batch.update(_firestore.collection('groups').doc(chatId), {
           'unreadCount.$_currentUserUid': 0,
         });
 
         if (hasUpdates) await batch.commit();
       } else {
-        // --- منطق المحادثة الفردية (Status String) ---
+        // 1. نجلب فقط الرسائل التي لم أرسلها أنا
         final querySnapshot = await _firestore
             .collection(collectionPath)
             .doc(chatId)
             .collection(messageSubCollection)
             .where('senderId', isNotEqualTo: _currentUserUid)
-            .where('status', isNotEqualTo: 'seen')
+            // حذفنا شرط status من هنا لأن Firebase يرفض شرطين "لا يساوي"
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
           final batch = _firestore.batch();
+          bool hasUpdates = false;
+
           for (var doc in querySnapshot.docs) {
-            batch.update(doc.reference, {'status': 'seen'});
+            final data = doc.data();
+            // 2. نتحقق هنا يدوياً إذا كانت الحالة ليست seen
+            if (data['status'] != 'seen') {
+              batch.update(doc.reference, {'status': 'seen'});
+              hasUpdates = true;
+            }
           }
-          // تصفير العداد للفردي
+
+          // تصفير العداد دائماً عند الفتح
           batch.update(_firestore.collection('chat').doc(chatId), {
             'unreadCount.$_currentUserUid': 0,
           });
-          await batch.commit();
+
+          // ننفذ التحديث فقط إذا وجدنا رسائل غير مقروءة فعلياً
+          if (hasUpdates) {
+            await batch.commit();
+          } else {
+            // لتحديث العداد فقط إذا كانت الرسائل مقروءة سابقاً ولكن العداد لم يصفر
+            await _firestore.collection('chat').doc(chatId).update({
+              'unreadCount.$_currentUserUid': 0,
+            });
+          }
         }
       }
     } catch (e) {

@@ -6,6 +6,7 @@ import 'package:lammah/data/model/note.dart';
 import 'package:lammah/data/model/private_task%20.dart';
 import 'package:lammah/data/model/transaction.dart';
 import 'package:lammah/data/service/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 part 'transaction_state.dart';
@@ -14,7 +15,7 @@ class TransactionCubit extends Cubit<TransactionState> {
   final dbHelper = DatabaseHelper.instance;
 
   // الرصيد المبدئي (يفضل حفظه في SharedPreferences لاحقاً ليبقى محفوظاً)
-  double _initialBalance = 10000.0;
+  double _initialBalance = 0.0;
 
   final List<Category> _availableCategories = defaultCategories;
 
@@ -27,20 +28,33 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> loadInitialData() async {
     emit(TransactionLoading());
     try {
+      // 1. تحميل الرصيد المبدئي المحفوظ من الذاكرة
+      final prefs = await SharedPreferences.getInstance();
+      _initialBalance =
+          prefs.getDouble('initial_balance') ?? 0.0; // القيمة الافتراضية 0
+
+      // 2. تحميل البيانات من قاعدة البيانات
       final allTransactions = await dbHelper.getAllTransactions(
         _availableCategories,
       );
       final allNotes = await dbHelper.getAllNotes();
-
-      // 1. جلب المهام الخاصة (الإصلاح هنا)
       final allPrivateTasks = await dbHelper.getAllPrivateTasks();
 
-      // 2. تمرير القوائم الثلاثة للدالة
+      // 3. الحساب والعرض
       _recalculateAndEmitState(allTransactions, allNotes, allPrivateTasks);
-      await _processRecurringTransactions();
     } catch (e) {
       emit(TransactionError("فشل في تحميل البيانات: ${e.toString()}"));
     }
+  }
+
+  Future<void> updateInitialBalance(double newBalance) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('initial_balance', newBalance); // حفظ في الذاكرة
+
+    _initialBalance = newBalance; // تحديث المتغير المحلي
+
+    // إعادة تحميل البيانات لتحديث الحسابات فوراً
+    await loadInitialData();
   }
 
   // دالة لتغيير الرصيد المبدئي
@@ -205,7 +219,7 @@ class TransactionCubit extends Cubit<TransactionState> {
     await loadInitialData();
   }
 
-  Future<void> _processRecurringTransactions() async {
+  Future<void> processRecurringTransactions() async {
     final recurringItems = await dbHelper.getRecurringTransactions();
     final now = DateTime.now();
 

@@ -65,15 +65,6 @@ class TasksCubit extends Cubit<TasksState> {
     }
   }
 
-  // دالة قبول العرض
-  Future<void> acceptTaskOffer(String taskId, String offerId) async {
-    try {
-      await _firestoreService.acceptOffer(taskId, offerId);
-    } catch (e) {
-      emit(TasksError("فشل قبول العرض: $e"));
-    }
-  }
-
   // --- مهام خاصة ---
   Future<void> deletePrivateTask(String id) async {
     await _localDb.deletePrivateTask(id);
@@ -117,6 +108,19 @@ class TasksCubit extends Cubit<TasksState> {
       await _firestoreService.rateUser(workerId, rating);
     } catch (e) {
       emit(TasksError("فشل التقييم: $e"));
+    }
+  }
+
+  Future<void> acceptTaskOffer(
+    String taskId,
+    String offerId,
+    String workerId,
+  ) async {
+    try {
+      // مررنا workerId هنا
+      await _firestoreService.acceptOffer(taskId, offerId, workerId);
+    } catch (e) {
+      emit(TasksError("فشل قبول العرض: $e"));
     }
   }
 }
